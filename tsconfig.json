@@ -15,19 +15,7 @@
     "noEmit": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "allowImportingTsExtensions": true,
-    "baseUrl": ".",
-    "paths": {
-      "@deepseek-ai/dsh-client-runtime/client": [
-        "../../../packages/client/runtime/lib/types/client/index.d.ts"
-      ],
-      "@deepseek-ai/dsh-client-ui-conversation/client": [
-        "../../../packages/client/ui-conversation/lib/types/client/index.d.ts"
-      ],
-      "@deepseek-ai/dsh-client-ui-input-trigger/client": [
-        "../../../packages/client/ui-input-trigger/lib/types/client/index.d.ts"
-      ]
-    }
+    "allowImportingTsExtensions": true
   },
   "include": ["src", "tests", "tsdown.config.ts", "vitest.config.ts"]
 }

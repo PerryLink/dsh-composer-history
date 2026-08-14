@@ -32,7 +32,7 @@ describe('built client bundle', () => {
     }
     const module = handoff?.factory(strictRequire) as Record<string, unknown>
     expect(module.name).toBe('dsh-composer-history')
-    expect(module.inject).toEqual(['conversation', 'sessions', 'inputTriggers'])
+    expect(module.inject).toEqual(['conversation', 'sessions', 'inputTriggers', 'settingsScope'])
     expect(typeof module.apply).toBe('function')
     expect(typeof module.Config).toBe('function')
   })
@@ -48,13 +48,25 @@ describe('built client bundle', () => {
     }) as { apply(ctx: unknown, config?: unknown): void }
 
     const disposed: string[] = []
+    const fakeScope = {
+      getSnapshot: () => ({ status: 'unavailable', value: undefined, writable: false, mode: 'memory' }),
+      subscribe: (): (() => void) => () => {},
+      set: (): Promise<void> => Promise.resolve(),
+      unset: (): Promise<void> => Promise.resolve(),
+    }
     const fakeCtx = {
       effect: (fn: () => unknown): (() => void) => {
         fn()
         return () => { disposed.push('effect') }
       },
       get: () => undefined,
-      sessions: { list: { getSnapshot: () => ({ current: undefined }) } },
+      sessions: {
+        list: {
+          getSnapshot: () => ({ current: undefined }),
+          subscribe: (): (() => void) => () => {},
+        },
+      },
+      settingsScope: { bind: () => fakeScope },
     }
     expect(() => module.apply(fakeCtx)).not.toThrow()
 

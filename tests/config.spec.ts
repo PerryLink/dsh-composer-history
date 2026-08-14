@@ -9,16 +9,26 @@ describe('Config schema', () => {
       edgeMode: 'logical',
       enableCtrlAlias: true,
       restoreCaret: true,
+      upKey: 'ArrowUp',
+      downKey: 'ArrowDown',
+      escapeKey: 'Escape',
+      maxHistory: 500,
+      includeKinds: ['user'],
+      historyScope: 'session',
+      persistHistory: true,
+      maxPersisted: 200,
+      enableSearch: false,
+      searchKeys: ['Ctrl+R'],
+      searchCaseSensitive: false,
     })
   })
 
   it('accepts explicit values and fills the rest', () => {
-    expect(resolveConfig({ recallWithDraft: 'gate', edgeMode: 'visual' })).toEqual({
+    expect(resolveConfig({ recallWithDraft: 'gate', edgeMode: 'visual' })).toMatchObject({
       recallWithDraft: 'gate',
-      restoreOnEscape: true,
       edgeMode: 'visual',
-      enableCtrlAlias: true,
-      restoreCaret: true,
+      restoreOnEscape: true,
+      maxHistory: 500,
     })
   })
 
@@ -28,6 +38,18 @@ describe('Config schema', () => {
 
   it('rejects an invalid edgeMode at load time', () => {
     expect(() => resolveConfig({ edgeMode: 'magic' })).toThrow()
+  })
+
+  it('rejects an invalid historyScope at load time', () => {
+    expect(() => resolveConfig({ historyScope: 'universe' })).toThrow()
+  })
+
+  it('rejects a negative maxHistory at load time', () => {
+    expect(() => resolveConfig({ maxHistory: -1 })).toThrow()
+  })
+
+  it('rejects a fractional maxPersisted at load time', () => {
+    expect(() => resolveConfig({ maxPersisted: 1.5 })).toThrow()
   })
 
   it('rejects an invalid recallWithDraft even when other keys are valid', () => {

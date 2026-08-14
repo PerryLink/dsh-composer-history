@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  DraftRecall, downAtLogicalEdge, extractHistory, hasActiveTriggerToken, upAtLogicalEdge,
+  DraftRecall, composeHistory, downAtLogicalEdge, extractHistory, hasActiveTriggerToken, upAtLogicalEdge,
   type HistoryNodeView, type RecallKeyFrame, type RecallOptions,
 } from '../src/client/recall.ts'
 
@@ -75,6 +75,41 @@ describe('extractHistory', () => {
 
   it('returns an empty list for no user nodes', () => {
     expect(extractHistory([])).toEqual([])
+  })
+
+  it('admits only the configured kinds', () => {
+    const nodes = [node('user', ['a']), node('steering', ['s']), node('context', ['c']), node('user', ['b'])]
+    expect(extractHistory(nodes, { kinds: ['user', 'steering'] })).toEqual(['a', 's', 'b'])
+    expect(extractHistory(nodes, { kinds: ['steering'] })).toEqual(['s'])
+    expect(extractHistory(nodes, { kinds: [] })).toEqual([])
+  })
+
+  it('keeps only the newest max entries', () => {
+    const nodes = [node('user', ['a']), node('user', ['b']), node('user', ['c']), node('user', ['d'])]
+    expect(extractHistory(nodes, { max: 2 })).toEqual(['c', 'd'])
+    expect(extractHistory(nodes, { max: 0 })).toEqual(['a', 'b', 'c', 'd'])
+  })
+})
+
+describe('composeHistory', () => {
+  it('returns the current entries alone without supplemental ones', () => {
+    expect(composeHistory([], ['one', 'two'])).toEqual(['one', 'two'])
+  })
+
+  it('prepends supplemental entries before the current session', () => {
+    expect(composeHistory(['zero', 'older'], ['one', 'two'])).toEqual(['zero', 'older', 'one', 'two'])
+  })
+
+  it('drops supplemental texts already in the current session (newest wins)', () => {
+    expect(composeHistory(['zero', 'one'], ['one', 'two'])).toEqual(['zero', 'one', 'two'])
+  })
+
+  it('adjacent-deduplicates kept supplemental entries', () => {
+    expect(composeHistory(['x', 'x', 'y'], ['one'])).toEqual(['x', 'y', 'one'])
+  })
+
+  it('preserves the current list untouched at the tail', () => {
+    expect(composeHistory(['one'], ['one', 'one', 'two'])).toEqual(['one', 'one', 'two'])
   })
 })
 

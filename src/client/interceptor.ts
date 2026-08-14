@@ -3,22 +3,26 @@
  * window-capture keyboard behavior. Everything platform-specific arrives
  * through the injected {@link ComposerHistoryHost}, so the full takeover
  * semantics (preventDefault/stopPropagation discipline, divergence on edit,
- * session-switch reset) are testable under jsdom with fakes.
+ * session-switch reset, search chord, key remapping) are testable under
+ * jsdom with fakes.
  *
  * Contract: an event is only prevented once the machine produced a non-pass
  * effect; every pass path leaves the event untouched. After a takeover the
  * caret is moved to the end of the filled text on the next animation frame
- * (requestAnimationFrame + setSelectionRange), and the draft write always
- * goes through the host's setDraft (the input machine's single write path).
+ * (requestAnimationFrame + setSelectionRange, pending frames cancelled on
+ * reschedule and dispose), and the draft write always goes through the
+ * host's setDraft (the input machine's single write path).
  */
 
 import {
-  DraftRecall, downAtLogicalEdge, extractHistory, upAtLogicalEdge,
-  type HistoryNodeView, type RecallEffect, type RecallOptions, type RecallState,
+  DraftRecall, composeHistory, downAtLogicalEdge, extractHistory, upAtLogicalEdge,
+  type HistoryNodeView, type RecallEffect, type RecallState,
 } from './recall.ts'
 import {
   downAtLastVisualLine, upAtFirstVisualLine, type VisualLineSpan,
 } from './visual-edge.ts'
+import { chordMatches, parseChord, type KeyChord } from './keys.ts'
+import type { ComposerHistoryConfig } from './config.ts'
 
 /** The input-machine slice the interceptor reads (phase gates interception). */
 export interface ComposerInputView {
@@ -39,10 +43,14 @@ export interface ComposerHistoryHost {
   inputState(composer: HTMLTextAreaElement): ComposerInputView | undefined
   /** Session nodes for the fresh history extraction (called per key press). */
   history(composer: HTMLTextAreaElement): readonly HistoryNodeView[]
+  /** Already-extracted entries from beyond the current session (persisted, workspace). */
+  supplementalHistory?(composer: HTMLTextAreaElement): readonly string[]
   /** A picker owning the arrow keys is open (slash menu, command popup, token fallback). */
   menuOpen(composer: HTMLTextAreaElement): boolean
   /** Single programmatic draft write path. */
   setDraft(composer: HTMLTextAreaElement, text: string): void
+  /** Open the reverse-search overlay for the merged history (search chord takeover). */
+  openSearch(composer: HTMLTextAreaElement, history: readonly string[]): void
   /** Measured visual line spans for edgeMode='visual'; absent in logical mode. */
   visualSpans?(composer: HTMLTextAreaElement, draft: string): readonly VisualLineSpan[] | undefined
 }
@@ -53,32 +61,40 @@ export interface ComposerHistoryHandle {
   input(event: Event): void
   state(): RecallState
   reset(): void
+  /** Write a text into the draft and move the caret to its end (search picks). */
+  fill(composer: HTMLTextAreaElement, text: string): void
+  /** Cancel pending caret frames and leave the machine idle (owner teardown). */
+  dispose(): void
 }
 
 /**
  * Build the interception handle over a host and the resolved options.
+ * Search chord specs are parsed here: a malformed spec throws, failing the
+ * browser fiber loudly at load.
  * @param host - platform seams.
- * @param options - resolved tunables.
+ * @param config - resolved tunables.
  * @returns the handle; wire it to window capture listeners and dispose with
  *   the owning fiber (the handle owns no external resources itself).
  */
-export function createComposerHistory(host: ComposerHistoryHost, options: RecallOptions): ComposerHistoryHandle {
-  const machine = new DraftRecall(options)
+export function createComposerHistory(host: ComposerHistoryHost, config: ComposerHistoryConfig): ComposerHistoryHandle {
+  const machine = new DraftRecall(config)
+  const searchChords: readonly KeyChord[] = config.searchKeys.map(parseChord)
   let lastSession: string | undefined
+  let rafId: number | undefined
 
   const keyOf = (event: KeyboardEvent): 'up' | 'down' | 'escape' | undefined => {
-    switch (event.key) {
-      case 'ArrowUp': return 'up'
-      case 'ArrowDown': return 'down'
-      case 'Escape': return 'escape'
-      default: return undefined
-    }
+    if (event.key === config.upKey) return 'up'
+    if (event.key === config.downKey) return 'down'
+    if (event.key === config.escapeKey) return 'escape'
+    return undefined
   }
 
   const caretTo = (composer: HTMLTextAreaElement, caret: number): void => {
     // Defer past React's discrete-event render commit, which applies the
     // setDraft value to the textarea before the next frame.
-    requestAnimationFrame(() => {
+    if (rafId !== undefined) cancelAnimationFrame(rafId)
+    rafId = requestAnimationFrame(() => {
+      rafId = undefined
       composer.setSelectionRange(caret, caret)
     })
   }
@@ -101,20 +117,33 @@ export function createComposerHistory(host: ComposerHistoryHost, options: Recall
         host.setDraft(composer, effect.text)
         if (effect.caret !== undefined) caretTo(composer, Math.min(effect.caret, effect.text.length))
         return
+      case 'openSearch':
+        host.openSearch(composer, effect.history)
+        return
     }
   }
 
   const edgeVerdicts = (composer: HTMLTextAreaElement, draft: string, caret: number): { upEdge: boolean; downEdge: boolean } => {
-    if (options.edgeMode === 'visual') {
+    if (config.edgeMode === 'visual') {
       const spans = host.visualSpans?.(composer, draft) ?? [{ start: 0, end: draft.length }]
       return { upEdge: upAtFirstVisualLine(spans, caret), downEdge: downAtLastVisualLine(spans, caret) }
     }
     return { upEdge: upAtLogicalEdge(draft, caret), downEdge: downAtLogicalEdge(draft, caret) }
   }
 
+  /** Fresh merged history for this key press: supplemental entries, then the current session's. */
+  const mergedHistory = (composer: HTMLTextAreaElement): string[] => {
+    const current = extractHistory(host.history(composer), { kinds: config.includeKinds, max: config.maxHistory })
+    const merged = composeHistory(host.supplementalHistory?.(composer) ?? [], current)
+    return config.maxHistory > 0 && merged.length > config.maxHistory ? merged.slice(-config.maxHistory) : merged
+  }
+
   const keydown = (event: KeyboardEvent): void => {
     const key = keyOf(event)
-    if (key === undefined) return
+    const searchChord = config.enableSearch && !event.repeat
+      ? searchChords.find(chord => chordMatches(event, chord))
+      : undefined
+    if (key === undefined && searchChord === undefined) return
     const composer = host.composerOf(event.target)
     if (composer === undefined) return
     const sessionKey = host.sessionKey(composer)
@@ -128,37 +157,51 @@ export function createComposerHistory(host: ComposerHistoryHost, options: Recall
     if (host.menuOpen(composer)) return
     const caret = composer.selectionStart
     if (composer.selectionEnd !== caret) return
-    if (event.altKey || event.metaKey || event.shiftKey) return
     if (event.isComposing) return
-    if (key === 'escape') {
-      if (event.ctrlKey) return
-    } else if (event.ctrlKey && !options.enableCtrlAlias) {
-      return
-    }
-    // A send committed while browsing clears the draft programmatically
-    // (no input event): leave browsing before any recall decisions.
-    if (machine.stateOf().kind === 'browsing' && input.draft === '' && input.phase === 'plain') {
+    let effect: RecallEffect
+    if (searchChord !== undefined) {
+      // Search branch: the chord's modifiers are exact by match, so the
+      // alt/meta/shift arrow policy must not gate it. Starting a search ends
+      // any browsing — the recalled text shown becomes the ordinary draft,
+      // exactly like the divergence guard.
       machine.reset()
+      effect = { kind: 'openSearch', history: mergedHistory(composer) }
+    } else {
+      if (key === undefined) return
+      if (event.altKey || event.metaKey || event.shiftKey) return
+      if (key === 'escape') {
+        if (event.ctrlKey) return
+      } else if (event.ctrlKey && !config.enableCtrlAlias) {
+        return
+      }
+      // A send committed while browsing clears the draft programmatically
+      // (no input event): leave browsing before any recall decisions.
+      if (machine.stateOf().kind === 'browsing' && input.draft === '' && input.phase === 'plain') {
+        machine.reset()
+      }
+      const draft = input.draft
+      const { upEdge, downEdge } = edgeVerdicts(composer, draft, caret)
+      // History is only consumed by ↑ (always) and by ↓ while browsing;
+      // the common IDLE-↓ caret path and Escape skip the merge entirely.
+      const needsHistory = key === 'up' || (key === 'down' && machine.stateOf().kind === 'browsing')
+      const frame = {
+        key,
+        ctrlKey: event.ctrlKey,
+        altKey: event.altKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
+        isComposing: event.isComposing,
+        hasSelection: false,
+        phase: input.phase,
+        menuOpen: false,
+        draft,
+        caret,
+        history: needsHistory ? mergedHistory(composer) : [],
+        upEdge,
+        downEdge,
+      }
+      effect = key === 'up' ? machine.up(frame) : key === 'down' ? machine.down(frame) : machine.escape(frame)
     }
-    const draft = input.draft
-    const { upEdge, downEdge } = edgeVerdicts(composer, draft, caret)
-    const frame = {
-      key,
-      ctrlKey: event.ctrlKey,
-      altKey: event.altKey,
-      metaKey: event.metaKey,
-      shiftKey: event.shiftKey,
-      isComposing: event.isComposing,
-      hasSelection: false,
-      phase: input.phase,
-      menuOpen: false,
-      draft,
-      caret,
-      history: extractHistory(host.history(composer)),
-      upEdge,
-      downEdge,
-    }
-    const effect = key === 'up' ? machine.up(frame) : key === 'down' ? machine.down(frame) : machine.escape(frame)
     if (effect.kind === 'pass') return
     event.preventDefault()
     event.stopPropagation()
@@ -183,6 +226,15 @@ export function createComposerHistory(host: ComposerHistoryHost, options: Recall
     input,
     state: () => machine.stateOf(),
     reset: () => {
+      machine.reset()
+    },
+    fill: (composer, text) => {
+      host.setDraft(composer, text)
+      caretToEnd(composer)
+    },
+    dispose: () => {
+      if (rafId !== undefined) cancelAnimationFrame(rafId)
+      rafId = undefined
       machine.reset()
     },
   }

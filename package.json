@@ -1,7 +1,7 @@
 {
   "name": "dsh-composer-history",
-  "version": "0.1.0",
-  "description": "Terminal-style input history recall for the DeepSeek Harness web composer: bare Up/Down move the caret first, only the draft edges trigger recall, the in-progress draft is stashed before browsing and restored exactly when you return to the newest entry or press Escape.",
+  "version": "0.2.0",
+  "description": "Terminal-style input history for the DeepSeek Harness web composer: edge-first arrows with exact draft/caret restore, browser-local persisted history, Ctrl+R reverse search, workspace-scoped recall, and fully configurable keys — layered on the ordinary composer draft only.",
   "type": "module",
   "main": "./lib/index.js",
   "types": "./lib/types/index.d.ts",
@@ -26,6 +26,7 @@
     "lib/client.js",
     "lib/types/**/*.d.ts",
     "src",
+    "docs",
     "README*.md",
     "LICENSE"
   ],
@@ -35,7 +36,8 @@
       "inject": [
         "@deepseek-ai/dsh-client-runtime",
         "@deepseek-ai/dsh-client-ui-conversation",
-        "@deepseek-ai/dsh-client-ui-input-trigger"
+        "@deepseek-ai/dsh-client-ui-input-trigger",
+        "@deepseek-ai/dsh-client-ui-settings"
       ]
     }
   },
@@ -59,8 +61,15 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/schemastery": "^3.18.0",
+    "@deepseek-ai/dsh-api-remotes": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-runtime": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-input-trigger": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-settings": "0.1.0-rc.6",
+    "@deepseek-ai/schemastery": "^3.18.1",
     "@types/node": "^22.19.0",
+    "@vitest/coverage-v8": "^3.2.0",
     "jsdom": "^26.1.0",
     "tsdown": "^0.22.14",
     "typescript": "^5.9.0",
@@ -70,7 +79,10 @@
     "build": "node scripts/clean.mjs && tsc -p tsconfig.build.json && tsdown",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "check:readmes": "node scripts/check-readmes.mjs",
+    "verify:pack": "node scripts/verify-pack.mjs"
   },
   "license": "Apache-2.0"
 }

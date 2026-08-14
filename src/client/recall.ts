@@ -41,6 +41,65 @@ export interface HistoryNodeView {
   readonly texts: readonly string[]
 }
 
+/** Extraction tunables: which node kinds to read and how many entries to keep. */
+export interface HistoryExtractOptions {
+  /** Node kinds admitted into the history (default ['user']). */
+  readonly kinds: readonly string[]
+  /** Maximum entries kept, newest last; 0 means unlimited. */
+  readonly max: number
+}
+
+const DEFAULT_EXTRACT: HistoryExtractOptions = { kinds: ['user'], max: 0 }
+
+/**
+ * Extract the recall history from a session's nodes in time order (newest
+ * last): admitted node kinds only, text blocks joined per node, blank
+ * entries dropped, adjacent duplicates merged, bounded to `max` newest
+ * entries. One entry per submitted message.
+ * @param nodes - projected conversation nodes in seq order.
+ * @param options - partial extraction tunables; defaults read user nodes
+ *   unbounded (the historical behavior).
+ * @returns non-blank entries, oldest first.
+ */
+export function extractHistory(nodes: readonly HistoryNodeView[], options: Partial<HistoryExtractOptions> = {}): string[] {
+  const kinds = options.kinds ?? DEFAULT_EXTRACT.kinds
+  const max = options.max ?? DEFAULT_EXTRACT.max
+  const entries: string[] = []
+  let head = 0
+  for (const node of nodes) {
+    if (!kinds.includes(node.kind)) continue
+    const text = node.texts.join('\n')
+    if (text.trim() === '') continue
+    if (entries[entries.length - 1] === text) continue
+    entries.push(text)
+    if (max > 0 && entries.length - head > max) head++
+  }
+  return head === 0 ? entries : entries.slice(head)
+}
+
+/**
+ * Compose the recall order from supplemental entries (persisted history,
+ * other sessions) followed by the current session's entries. Supplemental
+ * texts already present in the current session are dropped (the newest
+ * occurrence wins), kept supplementals are adjacent-deduplicated, and the
+ * current-session list is appended untouched — its internal dedupe already
+ * happened at extraction.
+ * @param supplemental - extra entries in oldest-first order.
+ * @param current - current-session entries in oldest-first order.
+ * @returns the merged history, newest last.
+ */
+export function composeHistory(supplemental: readonly string[], current: readonly string[]): string[] {
+  if (supplemental.length === 0) return [...current]
+  const currentSet = new Set(current)
+  const kept: string[] = []
+  for (const text of supplemental) {
+    if (currentSet.has(text)) continue
+    if (kept[kept.length - 1] === text) continue
+    kept.push(text)
+  }
+  return [...kept, ...current]
+}
+
 /** Machine state; 'browsing' carries the snapshot the restore path needs. */
 export type RecallState =
   | { readonly kind: 'idle' }
@@ -59,12 +118,15 @@ export type RecallState =
  * - fill: write the entry into the draft, then move the caret to its end.
  * - restore: write the stashed draft back; caret present exactly when
  *   restoreCaret is on and the stashed caret should be re-applied.
+ * - openSearch: open the reverse-search overlay for the merged history
+ *   (browsing already ended; the event is consumed).
  */
 export type RecallEffect =
   | { readonly kind: 'pass' }
   | { readonly kind: 'hold' }
   | { readonly kind: 'fill'; readonly text: string }
   | { readonly kind: 'restore'; readonly text: string; readonly caret?: number }
+  | { readonly kind: 'openSearch'; readonly history: readonly string[] }
 
 /** Everything one intercepted key press can depend on (resolved by the caller). */
 export interface RecallKeyFrame {
@@ -86,25 +148,6 @@ export interface RecallKeyFrame {
   /** Precomputed edge verdicts for the caret (logical or visual, per config). */
   readonly upEdge: boolean
   readonly downEdge: boolean
-}
-
-/**
- * Extract the recall history from a session's nodes in time order (newest
- * last): user nodes only, text blocks joined per node, blank entries
- * dropped, adjacent duplicates merged. One entry per submitted message.
- * @param nodes - projected conversation nodes in seq order.
- * @returns non-blank user entries, oldest first.
- */
-export function extractHistory(nodes: readonly HistoryNodeView[]): string[] {
-  const entries: string[] = []
-  for (const node of nodes) {
-    if (node.kind !== 'user') continue
-    const text = node.texts.join('\n')
-    if (text.trim() === '') continue
-    if (entries[entries.length - 1] === text) continue
-    entries.push(text)
-  }
-  return entries
 }
 
 const WORD_CHAR = /[\p{L}\p{N}_]/u

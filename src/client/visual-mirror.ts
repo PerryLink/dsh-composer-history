@@ -6,8 +6,11 @@
  * boundaries are recovered by binary-searching rect tops, which produces
  * the {@link VisualLineSpan} list consumed by the pure edge predicates.
  *
- * Untestable under jsdom (no layout engine): the pure span math in
- * visual-edge.ts carries the testable logic; this file is thin glue.
+ * The span math is a pure seam over an injected `topAt(offset)` line-top
+ * probe ({@link nextWrapOffsetBy}/{@link computeSpans}), so the binary search
+ * is unit-testable without a layout engine; the Range glue stays thin. The
+ * measurer also memoizes its last measurement per (composer, draft, width),
+ * because every key press re-measures while browsing.
  */
 
 import type { VisualLineSpan } from './visual-edge.ts'
@@ -39,6 +42,65 @@ const MAX_LINES = 1000
 /** Zero-width placeholder so an empty draft still produces one line box. */
 const EMPTY_TEXT = '\u200b'
 
+/** A probe returning the top of the visual line holding the character AT an offset. */
+export type TopAt = (offset: number) => number
+
+/**
+ * Find the first character index after `start` that opens a new visual
+ * line, by binary-searching the index whose line top exceeds the line top
+ * at `start`. Pure over the injected top probe; the probe is only ever
+ * asked about offsets inside [start, length), so the caller needs no
+ * sentinel semantics.
+ * @param topAt - line-top probe.
+ * @param start - first character of the current visual line.
+ * @param length - draft length.
+ * @returns the wrap offset (first index of the next line), or undefined
+ *   when no later line exists.
+ */
+export function nextWrapOffsetBy(topAt: TopAt, start: number, length: number): number | undefined {
+  if (start >= length) return undefined
+  const base = topAt(start)
+  if (topAt(length - 1) <= base) return undefined
+  let low = start + 1
+  let high = length - 1
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2)
+    if (topAt(mid) > base) high = mid
+    else low = mid + 1
+  }
+  return low
+}
+
+/**
+ * Recover the visual-line span list from a line-top probe: one span per
+ * visual line, each boundary found with {@link nextWrapOffsetBy}. Pure over
+ * the injected probe; the DOM layer supplies it from Range rects.
+ * @param topAt - line-top probe over [0, draftLength].
+ * @param draftLength - character count of the laid-out draft.
+ * @param visualLines - rect count of the full range (the probe must agree).
+ * @returns spans covering the draft, or undefined when the probe cannot
+ *   resolve the layout.
+ */
+export function computeSpans(topAt: TopAt, draftLength: number, visualLines: number): VisualLineSpan[] | undefined {
+  if (visualLines <= 1) return [{ start: 0, end: draftLength }]
+  const spans: VisualLineSpan[] = []
+  let start = 0
+  for (let line = 0; line < visualLines && line < MAX_LINES; line++) {
+    if (line === visualLines - 1) {
+      spans.push({ start, end: draftLength })
+      break
+    }
+    const next = nextWrapOffsetBy(topAt, start, draftLength)
+    if (next === undefined || next <= start) break
+    spans.push({ start, end: next })
+    start = next
+  }
+  if (spans.length === 0 || spans[spans.length - 1]?.end !== draftLength) {
+    spans.push({ start, end: draftLength })
+  }
+  return spans
+}
+
 /**
  * Create the hidden mirror and its span measurer. The mirror is appended to
  * document.body and removed by {@link MirrorMeasurer.dispose}.
@@ -57,8 +119,24 @@ export function createMirrorMeasurer(): MirrorMeasurer | undefined {
   style.setProperty('word-break', 'break-word')
   style.setProperty('overflow-wrap', 'break-word')
   document.body.appendChild(mirror)
+
+  // Measurement memo: browsing re-measures on every key press; identical
+  // (composer, draft, width) input must not re-run the binary search.
+  let cachedComposer: HTMLTextAreaElement | undefined
+  let cachedDraft: string | undefined
+  let cachedWidth = -1
+  let cachedSpans: VisualLineSpan[] | undefined
+
   return {
-    spans: (composer, draft) => measureSpans(mirror, composer, draft),
+    spans: (composer, draft) => {
+      const width = composer.clientWidth
+      if (cachedComposer === composer && cachedDraft === draft && cachedWidth === width) return cachedSpans
+      cachedComposer = composer
+      cachedDraft = draft
+      cachedWidth = width
+      cachedSpans = measureSpans(mirror, composer, draft)
+      return cachedSpans
+    },
     dispose: () => {
       mirror.remove()
     },
@@ -81,63 +159,20 @@ function measureSpans(mirror: HTMLDivElement, composer: HTMLTextAreaElement, dra
   const node = mirror.firstChild
   if (node === null) return undefined
   const range = document.createRange()
+  const textLength = node.textContent?.length ?? 0
+  const topAt: TopAt = (offset) => {
+    // The range [0, offset+1) ends inside the target line; the LAST client
+    // rect is that line's box, whose top identifies the line holding the
+    // character at `offset`. (The union getBoundingClientRect() top is
+    // always the first line's — measuring it would hide every wrap.)
+    range.setStart(node, 0)
+    range.setEnd(node, Math.min(offset + 1, textLength))
+    const rects = range.getClientRects()
+    const last = rects[rects.length - 1]
+    return last === undefined ? 0 : last.top
+  }
   range.setStart(node, 0)
-  range.setEnd(node, node.textContent?.length ?? 0)
-  const rects = range.getClientRects()
-  const visualLines = rects.length
-  if (visualLines <= 1) return [{ start: 0, end: draft.length }]
-  const spans: VisualLineSpan[] = []
-  let start = 0
-  for (let line = 0; line < visualLines && line < MAX_LINES; line++) {
-    if (line === visualLines - 1) {
-      spans.push({ start, end: draft.length })
-      break
-    }
-    const next = nextWrapOffset(range, node, start, draft.length)
-    if (next === undefined || next <= start) break
-    spans.push({ start, end: next })
-    start = next
-  }
-  if (spans.length === 0 || spans[spans.length - 1]?.end !== draft.length) {
-    spans.push({ start, end: draft.length })
-  }
-  return spans
-}
-
-/**
- * The top of the range covering text [0, offset) — i.e. the top of the line
- * holding character offset-1. An offset of 0 yields the empty range at the
- * start of the first line.
- * @param range - reusable range over the mirror text node.
- * @param node - the mirror text node.
- * @param offset - exclusive range end.
- */
-function topAt(range: Range, node: Node, offset: number): number {
-  range.setStart(node, 0)
-  range.setEnd(node, Math.max(offset, 1))
-  return range.getBoundingClientRect().top
-}
-
-/**
- * Find the first character offset after `start` that opens a new visual
- * line, by binary-searching the offset whose line top exceeds the line top
- * at `start`.
- * @param range - reusable range over the mirror text node.
- * @param node - the mirror text node.
- * @param start - first character of the current visual line.
- * @param length - draft length.
- * @returns the wrap offset, or undefined when no transition exists.
- */
-function nextWrapOffset(range: Range, node: Node, start: number, length: number): number | undefined {
-  const base = topAt(range, node, start + 1)
-  let low = start + 1
-  let high = length
-  if (low > high) return undefined
-  if (topAt(range, node, high) <= base) return undefined
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2)
-    if (topAt(range, node, mid) > base) high = mid
-    else low = mid + 1
-  }
-  return low
+  range.setEnd(node, textLength)
+  const visualLines = range.getClientRects().length
+  return computeSpans(topAt, draft.length, visualLines)
 }
