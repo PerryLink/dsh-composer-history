@@ -62,6 +62,8 @@ Then register it in a profile (see [Installation](#installation)) and launch `ds
 
 Build **before** launching — the client-package check refuses to boot against an unbuilt bundle.
 
+> From npm: `pnpm add dsh-composer-history` (or npm/yarn) ships the built bundles — skip steps 1 and 5.
+
 1. Build the plugin (above).
 2. Register the row in `$DSH_HOME/profiles/<your-profile>/cordis.patch.yml`. Use the **bare package name** as the row `name`: the browser graph row id *is* that string, and the client bundle stamps the same id at build time.
 

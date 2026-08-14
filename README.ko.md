@@ -62,6 +62,8 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 
 **반드시 먼저 build 후 실행**하세요 — 클라이언트 패키지 검증이 빌드되지 않은 번들에 대해 부팅을 거부합니다.
 
+> npm에서: `pnpm add dsh-composer-history`(또는 npm/yarn)는 빌드된 번들을 포함합니다 — 1번과 5번 단계는 건너뛰세요.
+
 1. 플러그인을 빌드합니다(위 참조).
 2. `$DSH_HOME/profiles/<your-profile>/cordis.patch.yml` 에 행을 등록합니다. 행의 `name` 으로 **베어 패키지 이름**을 사용하세요: 브라우저 그래프 행 id가 곧 그 문자열이고, 클라이언트 번들도 빌드 시 같은 id를 새깁니다.
 
