@@ -51,6 +51,23 @@ export interface HistoryExtractOptions {
 
 const DEFAULT_EXTRACT: HistoryExtractOptions = { kinds: ['user'], max: 0 }
 
+/** Node kind of the harness's sliding-context checkpoint markers. */
+export const COMPACTION_KIND = 'compaction'
+
+/**
+ * Effective kinds for recall/search: the configured kinds plus the
+ * compaction kind when compaction summaries are admitted. Returns the
+ * configured list untouched when it already contains the compaction kind
+ * (no duplicates) or when summaries are disabled.
+ * @param includeKinds - configured node kinds.
+ * @param includeCompactionSummaries - whether `[compacted]` summary entries join the history.
+ * @returns the kinds one extraction should admit.
+ */
+export function effectiveKinds(includeKinds: readonly string[], includeCompactionSummaries: boolean): readonly string[] {
+  if (!includeCompactionSummaries || includeKinds.includes(COMPACTION_KIND)) return includeKinds
+  return [...includeKinds, COMPACTION_KIND]
+}
+
 /**
  * Extract the recall history from a session's nodes in time order (newest
  * last): admitted node kinds only, text blocks joined per node, blank

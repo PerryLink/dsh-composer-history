@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  DraftRecall, composeHistory, downAtLogicalEdge, extractHistory, hasActiveTriggerToken, upAtLogicalEdge,
+  DraftRecall, composeHistory, downAtLogicalEdge, effectiveKinds, extractHistory, hasActiveTriggerToken, upAtLogicalEdge,
   type HistoryNodeView, type RecallKeyFrame, type RecallOptions,
 } from '../src/client/recall.ts'
 
@@ -425,5 +425,19 @@ describe('gate matrix', () => {
     machine.up(frame())
     expect(machine.escape(frame({ key: 'escape', ctrlKey: true }))).toEqual({ kind: 'pass' })
     expect(machine.stateOf()).toMatchObject({ kind: 'browsing' })
+  })
+})
+
+describe('effectiveKinds', () => {
+  it('returns the configured kinds untouched when summaries are disabled', () => {
+    expect(effectiveKinds(['user'], false)).toEqual(['user'])
+  })
+
+  it('appends the compaction kind when summaries are enabled', () => {
+    expect(effectiveKinds(['user'], true)).toEqual(['user', 'compaction'])
+  })
+
+  it('never duplicates an explicitly configured compaction kind', () => {
+    expect(effectiveKinds(['user', 'compaction'], true)).toEqual(['user', 'compaction'])
   })
 })

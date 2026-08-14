@@ -20,6 +20,9 @@ describe('Config schema', () => {
       enableSearch: false,
       searchKeys: ['Ctrl+R'],
       searchCaseSensitive: false,
+      includeCompactionSummaries: true,
+      showCompactionNotice: true,
+      compactCommandText: '/compact',
     })
   })
 

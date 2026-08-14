@@ -21,6 +21,9 @@ const CONFIG: ComposerHistoryConfig = {
   enableSearch: true,
   searchKeys: ['Ctrl+R'],
   searchCaseSensitive: false,
+  includeCompactionSummaries: true,
+  showCompactionNotice: true,
+  compactCommandText: '/compact',
 }
 
 const user = (text: string): HistoryNodeView => ({ kind: 'user', texts: [text] })
@@ -432,6 +435,51 @@ describe('reverse search', () => {
     fx.composer.setSelectionRange(0, 3)
     fx.dispatchKey('r', { ctrlKey: true })
     expect(fx.searchCalls).toEqual([])
+  })
+})
+
+describe('compaction summaries in history', () => {
+  const compacted = (text: string): HistoryNodeView => ({ kind: 'compaction', texts: [`[compacted] ${text}`] })
+
+  it('admits compaction summary views into recall when enabled', async () => {
+    const fx = fixture()
+    fx.historyNodes.push(compacted('earlier work'))
+    fx.composer.setSelectionRange(0, 0)
+    fx.dispatchKey('ArrowUp') // newest entry is the checkpoint summary
+    expect(fx.setDraftCalls).toEqual(['[compacted] earlier work'])
+    expect(fx.handle.state()).toMatchObject({ kind: 'browsing', index: 2 })
+    await fx.flushFrames()
+    expect(fx.composer.value).toBe('[compacted] earlier work')
+  })
+
+  it('skips compaction views when includeCompactionSummaries is off', () => {
+    const fx = fixture({}, { ...CONFIG, includeCompactionSummaries: false })
+    fx.historyNodes.push(compacted('earlier work'))
+    fx.composer.setSelectionRange(0, 0)
+    fx.dispatchKey('ArrowUp')
+    expect(fx.setDraftCalls).toEqual(['two'])
+  })
+
+  it('includes summaries in the reverse-search history', () => {
+    const fx = fixture()
+    fx.historyNodes.push(compacted('earlier work'))
+    fx.composer.setSelectionRange(0, 0)
+    fx.dispatchKey('r', { ctrlKey: true })
+    expect(fx.searchCalls).toEqual([['one', 'two', '[compacted] earlier work']])
+  })
+
+  it('walks out of a recalled summary like any other entry', () => {
+    const fx = fixture()
+    fx.historyNodes.push(compacted('earlier work'))
+    fx.composer.setSelectionRange(0, 0)
+    fx.dispatchKey('ArrowUp') // summary
+    fx.dispatchKey('ArrowUp') // 'two'
+    fx.dispatchKey('ArrowDown') // summary again
+    expect(fx.setDraftCalls).toEqual([
+      '[compacted] earlier work',
+      'two',
+      '[compacted] earlier work',
+    ])
   })
 })
 

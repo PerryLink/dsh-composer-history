@@ -10,13 +10,13 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.2.0-66ccff"></a>
+  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.3.0-66ccff"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
-  <img alt="tests" src="https://img.shields.io/badge/tests-168%2F168-brightgreen">
+  <img alt="tests" src="https://img.shields.io/badge/tests-200%2F200-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
 </p>
 
-Нажмите **↑**, как в терминале, — но недописанный промпт останется в безопасности. `dsh-composer-history` переносит модель клавиш-стрелок Claude Code «сначала край, потом история» в веб-композер dsh и идёт дальше: когда вы возвращаетесь к самой свежей записи (или жмёте `Esc`), сохранённый черновик и позиция курсора **восстанавливаются точно**, а не очищаются. Вдобавок: отправленные сообщения **сохраняются локально в браузере**, так что история переживает перезагрузку и распространяется между сессиями, `Ctrl+R` открывает **обратный поиск**, а каждая клавиша и каждый параметр настраивается.
+Нажмите **↑**, как в терминале, — но недописанный промпт останется в безопасности. `dsh-composer-history` переносит модель клавиш-стрелок Claude Code «сначала край, потом история» в веб-композер dsh и идёт дальше: когда вы возвращаетесь к самой свежей записи (или жмёте `Esc`), сохранённый черновик и позиция курсора **восстанавливаются точно**, а не очищаются. Вдобавок: отправленные сообщения **сохраняются локально в браузере**, так что история переживает перезагрузку и распространяется между сессиями, `Ctrl+R` открывает **обратный поиск**, а каждая клавиша и каждый параметр настраивается. А когда **скользящий контекст** harness сжимает длинную беседу (тот же рабочий процесс автосжатия, что у Claude Code и Codex), плагин сохраняет эту историю доступной: сводки контрольных точек входят в вызов и поиск, а каждое сжатие сопровождается кратким уведомлением с кнопкой «вставить `/compact`» в один клик.
 
 > Чистое UI-поведение: без событий сессии, без правок agent-loop, без запросов к модели. Вызванный текст попадает только в обычный черновик композера и достигает модели, лишь когда *вы* нажмёте Enter. Сохранённая история — это локальный для браузера текст (см. [Приватность](#приватность)).
 
@@ -30,6 +30,7 @@
 - 🗂️ **Область воркспейса** — `historyScope: 'workspace'` ставит сообщения других перечисленных сессий перед сообщениями текущей сессии.
 - 🔍 **Обратный поиск** — `Ctrl+R` (настраивается) открывает панель запроса под композером: ввод фильтрует, ↑/↓ выбирают, Enter заполняет, Esc отменяет.
 - 🎛️ **Каждая клавиша настраивается** — `upKey`/`downKey`/`escapeKey`/`searchKeys` живут в схеме Config, а не в коде.
+- 🧭 **Осведомлён о скользящем контексте** — при автосжатии harness (как в Claude Code / Codex) сводки контрольных точек входят в вызов ↑ и поиск `Ctrl+R` как записи `[compacted] …`, а каждое сжатие сопровождается кратким уведомлением (с кнопкой «вставить `/compact`»). См. [Скользящий контекст](#-скользящий-контекст).
 - ⚙️ **Интеграция с настройками** — хостовая половина регистрирует namespace настроек `composer-history` (config из cordis.yml становится `base` композиции); пользовательские переопределения из документа настроек доходят до браузера. Без сервиса настроек плагин продолжает работать ровно как скомпонован.
 - 🚦 **Полное гейтирование** — перехват только в фазе ввода `plain`; уступает slash-меню, командным попапам, IME-композиции, выделению текста и комбинациям alt/meta/shift. Пути пропуска не имеют побочных эффектов.
 - 📐 **Два режима краёв** — `logical` (по переносам строк, по умолчанию) или `visual` (скрытый mirror-div измеряет реальные перенесённые строки).
@@ -51,7 +52,7 @@ $ press Ctrl+R → type a fragment → ↑/↓ → Enter → the match fills the
 ```sh
 cd Project/Plugins/dsh-composer-history
 pnpm install
-pnpm run typecheck && pnpm run build && pnpm run test   # all green: 168/168
+pnpm run typecheck && pnpm run build && pnpm run test   # all green: 200/200
 pnpm run test:coverage                                  # per-module coverage report
 pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack surface
 ```
@@ -89,6 +90,9 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
            enableSearch: true
            searchKeys: [Ctrl+R]
            searchCaseSensitive: false
+           includeCompactionSummaries: true   # summaries join recall/search
+           showCompactionNotice: true         # transient notice on compaction
+           compactCommandText: /compact       # filled by "Compact now"; '' hides it
    ```
 
    Блок `config:` валидируется хост-Loader той же схемой и (когда сервис настроек присутствует) попадает в браузер как слой `base` настроек — так что эти значения действительно доходят до браузерной половины, а не только до валидатора.
@@ -142,6 +146,9 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `enableSearch` | `boolean` | `false` | включает оверлей обратного поиска `Ctrl+R` |
 | `searchKeys` | `string[]` | `['Ctrl+R']` | спецификации аккордов, открывающих поиск (модификаторы `Ctrl`/`Alt`/`Meta`/`Shift` + имя клавиши); некорректная спецификация громко роняет браузерный fiber |
 | `searchCaseSensitive` | `boolean` | `false` | различает ли поиск регистр букв |
+| `includeCompactionSummaries` | `boolean` | `true` | включать сводки контрольных точек `[compacted] …` в вызов и поиск |
+| `showCompactionNotice` | `boolean` | `true` | показывать краткое уведомление при появлении контрольной точки сжатия |
+| `compactCommandText` | `string` | `'/compact'` | slash-команда, которую вставляет в композер действие «Сжать сейчас»; `''` скрывает действие |
 
 ## 🎹 Раскладка клавиш
 
@@ -168,6 +175,19 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 - **Выбор**: Enter заполняет черновик и ставит курсор в конец — тот же единственный путь записи `setDraft`, что и при обычном вызове. Вызванный текст достигает модели, только если вы после этого нажмёте Enter.
 - **Отмена**: Esc или нажатие вне панели; черновик не тронут.
 
+## 🧭 Скользящий контекст
+
+Ядро harness даёт каждой сессии dsh скользящее окно контекста — тот же рабочий процесс, что у Claude Code и Codex: когда беседа приближается к лимиту контекста модели (или провайдер сообщает о переполнении), harness **автосжимает** её — более старые ходы сворачиваются в сводку за маркером-контрольной точкой `compaction`, который остаётся в транскрипте, модель хранит только сводку плюс недавний хвост, и сессия продолжается. `/compact` запускает то же сжатие по требованию, а маркер отображается как раскрываемая строка «Контекст сжат».
+
+`dsh-composer-history` подключает композер к этому рабочему процессу, чтобы сдвиг окна никогда не стоил вам истории ввода:
+
+- **Вызов переживает сжатие** — затмеваемые ходы остаются в снимке сессии, поэтому ↑ по-прежнему проходит каждое сообщение, отправленное до и после контрольной точки.
+- **Сводки входят в историю** — текст сводки каждой контрольной точки попадает в вызов ↑ и поиск `Ctrl+R` как запись `[compacted] …` (переключатель: `includeCompactionSummaries`), так что контекст, который модель больше не видит дословно, остаётся в одном нажатии.
+- **Уведомление о сжатии** — когда контрольная точка появляется при открытой странице, краткий снэкбар сообщает об этом (момент «Автосжатие беседы…» из Claude Code) со сниппетом сводки и действием **«вставить `/compact`»** в один клик (`showCompactionNotice`, `compactCommandText`); текст попадает только в обычный черновик, и отправляете его только вы нажатием Enter.
+- **Счётчик поиска** — в панели `Ctrl+R` появилась живая строка состояния `N entries` / `N matches`, а длинные записи обрезаются до двух строк.
+
+> Само сжатие (пороги, модель сводки, `/compact`) принадлежит compaction-плагинам ядра harness — этот плагин лишь наблюдает маркеры контрольных точек, которые клиентский снимок уже отдаёт, поэтому никаких правок agent-loop или запросов к модели не требуется.
+
 ## 🔒 Приватность
 
 `persistHistory: true` (по умолчанию) записывает отправленные сообщения в `localStorage` этого браузера под ключом `dsh.composer-history.v1`, ограниченно `maxPersisted`, никуда не загружается и читается только страницами того же origin. Отключите через `persistHistory: false` — тогда вызов использует только живую проекцию сессии (и область воркспейса), как в поведении v1. Повреждённые или чужеродные данные молча сбрасываются.
@@ -187,11 +207,14 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
    - `Ctrl+R` открывает панель поиска; ввод фильтрует; ↑/↓ + Enter заполняют; Esc оставляет черновик нетронутым.
    - После перезагрузки страницы ↑ вызывает сообщения, отправленные до перезагрузки (при включённом `persistHistory`).
    - При `historyScope: 'workspace'` записи из других перечисленных сессий идут перед записями текущей сессии.
+   - После появления сжатия (авто или `/compact`) ↑ доходит до записи-сводки `[compacted] …`, а `Ctrl+R` находит её по тексту.
+   - Уведомление о сжатии появляется внизу, исчезает само, а его кнопка вставляет `/compact` в композер.
 4. Гейты: `pnpm run typecheck`, `pnpm run build`, `pnpm run test` — всё зелёное, включая смоук-тест, выполняющий **собранный бандл** в jsdom через настоящее рукопожатие `__ModuleLoader__`; плюс `pnpm run test:coverage`, `pnpm run check:readmes`, `pnpm run verify:pack`.
 
 ## 🔬 Базовый уровень совместимости (замерено на этой машине, 2026-08-14)
 
 - **Типы**: devDependencies фиксируют опубликованные клиентские пакеты **0.1.0-rc.6** из npm (`dsh-client-runtime`, `dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`, `dsh-settings`, `dsh-api-remotes`); `typecheck` больше не зависит от локального чекаута. Runtime-смоук выполняется против чекаута, чьи клиентские пакеты — **0.1.0-rc.5**; `@deepseek-ai/cordis` **4.0.1**; `@deepseek-ai/schemastery` **3.18.1**.
+- **В rc.6 маркеры сжатия видны клиенту**: `ConversationNode` включает `CompactionSummaryNode` (`kind: 'compaction'`, `summary`/`shadowedItemCount`/`shadowedTokenCount`), а транскрипт над каждым маркером остаётся нетронутым — затмеваемые ходы не удаляются из снимка. Функции скользящего контекста читают только эту опубликованную поверхность.
 - Фазы `InputState` (прочитано из `packages/client/ui-conversation/src/client/input/contract.ts`): `'plain' | 'adjudicating' | 'claimed' | 'submitting'`, плюс `draft`/`draftRev`. Единственный публичный путь записи черновика — `ctx.conversation.input.for(actx).setDraft(text)`; учитывающий `editRange` интерфейс `ComposerKeyboard` приватный для InputBar (см. `docs/upstream-proposals.md` C1).
 - **Метаданные клиентских плагинов — вложенное поле `dsh.client`** (`resolveMeta` в `packages/client/modules` читает `pkg.dsh.client`): неверное расположение **молча** выбрасывает пакет из графа загрузки — без ошибок.
 - **Вендоренный cordis переименован в `@deepseek-ai/cordis`**: импорт только type-only; собранный `lib/client.js` не имеет runtime-импортов cordis (вообще нет вызовов `require(`).
@@ -212,6 +235,8 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 - Ссылочные чипы (плейсхолдеры U+FFFC) переносятся вместе с вызываемым/восстанавливаемым текстом черновика.
 - `historyScope: 'workspace'` читает живые сборки других перечисленных сессий; сессии, чья сборка ещё не материализовалась, пока ничего не дают.
 - Оверлей поиска — это простой DOM (без зависимости от React); он рендерит все совпадения до лимита `maxHistory`.
+- **Осведомлённость о сжатии — наблюдательная**: контрольные точки, появившиеся до установки плагина (или до переключения сессии), уведомлений не вызывают; только маркеры, появившиеся при открытой странице. Контрольная точка, чьё событие сводки оказалось за пределами загруженного окна, не даёт запись `[compacted] …` (`summary: null`).
+- Действие «Сжать сейчас» в уведомлении лишь *вставляет* настроенный текст команды в черновик — отправка (и само принятие `/compact`) остаётся за вашим Enter.
 
 ## 🗺️ Апстрим-предложения
 
@@ -221,7 +246,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 
 Проект — часть экосистемы плагинов DeepSeek Harness. Рекомендуемые темы GitHub (задаются в настройках репозитория):
 
-`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `typescript`
+`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 
 Полезные ссылки: [github.com/topics/dsh-plugin](https://github.com/topics/dsh-plugin) · [github.com/topics/deepseek-harness](https://github.com/topics/deepseek-harness) · [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 

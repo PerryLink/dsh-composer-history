@@ -37,6 +37,12 @@ export interface ComposerHistoryConfig extends RecallOptions {
   readonly searchKeys: string[]
   /** Whether search matching distinguishes letter case. */
   readonly searchCaseSensitive: boolean
+  /** Admit `[compacted]` checkpoint summaries into recall and search. */
+  readonly includeCompactionSummaries: boolean
+  /** Show a transient notice when a compaction checkpoint lands. */
+  readonly showCompactionNotice: boolean
+  /** Slash command the notice's "Compact now" action fills; '' hides the action. */
+  readonly compactCommandText: string
 }
 
 /** Defaults are the plugin behavior baseline; every key is changeable from cordis.yml and the settings document. */
@@ -57,6 +63,9 @@ export const Config: z<ComposerHistoryConfig> = z.object({
   enableSearch: z.boolean().default(false),
   searchKeys: z.array(z.string()).default(['Ctrl+R']),
   searchCaseSensitive: z.boolean().default(false),
+  includeCompactionSummaries: z.boolean().default(true),
+  showCompactionNotice: z.boolean().default(true),
+  compactCommandText: z.string().default('/compact'),
 })
 
 /**

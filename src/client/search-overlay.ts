@@ -44,9 +44,10 @@ const STYLE_TEXT = [
   '}',
   `.${ROOT_CLASS} input:focus{border-color:#58a6ff;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}list{overflow-y:auto;display:flex;flex-direction:column;gap:2px;}`,
+  `.${ROOT_CLASS} .${ROOT_CLASS}status{padding:0 8px;color:#8b949e;font-size:11px;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}row{`,
   'padding:5px 8px;border-radius:6px;cursor:pointer;white-space:pre-wrap;',
-  'overflow-wrap:anywhere;color:#c9d1d9;',
+  'overflow-wrap:anywhere;color:#c9d1d9;max-height:36px;overflow:hidden;',
   '}',
   `.${ROOT_CLASS} .${ROOT_CLASS}row[aria-selected="true"]{background:#316dca;color:#ffffff;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}empty{padding:5px 8px;color:#8b949e;font-style:italic;}`,
@@ -74,10 +75,12 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
   const input = document.createElement('input')
   input.setAttribute('role', 'combobox')
   input.setAttribute('aria-label', 'Search query')
+  const status = document.createElement('div')
+  status.className = `${ROOT_CLASS}status`
   const list = document.createElement('div')
   list.className = `${ROOT_CLASS}list`
   list.setAttribute('role', 'listbox')
-  root.append(input, list)
+  root.append(input, status, list)
 
   let open = false
   let entries: readonly string[] = []
@@ -94,6 +97,9 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
 
   const render = (): void => {
     list.textContent = ''
+    status.textContent = matches.length > 0
+      ? `${matches.length} ${input.value === '' ? 'entries' : 'matches'}`
+      : ''
     if (matches.length === 0) {
       const empty = document.createElement('div')
       empty.className = `${ROOT_CLASS}empty`

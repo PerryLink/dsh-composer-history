@@ -15,7 +15,7 @@
  */
 
 import {
-  DraftRecall, composeHistory, downAtLogicalEdge, extractHistory, upAtLogicalEdge,
+  DraftRecall, composeHistory, downAtLogicalEdge, effectiveKinds, extractHistory, upAtLogicalEdge,
   type HistoryNodeView, type RecallEffect, type RecallState,
 } from './recall.ts'
 import {
@@ -133,7 +133,8 @@ export function createComposerHistory(host: ComposerHistoryHost, config: Compose
 
   /** Fresh merged history for this key press: supplemental entries, then the current session's. */
   const mergedHistory = (composer: HTMLTextAreaElement): string[] => {
-    const current = extractHistory(host.history(composer), { kinds: config.includeKinds, max: config.maxHistory })
+    const kinds = effectiveKinds(config.includeKinds, config.includeCompactionSummaries)
+    const current = extractHistory(host.history(composer), { kinds, max: config.maxHistory })
     const merged = composeHistory(host.supplementalHistory?.(composer) ?? [], current)
     return config.maxHistory > 0 && merged.length > config.maxHistory ? merged.slice(-config.maxHistory) : merged
   }

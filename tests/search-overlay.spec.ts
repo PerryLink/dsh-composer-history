@@ -69,6 +69,13 @@ describe('open and filter', () => {
     expect(fx.rows()).toHaveLength(0)
     expect(fx.root.textContent).toContain('No matches')
   })
+
+  it('shows an entry count for an empty query and a match count while filtering', () => {
+    const fx = fixture()
+    expect(fx.root.textContent).toContain('3 entries')
+    fx.query('prompt')
+    expect(fx.root.textContent).toContain('2 matches')
+  })
 })
 
 describe('keyboard and pointer', () => {

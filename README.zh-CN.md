@@ -10,13 +10,13 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.2.0-66ccff"></a>
+  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.3.0-66ccff"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
-  <img alt="tests" src="https://img.shields.io/badge/tests-168%2F168-brightgreen">
+  <img alt="tests" src="https://img.shields.io/badge/tests-200%2F200-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
 </p>
 
-像在终端里一样按 **↑** —— 但你打到一半的提示词不会被丢。`dsh-composer-history` 把 Claude Code 的"边缘优先"方向键模型带进 dsh Web 作曲器，并且更进一步：当你走回最新一条（或按 `Esc`）时，被暂存的草稿和光标位置会**原样还原**，而不是被清空。在此之上：已发送的消息会**持久化在浏览器本地**，历史跨刷新、跨会话保留；`Ctrl+R` 打开**反向搜索**；所有按键与可调项都可配置。
+像在终端里一样按 **↑** —— 但你打到一半的提示词不会被丢。`dsh-composer-history` 把 Claude Code 的"边缘优先"方向键模型带进 dsh Web 作曲器，并且更进一步：当你走回最新一条（或按 `Esc`）时，被暂存的草稿和光标位置会**原样还原**，而不是被清空。在此之上：已发送的消息会**持久化在浏览器本地**，历史跨刷新、跨会话保留；`Ctrl+R` 打开**反向搜索**；所有按键与可调项都可配置。当 harness 的**滑动上下文**压缩长会话时（与 Claude Code / Codex 同款的自动压缩工作流），插件让这些历史继续可用：检查点摘要加入召回与搜索，并在每次压缩时弹出带有"一键填入 `/compact`"的短暂通知。
 
 > 纯 UI 行为：不产生会话事件、不改 agent-loop、不发模型请求。召回的文本只进入普通作曲器草稿，只有你按下 Enter 才会到达模型。持久化历史是浏览器本地文本（见[隐私](#隐私)）。
 
@@ -30,6 +30,7 @@
 - 🗂️ **工作区范围** —— `historyScope: 'workspace'` 把其他已列表会话的消息排在当前会话之前。
 - 🔍 **反向搜索** —— `Ctrl+R`（可配置）在作曲器下方打开查询面板：输入过滤、↑/↓ 选择、Enter 填充、Esc 取消。
 - 🎛️ **每个按键都可配置** —— `upKey`/`downKey`/`escapeKey`/`searchKeys` 都在 Config schema 里，不硬编码。
+- 🧭 **感知滑动上下文** —— harness 自动压缩（Claude Code / Codex 同款）时，检查点摘要以 `[compacted] …` 条目加入 ↑ 召回与 `Ctrl+R` 搜索；每次压缩弹出短暂通知（带一键"填入 `/compact`"按钮）。见[滑动上下文](#-滑动上下文)。
 - ⚙️ **Settings 集成** —— 宿主半边注册 `composer-history` settings 命名空间（cordis.yml 配置成为组合 `base` 层）；settings 文档中的用户覆盖会到达浏览器。没有 settings 服务时插件照常工作。
 - 🚦 **完整门控** —— 仅在 `plain` 输入阶段拦截；对斜杠菜单、命令弹窗、IME 组合、文本选区、alt/meta/shift 组合键一律放行。放行路径零副作用。
 - 📐 **两种边缘模式** —— `logical`（按换行符，默认）或 `visual`（隐藏 mirror div 测量真实折行）。
@@ -51,7 +52,7 @@ $ 按 Ctrl+R → 输入片段 → ↑/↓ → Enter → 匹配项填入作曲器
 ```sh
 cd Project/Plugins/dsh-composer-history
 pnpm install
-pnpm run typecheck && pnpm run build && pnpm run test   # 全绿：168/168
+pnpm run typecheck && pnpm run build && pnpm run test   # 全绿：200/200
 pnpm run test:coverage                                  # 分模块覆盖率报告
 pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打包面
 ```
@@ -89,6 +90,9 @@ pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打�
            enableSearch: true
            searchKeys: [Ctrl+R]
            searchCaseSensitive: false
+           includeCompactionSummaries: true   # 摘要加入召回/搜索
+           showCompactionNotice: true         # 压缩时显示短暂通知
+           compactCommandText: /compact       # "立即压缩"填入的文本；'' 隐藏按钮
    ```
 
    `config:` 块由宿主 Loader 用同一 schema 校验；当 settings 服务存在时，还会作为 settings 的 `base` 层流入浏览器 —— 所以这些值真正到达浏览器半边，而不只是被校验一遍。
@@ -142,6 +146,9 @@ pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打�
 | `enableSearch` | `boolean` | `false` | 启用 `Ctrl+R` 反向搜索覆盖层 |
 | `searchKeys` | `string[]` | `['Ctrl+R']` | 打开搜索的组合键规格（修饰键 `Ctrl`/`Alt`/`Meta`/`Shift` + 键名）；非法规格会使浏览器 fiber 响亮失败 |
 | `searchCaseSensitive` | `boolean` | `false` | 搜索匹配是否区分字母大小写 |
+| `includeCompactionSummaries` | `boolean` | `true` | 把 `[compacted] …` 检查点摘要纳入召回与搜索 |
+| `showCompactionNotice` | `boolean` | `true` | 检查点落地时显示短暂通知 |
+| `compactCommandText` | `string` | `'/compact'` | 通知中"立即压缩"按钮填入作曲器的斜杠命令；`''` 隐藏该按钮 |
 
 ## 🎹 按键绑定
 
@@ -168,6 +175,19 @@ pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打�
 - **选中**：Enter 填充草稿并把光标移到末尾——与普通召回同一条 `setDraft` 写路径。召回文本只有在你随后按 Enter 时才会到达模型。
 - **取消**：Esc 或点击面板外；草稿不被触碰。
 
+## 🧭 滑动上下文
+
+harness 核心给每个 dsh 会话提供滑动上下文窗口 —— 与 Claude Code 和 Codex 同款的工作流：当会话接近模型的上下文上限（或提供方回报溢出）时，harness 会**自动压缩** —— 更早的轮次被总结为留在会话记录中的 `compaction` 检查点标记，模型只保留摘要加上最近的尾部，会话继续；`/compact` 可随时手动触发同样的压缩，标记在记录中渲染为可展开的"上下文已压缩"行。
+
+`dsh-composer-history` 把作曲器接入这个工作流，让上下文窗口滑动时你的输入历史一条不丢：
+
+- **召回跨压缩留存** —— 被遮蔽的轮次仍留在会话快照里，↑ 依旧能走过检查点前后你发送过的每一条消息。
+- **摘要加入历史** —— 每个检查点的摘要文本以 `[compacted] …` 条目进入 ↑ 召回和 `Ctrl+R` 搜索（开关：`includeCompactionSummaries`），模型不再逐字看到的上下文仍然一键可达。
+- **压缩通知** —— 页面打开期间有检查点落地时，底部弹出短暂通知（Claude Code 的"自动压缩会话…"时刻），附摘要片段和一键**填入 `/compact`** 按钮（`showCompactionNotice`、`compactCommandText`）；填入只进普通草稿，只有你按 Enter 才发送。
+- **搜索计数** —— `Ctrl+R` 面板新增实时的 `N entries` / `N matches` 状态行，长条目限两行显示。
+
+> 压缩本身（阈值、摘要模型、`/compact`）由 harness 核心的 compaction 插件负责 —— 本插件只观察客户端快照已经暴露的检查点标记，因此不需要任何 agent-loop 或模型请求改动。
+
 ## 🔒 隐私
 
 `persistHistory: true`（默认）把已发送消息写入本浏览器 `localStorage` 的 `dsh.composer-history.v1` 键，受 `maxPersisted` 限制，绝不上传，仅同源页面可读。用 `persistHistory: false` 关闭——召回随即只使用实时会话投影（和工作区范围），与 v1 行为一致。损坏或外来的载荷会被静默重置。
@@ -187,11 +207,14 @@ pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打�
    - `Ctrl+R` 打开搜索面板；输入即过滤；↑/↓ + Enter 填充；Esc 不动草稿。
    - 刷新页面后，↑ 能召回刷新前发送的消息（`persistHistory` 开启时）。
    - `historyScope: 'workspace'` 时，其他已列表会话的条目排在当前会话之前。
+   - 一次压缩落地后（自动或 `/compact`），↑ 能走入 `[compacted] …` 摘要条目；`Ctrl+R` 能按摘要文本搜到它。
+   - 压缩通知出现在底部、到时自动消失，其按钮把 `/compact` 填入作曲器。
 4. 门禁：`pnpm run typecheck`、`pnpm run build`、`pnpm run test` —— 全绿，包括在 jsdom 中经真实 `__ModuleLoader__` handshake 执行**构建产物**的 smoke 测试；另有 `pnpm run test:coverage`、`pnpm run check:readmes`、`pnpm run verify:pack`。
 
 ## 🔬 兼容性基线（2026-08-14 于本机实测）
 
 - **类型**：devDependencies 固定 npm 上已发布的客户端包 **0.1.0-rc.6**（`dsh-client-runtime`、`dsh-client-ui-conversation`、`dsh-client-ui-input-trigger`、`dsh-client-ui-settings`、`dsh-settings`、`dsh-api-remotes`）；`typecheck` 不再依赖本地 checkout。运行时 smoke 针对客户端包为 **0.1.0-rc.5** 的 checkout；`@deepseek-ai/cordis` **4.0.1**；`@deepseek-ai/schemastery` **3.18.1**。
+- **rc.6 中压缩标记对客户端可见**：`ConversationNode` 包含 `CompactionSummaryNode`（`kind: 'compaction'`，带 `summary`/`shadowedItemCount`/`shadowedTokenCount`），且每个标记之上的记录保持完整 —— 被遮蔽的轮次不会从快照移除。滑动上下文功能只读取这个已发布的面。
 - `InputState` 阶段（读自 `packages/client/ui-conversation/src/client/input/contract.ts`）：`'plain' | 'adjudicating' | 'claimed' | 'submitting'`，外加 `draft`/`draftRev`。唯一的公开草稿写路径是 `ctx.conversation.input.for(actx).setDraft(text)`；带 `editRange` 的 `ComposerKeyboard` 面是 InputBar 私有（见 `docs/upstream-proposals.md` C1）。
 - **客户端插件元数据是嵌套的 `dsh.client` 字段**（`packages/client/modules` 的 `resolveMeta` 读 `pkg.dsh.client`）：放错位置会静默丢掉启动图里的包——没有报错。
 - **vendored cordis 被重命名为 `@deepseek-ai/cordis`**：只做类型导入；构建出的 `lib/client.js` 运行时零 cordis 导入（完全没有 `require(` 调用）。
@@ -212,6 +235,8 @@ pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打�
 - 引用 chip（U+FFFC 占位符）随召回/还原的草稿文本一起保留。
 - `historyScope: 'workspace'` 读取其他已列表会话的实时装配；装配尚未物化的会话暂时没有贡献。
 - 搜索覆盖层是纯 DOM（无 React 依赖）；最多渲染 `maxHistory` 条匹配。
+- **压缩感知是观察性的**：插件安装前（或会话切换前）已落地的检查点绝不触发通知；只有页面打开期间落地的标记才会。摘要事件落在已加载窗口之外的检查点不产生 `[compacted] …` 条目（`summary: null`）。
+- 通知的"立即压缩"按钮只把配置的命令文本*填入*草稿 —— 发送（以及 `/compact` 自身的受理）仍由你的 Enter 决定。
 
 ## 🗺️ 上游提案
 
@@ -221,7 +246,7 @@ pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打�
 
 本项目属于 DeepSeek Harness 插件生态。建议的 GitHub 话题（在仓库设置中设置）：
 
-`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `typescript`
+`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 
 相关链接：[github.com/topics/dsh-plugin](https://github.com/topics/dsh-plugin) · [github.com/topics/deepseek-harness](https://github.com/topics/deepseek-harness) · [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 

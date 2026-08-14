@@ -1,7 +1,7 @@
 {
   "name": "dsh-composer-history",
-  "version": "0.2.0",
-  "description": "Terminal-style input history for the DeepSeek Harness web composer: edge-first arrows with exact draft/caret restore, browser-local persisted history, Ctrl+R reverse search, workspace-scoped recall, and fully configurable keys — layered on the ordinary composer draft only.",
+  "version": "0.3.0",
+  "description": "Terminal-style input history for the DeepSeek Harness web composer: edge-first arrows with exact draft/caret restore, browser-local persisted history, Ctrl+R reverse search, workspace-scoped recall, and fully configurable keys — plus sliding-context awareness (compaction summaries join recall/search, a compaction notice with one-click /compact fill) layered on the ordinary composer draft only.",
   "packageManager": "pnpm@11.7.0",
   "repository": {
     "type": "git",
@@ -56,6 +56,9 @@
     "input-history",
     "keyboard-shortcuts",
     "terminal",
+    "compaction",
+    "sliding-context",
+    "context-window",
     "typescript",
     "ui"
   ],
@@ -88,7 +91,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "check:readmes": "node scripts/check-readmes.mjs",
-    "verify:pack": "node scripts/verify-pack.mjs"
+    "verify:pack": "node scripts/verify-pack.mjs",
+    "prepublishOnly": "pnpm run check:readmes && pnpm run build && pnpm run test"
   },
   "license": "Apache-2.0"
 }

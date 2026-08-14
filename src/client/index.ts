@@ -13,7 +13,10 @@
  * any user overrides), and the schema defaults. The scope arrives
  * asynchronously; the wiring reinstalls on every committed change.
  * Sent messages are appended to a bounded browser-local history store so
- * recall survives reloads and reaches across sessions.
+ * recall survives reloads and reaches across sessions. Compaction
+ * checkpoints (the harness's sliding-context summaries) join recall and
+ * search as prefixed entries, and a transient notice announces each
+ * checkpoint that lands while the page is open.
  */
 import type { ClientContext, ConversationNode } from '@deepseek-ai/dsh-client-runtime/client'
 // Type-only: activates the ctx.conversation Context merge (IConversation face).
@@ -25,9 +28,12 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import { resolveConfig, type ComposerHistoryConfig } from './config.ts'
 import { createComposerHistory, type ComposerHistoryHandle, type ComposerHistoryHost } from './interceptor.ts'
 import { createMirrorMeasurer, type MirrorMeasurer } from './visual-mirror.ts'
-import { hasActiveTriggerToken, type HistoryNodeView } from './recall.ts'
+import { hasActiveTriggerToken, effectiveKinds } from './recall.ts'
 import { HistoryExtractor } from './history-extract.ts'
+import { viewOfNodes } from './node-views.ts'
 import { createSearchOverlay, type SearchOverlay } from './search-overlay.ts'
+import { createCompactionNotice, type CompactionNotice } from './compaction-notice.ts'
+import { compactionAfter, latestCompactionSeq } from './compaction-watch.ts'
 import { STORE_KEY, appendEntries, loadEntries, safeStorage } from './history-store.ts'
 
 export { Config, resolveConfig } from './config.ts'
@@ -110,33 +116,23 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   }
 
   // Extraction memo over the immutable snapshot arrays (B3): the persistence
-  // path extracts unlimited, the recall paths use the history cap — both
-  // shapes are cached per nodes reference inside the extractor.
-  const toViews = (nodes: readonly ConversationNode[]): HistoryNodeView[] => {
-    const views: HistoryNodeView[] = []
-    for (const node of nodes) {
-      switch (node.kind) {
-        // Text-bearing user-facing kinds; other kinds carry no composer text.
-        case 'user':
-        case 'steering': {
-          const texts: string[] = []
-          for (const block of node.content) {
-            if (block.type === 'text') texts.push(block.text)
-          }
-          views.push({ kind: node.kind, texts })
-          break
-        }
-        default:
-          break
-      }
-    }
-    return views
-  }
-  const extractor = new HistoryExtractor(options.includeKinds, options.maxHistory, toViews)
-  const extract = (nodes: readonly ConversationNode[], max: number): string[] => extractor.extract(nodes, max)
+  // path extracts the configured kinds only (model-written summaries never
+  // pollute the sent-message store), the recall paths also admit compaction
+  // checkpoint summaries when enabled — both shapes are cached per nodes
+  // reference inside each extractor.
+  const toViews = viewOfNodes
+  const recallExtractor = new HistoryExtractor(
+    effectiveKinds(options.includeKinds, options.includeCompactionSummaries),
+    options.maxHistory,
+    toViews,
+  )
+  const persistExtractor = new HistoryExtractor(options.includeKinds, 0, toViews)
+  const extract = (nodes: readonly ConversationNode[], max: number): string[] => recallExtractor.extract(nodes, max)
+  const extractPersist = (nodes: readonly ConversationNode[]): string[] => persistExtractor.extract(nodes, 0)
 
   let handle: ComposerHistoryHandle | undefined
   let searchAnchor: HTMLTextAreaElement | undefined
+  let lastComposer: HTMLTextAreaElement | undefined
   const overlay: SearchOverlay | undefined = createSearchOverlay({
     onPick: (text) => {
       const composer = searchAnchor
@@ -146,6 +142,17 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     },
     onCancel: () => {
       searchAnchor?.focus()
+    },
+  })
+  const notice: CompactionNotice | undefined = createCompactionNotice({
+    compactCommandText: options.compactCommandText,
+    onCompactNow: () => {
+      // Fill the compact command into the composer the user last used; the
+      // plugin never sends — Enter stays the user's.
+      const composer = lastComposer
+      if (composer === undefined || handle === undefined) return
+      composer.focus()
+      handle.fill(composer, options.compactCommandText)
     },
   })
 
@@ -224,8 +231,16 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
 
   handle = createComposerHistory(hostWithSpans, options)
 
-  const windowKeydown = (event: KeyboardEvent): void => { handle?.keydown(event) }
-  const windowInput = (event: Event): void => { handle?.input(event) }
+  const windowKeydown = (event: KeyboardEvent): void => {
+    const composer = host.composerOf(event.target)
+    if (composer !== undefined) lastComposer = composer
+    handle?.keydown(event)
+  }
+  const windowInput = (event: Event): void => {
+    const composer = host.composerOf(event.target)
+    if (composer !== undefined) lastComposer = composer
+    handle?.input(event)
+  }
   window.addEventListener('keydown', windowKeydown, true)
   window.addEventListener('input', windowInput, true)
 
@@ -242,8 +257,22 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     const seq = typeof last?.seq === 'number' ? last.seq : -1
     if (nodes.length === lastSync.length && seq === lastSync.seq) return
     lastSync = { length: nodes.length, seq }
-    appendEntries(storage, STORE_KEY, extract(nodes, 0), options.maxPersisted)
+    appendEntries(storage, STORE_KEY, extractPersist(nodes), options.maxPersisted)
   }
+
+  // Sliding-context observation: report compaction checkpoints that land
+  // while this page is open. Each session subscribe re-baselines to the
+  // newest checkpoint already in the log, so markers that predate the
+  // plugin install (or a session switch) never toast.
+  let lastCompactionSeq: number | undefined
+  const watchCompaction = (nodes: readonly ConversationNode[]): void => {
+    if (!options.showCompactionNotice || notice === undefined) return
+    const info = compactionAfter(nodes, lastCompactionSeq)
+    if (info === undefined) return
+    lastCompactionSeq = info.seq
+    notice.show(info)
+  }
+
   let disposeSessionSub: (() => void) | undefined
   const reconcileSession = (): void => {
     disposeSessionSub?.()
@@ -253,8 +282,14 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     const binding = ctx.sessions.binding(id)
     if (binding === undefined) return
     const session = binding.session
+    lastCompactionSeq = latestCompactionSeq(session.getSnapshot().nodes)
+    lastSync = { length: -1, seq: -1 }
     syncPersisted(session.getSnapshot().nodes)
-    disposeSessionSub = session.subscribe(() => syncPersisted(session.getSnapshot().nodes))
+    disposeSessionSub = session.subscribe(() => {
+      const nodes = session.getSnapshot().nodes
+      syncPersisted(nodes)
+      watchCompaction(nodes)
+    })
   }
   const disposeListSub = ctx.sessions.list.subscribe(reconcileSession)
   reconcileSession()
@@ -267,6 +302,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     handle?.dispose()
     handle = undefined
     overlay?.dispose()
+    notice?.dispose()
     mirror?.dispose()
   }
 }

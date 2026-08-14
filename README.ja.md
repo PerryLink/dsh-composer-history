@@ -10,13 +10,13 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.2.0-66ccff"></a>
+  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.3.0-66ccff"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
-  <img alt="tests" src="https://img.shields.io/badge/tests-168%2F168-brightgreen">
+  <img alt="tests" src="https://img.shields.io/badge/tests-200%2F200-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
 </p>
 
-ターミナルと同じ感覚で **↑** を押して履歴を呼び戻す——でも、入力途中の下書きは常に安全です。`dsh-composer-history` は Claude Code の「エッジ優先」矢印キーモデルを dsh の Web コンポーザーに持ち込み、さらに一歩先へ：最新エントリまで戻る（または `Esc` を押す）と、退避した下書きとカーソル位置が**正確に復元**されます——クリアされません。その上：送信済みメッセージは**ブラウザローカルに永続化**されるので、履歴はリロードをまたいで残り、セッションを横断します。`Ctrl+R` は**逆検索**を開き、すべてのキーと調整値が設定可能です。
+ターミナルと同じ感覚で **↑** を押して履歴を呼び戻す——でも、入力途中の下書きは常に安全です。`dsh-composer-history` は Claude Code の「エッジ優先」矢印キーモデルを dsh の Web コンポーザーに持ち込み、さらに一歩先へ：最新エントリまで戻る（または `Esc` を押す）と、退避した下書きとカーソル位置が**正確に復元**されます——クリアされません。その上：送信済みメッセージは**ブラウザローカルに永続化**されるので、履歴はリロードをまたいで残り、セッションを横断します。`Ctrl+R` は**逆検索**を開き、すべてのキーと調整値が設定可能です。さらに、harness の**スライディングコンテキスト**が長い会話を圧縮するとき（Claude Code / Codex と同じ自動圧縮ワークフロー）、本プラグインはその履歴を使い続けられるようにします：チェックポイント要約がリコールと検索に加わり、圧縮のたびに「ワンクリックで `/compact` を入力」できる一時通知を表示します。
 
 > 純粋な UI 動作です：セッションイベントの追加、agent-loop の変更、モデルへのリクエストは一切ありません。リコールされたテキストは通常のコンポーザーの下書きに入るだけで、モデルに届くのはあなたが Enter を押したときだけです。永続化された履歴はブラウザローカルのテキストです（[プライバシー](#プライバシー) 参照）。
 
@@ -30,6 +30,7 @@
 - 🗂️ **ワークスペーススコープ** —— `historyScope: 'workspace'` は、現在のセッションの前に他の一覧表示されたセッションのメッセージを前置します。
 - 🔍 **逆検索** —— `Ctrl+R`（設定可能）でコンポーザーの下にクエリパネルが開きます：入力で絞り込み、↑/↓ で選択、Enter で確定、Esc でキャンセル。
 - 🎛️ **すべてのキーが設定可能** —— `upKey`/`downKey`/`escapeKey`/`searchKeys` はコードではなく Config スキーマにあります。
+- 🧭 **スライディングコンテキスト対応** —— harness の自動圧縮（Claude Code / Codex と同方式）時に、チェックポイント要約が `[compacted] …` エントリとして ↑ リコールと `Ctrl+R` 検索に加わり、圧縮のたびに一時通知（ワンクリックの「`/compact` を入力」付き）が表示されます。[スライディングコンテキスト](#-スライディングコンテキスト) 参照。
 - ⚙️ **設定との統合** —— ホスト側が `composer-history` 設定名前空間を登録します（cordis.yml の設定が composition の `base` になります）。設定ドキュメントからのユーザー上書きはブラウザに届きます。設定サービスが無い場合も、プラグインは composition のとおりにそのまま動作します。
 - 🚦 **完全なゲーティング** —— `plain` 入力フェーズのみ横取り。スラッシュメニュー・コマンドポップアップ・IME 変換中・テキスト選択・alt/meta/shift コンビネーションにはすべて譲ります。パススルー経路は副作用ゼロ。
 - 📐 **2 種類のエッジ判定** —— `logical`（改行ベース、デフォルト）または `visual`（隠し mirror div が実際の折り返し行を測定）。
@@ -51,7 +52,7 @@ $ press Ctrl+R → type a fragment → ↑/↓ → Enter → the match fills the
 ```sh
 cd Project/Plugins/dsh-composer-history
 pnpm install
-pnpm run typecheck && pnpm run build && pnpm run test   # all green: 168/168
+pnpm run typecheck && pnpm run build && pnpm run test   # all green: 200/200
 pnpm run test:coverage                                  # per-module coverage report
 pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack surface
 ```
@@ -89,6 +90,9 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
            enableSearch: true
            searchKeys: [Ctrl+R]
            searchCaseSensitive: false
+           includeCompactionSummaries: true   # summaries join recall/search
+           showCompactionNotice: true         # transient notice on compaction
+           compactCommandText: /compact       # filled by "Compact now"; '' hides it
    ```
 
    `config:` ブロックはホスト Loader が同じスキーマで検証し、（設定サービスが存在する場合は）設定の `base` レイヤーとしてブラウザに流れ込みます——つまり、これらの値はバリデータだけでなく実際にブラウザ側に届きます。
@@ -142,6 +146,9 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `enableSearch` | `boolean` | `false` | `Ctrl+R` 逆検索オーバーレイを有効化 |
 | `searchKeys` | `string[]` | `['Ctrl+R']` | 検索を開くコードスペック（修飾キー `Ctrl`/`Alt`/`Meta`/`Shift` + キー名）；不正なスペックはブラウザファイバーを大きなエラーで失敗させる |
 | `searchCaseSensitive` | `boolean` | `false` | 検索マッチングで大文字小文字を区別するか |
+| `includeCompactionSummaries` | `boolean` | `true` | `[compacted] …` チェックポイント要約をリコールと検索に取り込む |
+| `showCompactionNotice` | `boolean` | `true` | 圧縮チェックポイントの落地時に一時通知を表示 |
+| `compactCommandText` | `string` | `'/compact'` | 通知の「今すぐ圧縮」アクションがコンポーザーに入力するスラッシュコマンド；`''` で非表示 |
 
 ## 🎹 キーバインド
 
@@ -168,6 +175,19 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 - **選択**：Enter で下書きを確定しカーソルを末尾へ移動——通常のリコールと同じ単一の `setDraft` 書き込み経路です。リコールされたテキストがモデルに届くのは、その後に Enter を押したときだけです。
 - **キャンセル**：Esc またはパネル外の押下。下書きは変更されません。
 
+## 🧭 スライディングコンテキスト
+
+harness コアはすべての dsh セッションにスライディングコンテキストウィンドウを提供します——Claude Code や Codex と同じワークフローです：会話がモデルのコンテキスト上限に近づく（またはプロバイダーがオーバーフローを報告する）と、harness は**自動圧縮**します——古いターンは会話記録に残る `compaction` チェックポイントマーカーの背後に要約され、モデルは要約と直近の尾部だけを保持してセッションが続行します。`/compact` は同じ圧縮をオンデマンドで実行し、マーカーは展開可能な「コンテキスト圧縮済み」行として描画されます。
+
+`dsh-composer-history` はコンポーザーをこのワークフローに接続し、ウィンドウが滑っても入力履歴が失われないようにします：
+
+- **圧縮をまたぐリコール** —— シャドウされたターンはセッションスナップショットに残るため、↑ はチェックポイント前後に送信したすべてのメッセージを引き続きたどれます。
+- **要約が履歴に加わる** —— 各チェックポイントの要約テキストが `[compacted] …` エントリとして ↑ リコールと `Ctrl+R` 検索に入ります（切替：`includeCompactionSummaries`）。モデルが逐語的に見なくなった文脈が、キー 1 回の距離に残ります。
+- **圧縮通知** —— ページを開いている間にチェックポイントが落地すると、一時的なスナックバーがそれを知らせ（Claude Code の「会話を自動圧縮中…」の瞬間）、要約スニペットとワンクリックの**`/compact` を入力**アクションが付きます（`showCompactionNotice`、`compactCommandText`）。入力は通常の下書きに入るだけで、送信するのはあなたの Enter だけです。
+- **検索カウント** —— `Ctrl+R` パネルにライブの `N entries` / `N matches` ステータス行が加わり、長いエントリは 2 行にクランプされます。
+
+> 圧縮そのもの（閾値、要約モデル、`/compact`）は harness コアの compaction プラグインが担います——本プラグインはクライアントスナップショットが既に公開しているチェックポイントマーカーを観察するだけなので、agent-loop やモデルリクエストの変更は一切必要ありません。
+
 ## 🔒 プライバシー
 
 `persistHistory: true`（デフォルト）は、送信済みメッセージをこのブラウザの `localStorage` の `dsh.composer-history.v1` キーに書き込みます。上限は `maxPersisted`、どこにもアップロードされず、同じオリジンのページからのみ読み取れます。`persistHistory: false` で無効化すると——リコールはライブのセッション投影（とワークスペーススコープ）のみを使う v1 動作になります。破損または外部のペイロードは無言でリセットされます。
@@ -187,11 +207,14 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
    - `Ctrl+R` で検索パネルが開きます。入力で絞り込み、↑/↓ + Enter で確定、Esc で下書きは変更されません。
    - ページリロード後も、↑ でリロード前に送信したメッセージをリコールできます（`persistHistory` が有効な場合）。
    - `historyScope: 'workspace'` の場合、他の一覧表示されたセッションのエントリが現在のセッションの前に来ます。
+   - 圧縮（自動または `/compact`）が落地した後、↑ で `[compacted] …` 要約エントリまでたどれ、`Ctrl+R` がそのテキストで見つけられます。
+   - 圧縮通知が下部に現れ、自動で消え、ボタンが `/compact` をコンポーザーに入力します。
 4. ゲート：`pnpm run typecheck`、`pnpm run build`、`pnpm run test` がすべて成功——**ビルド済みバンドル**を jsdom 上で本物の `__ModuleLoader__` ハンドシェイク経由で実行するスモークテストを含みます。加えて `pnpm run test:coverage`、`pnpm run check:readmes`、`pnpm run verify:pack`。
 
 ## 🔬 互換性ベースライン（このマシンで実測、2026-08-14）
 
 - **型**：devDependencies が npm から公開済みクライアントパッケージ **0.1.0-rc.6** を固定します（`dsh-client-runtime`、`dsh-client-ui-conversation`、`dsh-client-ui-input-trigger`、`dsh-client-ui-settings`、`dsh-settings`、`dsh-api-remotes`）。`typecheck` はもはやローカルチェックアウトに依存しません。実行時スモークテストは、クライアントパッケージ **0.1.0-rc.5**、`@deepseek-ai/cordis` **4.0.1**、`@deepseek-ai/schemastery` **3.18.1** のチェックアウトに対して実行されます。
+- **rc.6 では圧縮マーカーがクライアントに見える**：`ConversationNode` に `CompactionSummaryNode`（`kind: 'compaction'`、`summary`/`shadowedItemCount`/`shadowedTokenCount`）が含まれ、各マーカーの上にあるトランスクリプトはそのまま残ります——シャドウされたターンがスナップショットから取り除かれることはありません。スライディングコンテキスト機能はこの公開されたフェイスだけを読みます。
 - `InputState` のフェーズ（`packages/client/ui-conversation/src/client/input/contract.ts` を実読）：`'plain' | 'adjudicating' | 'claimed' | 'submitting'`、ほかに `draft`/`draftRev`。下書きの唯一の公開書き込み経路は `ctx.conversation.input.for(actx).setDraft(text)`。`editRange` 対応の `ComposerKeyboard` フェイスは InputBar 私有です（`docs/upstream-proposals.md` C1 参照）。
 - **クライアントプラグインのメタデータはネストされた `dsh.client` フィールド**（`packages/client/modules` の `resolveMeta` が `pkg.dsh.client` を読む）：置き場所を間違えると、boot グラフから**無言で**パッケージが落ちます。エラーは出ません。
 - **ベンダー化された cordis は `@deepseek-ai/cordis` に改名済み**：type-only でインポート。ビルド済み `lib/client.js` には cordis の実行時インポートがゼロです（`require(` 呼び出し自体が皆無）。
@@ -212,6 +235,8 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 - 参照チップ（U+FFFC プレースホルダー）はリコール／復元される下書きテキストにそのまま乗ります。
 - `historyScope: 'workspace'` は他の一覧表示されたセッションのライブ assembly を読みます。assembly がまだ実体化していないセッションは、まだ何も寄与しません。
 - 検索オーバーレイは素の DOM です（React 依存なし）。`maxHistory` の上限までのすべてのマッチを描画します。
+- **圧縮認識は観察ベース**：プラグインインストール前（またはセッション切替前）に落地済みのチェックポイントは通知を出しません。通知するのはページを開いている間に落地したマーカーだけです。要約イベントが読み込み済みウィンドウの外にあるチェックポイントは `[compacted] …` エントリを生成しません（`summary: null`）。
+- 通知の「今すぐ圧縮」アクションは、設定されたコマンドテキストを下書きに*入力する*だけです——送信（および `/compact` 自体の受理）はあなたの Enter のままです。
 
 ## 🗺️ 上流への提案
 
@@ -221,7 +246,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 
 本プロジェクトは DeepSeek Harness プラグインエコシステムの一部です。推奨 GitHub トピック（リポジトリ設定で設定します）：
 
-`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `typescript`
+`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 
 関連リンク：[github.com/topics/dsh-plugin](https://github.com/topics/dsh-plugin) · [github.com/topics/deepseek-harness](https://github.com/topics/deepseek-harness) · [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 

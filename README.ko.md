@@ -10,13 +10,13 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.2.0-66ccff"></a>
+  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.3.0-66ccff"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
-  <img alt="tests" src="https://img.shields.io/badge/tests-168%2F168-brightgreen">
+  <img alt="tests" src="https://img.shields.io/badge/tests-200%2F200-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
 </p>
 
-터미널처럼 **↑** 를 눌러 히스토리를 불러오세요 — 작성 중이던 프롬프트는 언제나 안전합니다. `dsh-composer-history`는 Claude Code의 엣지 우선 화살표 키 모델을 dsh 웹 컴포저에 옮기고, 한 걸음 더 나아갑니다: 최신 항목까지 되돌아오거나(또는 `Esc`를 누르면) 저장해 둔 초안과 커서 위치가 **정확히 복원**됩니다. 지워지지 않습니다. 그 위에 더해: 전송된 메시지는 **브라우저 로컬에 영속화**되어 새로고침 후에도, 세션을 넘어서도 히스토리가 유지되고, `Ctrl+R` 로 **역방향 검색**이 열리며, 모든 키와 조정값이 설정 가능합니다.
+터미널처럼 **↑** 를 눌러 히스토리를 불러오세요 — 작성 중이던 프롬프트는 언제나 안전합니다. `dsh-composer-history`는 Claude Code의 엣지 우선 화살표 키 모델을 dsh 웹 컴포저에 옮기고, 한 걸음 더 나아갑니다: 최신 항목까지 되돌아오거나(또는 `Esc`를 누르면) 저장해 둔 초안과 커서 위치가 **정확히 복원**됩니다. 지워지지 않습니다. 그 위에 더해: 전송된 메시지는 **브라우저 로컬에 영속화**되어 새로고침 후에도, 세션을 넘어서도 히스토리가 유지되고, `Ctrl+R` 로 **역방향 검색**이 열리며, 모든 키와 조정값이 설정 가능합니다. 그리고 harness의 **슬라이딩 컨텍스트**가 긴 대화를 압축할 때(Claude Code / Codex와 동일한 자동 압축 워크플로), 플러그인은 그 히스토리를 계속 쓸 수 있게 합니다: 체크포인트 요약이 리콜과 검색에 합류하고, 압축마다 원클릭 `/compact` 입력이 붙은 일시 알림이 표시됩니다.
 
 > 순수 UI 동작입니다: 세션 이벤트 추가 없음, agent-loop 변경 없음, 모델 요청 없음. 리콜된 텍스트는 일반 컴포저 초안에만 들어가며, 모델에 전달되는 것은 *당신이* Enter를 눌렀을 때뿐입니다. 영속화된 히스토리는 브라우저 로컬 텍스트입니다([개인정보](#개인정보) 참조).
 
@@ -30,6 +30,7 @@
 - 🗂️ **워크스페이스 범위** — `historyScope: 'workspace'` 는 현재 세션의 메시지보다 먼저 다른 등록된 세션들의 메시지를 앞에 붙입니다.
 - 🔍 **역방향 검색** — `Ctrl+R`(설정 가능)이 컴포저 아래에 쿼리 패널을 엽니다: 타이핑하면 필터, ↑/↓ 로 선택, Enter 로 채움, Esc 로 취소.
 - 🎛️ **모든 키 설정 가능** — `upKey`/`downKey`/`escapeKey`/`searchKeys` 가 코드가 아닌 Config 스키마에 있습니다.
+- 🧭 **슬라이딩 컨텍스트 인식** — harness가 자동 압축(Claude Code / Codex 방식)할 때, 체크포인트 요약이 `[compacted] …` 항목으로 ↑ 리콜과 `Ctrl+R` 검색에 합류하고, 압축마다 일시 알림(원클릭 "`/compact` 입력" 버튼 포함)이 표시됩니다. [슬라이딩 컨텍스트](#-슬라이딩-컨텍스트) 참조.
 - ⚙️ **설정 통합** — 호스트 절반이 `composer-history` 설정 네임스페이스를 등록합니다(cordis.yml config가 컴포지션 `base` 가 됨); 설정 문서의 사용자 오버라이드가 브라우저에 도달합니다. 설정 서비스가 없으면 플러그인은 컴포즈된 그대로 정확히 계속 동작합니다.
 - 🚦 **완전한 게이팅** — `plain` 입력 페이즈에서만 가로챕니다; 슬래시 메뉴, 명령 팝업, IME 조합, 텍스트 선택, alt/meta/shift 조합에는 모두 양보합니다. 패스스루 경로는 부작용이 전혀 없습니다.
 - 📐 **두 가지 엣지 모드** — `logical`(개행 기준, 기본값) 또는 `visual`(숨겨진 mirror div가 실제 줄바꿈을 측정).
@@ -51,7 +52,7 @@ $ press Ctrl+R → type a fragment → ↑/↓ → Enter → the match fills the
 ```sh
 cd Project/Plugins/dsh-composer-history
 pnpm install
-pnpm run typecheck && pnpm run build && pnpm run test   # all green: 168/168
+pnpm run typecheck && pnpm run build && pnpm run test   # all green: 200/200
 pnpm run test:coverage                                  # per-module coverage report
 pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack surface
 ```
@@ -89,6 +90,9 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
            enableSearch: true
            searchKeys: [Ctrl+R]
            searchCaseSensitive: false
+           includeCompactionSummaries: true   # summaries join recall/search
+           showCompactionNotice: true         # transient notice on compaction
+           compactCommandText: /compact       # filled by "Compact now"; '' hides it
    ```
 
    `config:` 블록은 호스트 Loader가 같은 스키마로 검증하며, (설정 서비스가 있으면) 설정 `base` 레이어로 브라우저에 흘러 들어갑니다 — 그래서 이 값들은 검증기에만 도달하는 것이 아니라 실제로 브라우저 절반에 도달합니다.
@@ -142,6 +146,9 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `enableSearch` | `boolean` | `false` | `Ctrl+R` 역방향 검색 오버레이를 활성화합니다 |
 | `searchKeys` | `string[]` | `['Ctrl+R']` | 검색을 여는 조합 스펙(수정자 `Ctrl`/`Alt`/`Meta`/`Shift` + 키 이름); 잘못된 스펙은 브라우저 파이버를 크게 실패시킵니다 |
 | `searchCaseSensitive` | `boolean` | `false` | 검색 매칭이 대소문자를 구분하는지 여부 |
+| `includeCompactionSummaries` | `boolean` | `true` | `[compacted] …` 체크포인트 요약을 리콜과 검색에 포함 |
+| `showCompactionNotice` | `boolean` | `true` | 압축 체크포인트가 도착할 때 일시 알림 표시 |
+| `compactCommandText` | `string` | `'/compact'` | 알림의 "지금 압축" 동작이 컴포저에 입력하는 슬래시 명령; `''` 이면 숨김 |
 
 ## 🎹 키 바인딩
 
@@ -168,6 +175,19 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 - **선택**: Enter 가 초안을 채우고 커서를 끝으로 이동시킵니다 — 일반 리콜과 동일한 단일 `setDraft` 쓰기 경로입니다. 리콜된 텍스트가 모델에 도달하는 것은 그 후에 Enter를 눌렀을 때뿐입니다.
 - **취소**: Esc 또는 패널 바깥 클릭; 초안은 그대로입니다.
 
+## 🧭 슬라이딩 컨텍스트
+
+harness 코어는 모든 dsh 세션에 슬라이딩 컨텍스트 창을 제공합니다 — Claude Code와 Codex가 제공하는 것과 동일한 워크플로입니다: 대화가 모델의 컨텍스트 한계에 다가가면(또는 공급자가 오버플로를 보고하면) harness가 **자동 압축**합니다 — 이전 턴들이 트랜스크립트에 남는 `compaction` 체크포인트 마커 뒤에 요약되고, 모델은 요약과 최근 꼬리만 유지한 채 세션이 계속됩니다. `/compact` 는 같은 압축을 필요할 때 실행하며, 마커는 펼칠 수 있는 "컨텍스트 압축됨" 행으로 렌더링됩니다.
+
+`dsh-composer-history` 는 컴포저를 이 워크플로에 연결해, 창이 미끄러져도 입력 히스토리를 잃지 않게 합니다:
+
+- **리콜이 압축을 넘어 유지** — 가려진 턴들은 세션 스냅샷에 남아, ↑ 가 체크포인트 전후에 보낸 모든 메시지를 계속 걸어갑니다.
+- **요약이 히스토리에 합류** — 각 체크포인트의 요약 텍스트가 `[compacted] …` 항목으로 ↑ 리콜과 `Ctrl+R` 검색에 들어갑니다(토글: `includeCompactionSummaries`). 모델이 더는 그대로 보지 않는 컨텍스트가 키 하나 거리에 남습니다.
+- **압축 알림** — 페이지가 열려 있는 동안 체크포인트가 도착하면 일시 스낵바가 알려주고(Claude Code의 "대화 자동 압축 중…" 순간), 요약 스니펫과 원클릭 **`/compact` 입력** 동작이 붙습니다(`showCompactionNotice`, `compactCommandText`). 입력은 일반 초안에만 들어가며, 보내는 것은 당신의 Enter뿐입니다.
+- **검색 카운트** — `Ctrl+R` 패널에 실시간 `N entries` / `N matches` 상태 줄이 추가되고, 긴 항목은 두 줄로 잘립니다.
+
+> 압축 자체(임계값, 요약 모델, `/compact`)는 harness 코어의 compaction 플러그인이 담당합니다 — 이 플러그인은 클라이언트 스냅샷이 이미 노출하는 체크포인트 마커를 관찰할 뿐이므로, agent-loop나 모델 요청 변경이 전혀 필요 없습니다.
+
 ## 🔒 개인정보
 
 `persistHistory: true`(기본값)는 전송된 메시지를 이 브라우저의 `localStorage` 에 `dsh.composer-history.v1` 키로 기록하며, `maxPersisted` 로 상한이 정해지고, 어디에도 업로드되지 않으며, 같은 origin의 페이지만 읽을 수 있습니다. `persistHistory: false` 로 비활성화하세요 — 그러면 리콜은 v1 동작처럼 라이브 세션 투영(및 워크스페이스 범위)만 사용합니다. 손상되었거나 외부의 페이로드는 조용히 초기화됩니다.
@@ -187,11 +207,14 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
    - `Ctrl+R` 로 검색 패널 열림; 타이핑하면 필터; ↑/↓ + Enter 로 채움; Esc 는 초안을 그대로 둠.
    - 페이지 새로고침 후, ↑ 로 새로고침 전에 보낸 메시지 리콜(`persistHistory` 켜짐).
    - `historyScope: 'workspace'` 이면 다른 등록된 세션의 항목이 현재 세션보다 앞에 옵니다.
+   - 압축(자동 또는 `/compact`)이 도착한 뒤 ↑ 로 `[compacted] …` 요약 항목까지 걸어가고, `Ctrl+R` 이 그 텍스트로 찾아줍니다.
+   - 압축 알림이 아래쪽에 나타나 자동으로 사라지고, 버튼이 `/compact` 를 컴포저에 입력합니다.
 4. 게이트: `pnpm run typecheck`, `pnpm run build`, `pnpm run test` 전부 통과 — 실제 `__ModuleLoader__` 핸드셰이크로 jsdom에서 **빌드된 번들**을 실행하는 스모크 테스트 포함; 그리고 `pnpm run test:coverage`, `pnpm run check:readmes`, `pnpm run verify:pack`.
 
 ## 🔬 호환성 기준선 (이 머신에서 실측, 2026-08-14)
 
 - **타입**: devDependencies 가 npm의 공개 클라이언트 패키지 **0.1.0-rc.6**(`dsh-client-runtime`, `dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`, `dsh-settings`, `dsh-api-remotes`)을 고정합니다; `typecheck` 는 더 이상 로컬 체크아웃에 의존하지 않습니다. 런타임 스모크는 클라이언트 패키지가 **0.1.0-rc.5** 인 체크아웃에 대해 실행됩니다; `@deepseek-ai/cordis` **4.0.1**; `@deepseek-ai/schemastery` **3.18.1**.
+- **rc.6 에서 압축 마커는 클라이언트에 보임**: `ConversationNode` 에 `CompactionSummaryNode`(`kind: 'compaction'`, `summary`/`shadowedItemCount`/`shadowedTokenCount`)가 포함되고, 각 마커 위의 트랜스크립트는 그대로 유지됩니다 — 가려진 턴이 스냅샷에서 제거되지 않습니다. 슬라이딩 컨텍스트 기능은 이 공개 페이스만 읽습니다.
 - `InputState` 페이즈(`packages/client/ui-conversation/src/client/input/contract.ts` 실독): `'plain' | 'adjudicating' | 'claimed' | 'submitting'`, 그 밖에 `draft`/`draftRev`. 초안의 유일한 공개 쓰기 경로는 `ctx.conversation.input.for(actx).setDraft(text)` 입니다; `editRange` 인식 `ComposerKeyboard` 페이스는 InputBar 전용입니다(`docs/upstream-proposals.md` C1 참조).
 - **클라이언트 플러그인 메타데이터는 중첩된 `dsh.client` 필드**(`packages/client/modules`의 `resolveMeta`가 `pkg.dsh.client`를 읽음): 위치를 잘못 두면 boot 그래프에서 조용히 빠집니다 — 오류 없음.
 - **벤더드 cordis는 `@deepseek-ai/cordis` 로 개명됨**: type-only로만 임포트. 빌드된 `lib/client.js` 에 cordis 런타임 임포트 없음(`require(` 호출 자체가 전무).
@@ -212,6 +235,8 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 - 참조 칩(U+FFFC 자리표시자)은 리콜/복원되는 초안 텍스트에 그대로 실려갑니다.
 - `historyScope: 'workspace'` 는 다른 등록된 세션들의 라이브 어셈블리를 읽습니다; 어셈블리가 아직 구체화되지 않은 세션은 단순히 아직 아무것도 기여하지 않습니다.
 - 검색 오버레이는 순수 DOM입니다(React 의존성 없음); `maxHistory` 상한까지 모든 매치를 렌더링합니다.
+- **압축 인식은 관찰 기반**: 플러그인 설치 전(또는 세션 전환 전)에 이미 도착한 체크포인트는 알림을 띄우지 않습니다. 알림은 페이지가 열려 있는 동안 도착한 마커뿐입니다. 요약 이벤트가 로드된 창 밖에 있는 체크포인트는 `[compacted] …` 항목을 만들지 않습니다(`summary: null`).
+- 알림의 "지금 압축" 동작은 설정된 명령 텍스트를 초안에 *입력*할 뿐입니다 — 전송(및 `/compact` 자체의 수락)은 여전히 당신의 Enter입니다.
 
 ## 🗺️ 업스트림 제안
 
@@ -221,7 +246,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 
 이 프로젝트는 DeepSeek Harness 플러그인 생태계의 일부입니다. 권장 GitHub 토픽(리포지토리 설정에서 지정):
 
-`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `typescript`
+`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 
 관련 링크: [github.com/topics/dsh-plugin](https://github.com/topics/dsh-plugin) · [github.com/topics/deepseek-harness](https://github.com/topics/deepseek-harness) · [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 
