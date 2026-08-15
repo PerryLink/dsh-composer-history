@@ -10,7 +10,9 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.4.0-66ccff"></a>
+  <a href="https://www.npmjs.com/package/dsh-composer-history"><img alt="npm version" src="https://img.shields.io/npm/v/dsh-composer-history"></a>
+  <a href="https://www.npmjs.com/package/dsh-composer-history"><img alt="npm downloads" src="https://img.shields.io/npm/dm/dsh-composer-history"></a>
+  <a href="https://github.com/PerryLink/dsh-composer-history/actions/workflows/ci.yml"><img alt="ci" src="https://github.com/PerryLink/dsh-composer-history/actions/workflows/ci.yml/badge.svg"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
   <img alt="tests" src="https://img.shields.io/badge/tests-217%2F217-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
@@ -249,6 +251,14 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 `deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 
 Полезные ссылки: [github.com/topics/dsh-plugin](https://github.com/topics/dsh-plugin) · [github.com/topics/deepseek-harness](https://github.com/topics/deepseek-harness) · [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
+
+## 🙌 Участники
+
+Спасибо всем, кто внёс вклад в этот плагин:
+
+- [PerryLink](https://github.com/PerryLink) — автор и мейнтейнер: все релизы с v0.1.0 по v0.4.0 (вызов по краевым стрелкам, сохранённая история, обратный поиск, осведомлённость о скользящем контексте, полировка поисковой панели, манифесты `dsh.bundle` и `dshWorkshop`).
+
+Присоединяйтесь к списку через PR.
 
 ## 📄 Лицензия
 

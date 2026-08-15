@@ -10,7 +10,9 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.4.0-66ccff"></a>
+  <a href="https://www.npmjs.com/package/dsh-composer-history"><img alt="npm version" src="https://img.shields.io/npm/v/dsh-composer-history"></a>
+  <a href="https://www.npmjs.com/package/dsh-composer-history"><img alt="npm downloads" src="https://img.shields.io/npm/dm/dsh-composer-history"></a>
+  <a href="https://github.com/PerryLink/dsh-composer-history/actions/workflows/ci.yml"><img alt="ci" src="https://github.com/PerryLink/dsh-composer-history/actions/workflows/ci.yml/badge.svg"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
   <img alt="tests" src="https://img.shields.io/badge/tests-217%2F217-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
@@ -249,6 +251,14 @@ This project is part of the DeepSeek Harness plugin ecosystem. Suggested GitHub 
 `deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 
 Useful links: [github.com/topics/dsh-plugin](https://github.com/topics/dsh-plugin) · [github.com/topics/deepseek-harness](https://github.com/topics/deepseek-harness) · [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
+
+## 🙌 Contributors
+
+Thanks to everyone who has contributed to this plugin:
+
+- [PerryLink](https://github.com/PerryLink) — creator and maintainer: every release from v0.1.0 to v0.4.0 (edge-first arrow recall, persisted history, reverse search, sliding-context awareness, search overlay polish, `dsh.bundle` and `dshWorkshop` manifests).
+
+Open a PR to join this list.
 
 ## 📄 License
 
