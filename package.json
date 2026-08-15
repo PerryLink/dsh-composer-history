@@ -59,7 +59,7 @@
     "schema": "omdsh-workshop-package/v1",
     "type": "plugin",
     "integration": {
-      "protocol": "profile-bundle",
+      "protocol": "harness-profile",
       "artifact": "cordis.patch.yml"
     },
     "install": {
