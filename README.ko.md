@@ -10,9 +10,9 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.3.0-66ccff"></a>
+  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.4.0-66ccff"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
-  <img alt="tests" src="https://img.shields.io/badge/tests-200%2F200-brightgreen">
+  <img alt="tests" src="https://img.shields.io/badge/tests-217%2F217-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
 </p>
 
@@ -143,7 +143,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `historyScope` | `'session' \| 'workspace'` | `'session'` | `'workspace'` 는 현재 세션보다 먼저 다른 등록된 세션들의 사용자 메시지를 앞에 붙입니다 |
 | `persistHistory` | `boolean` | `true` | 전송된 메시지를 브라우저 로컬 저장소에 추가합니다([개인정보](#개인정보) 참조) |
 | `maxPersisted` | `number` | `200` | 저장되는 최대 항목 수; `0` = 무제한 |
-| `enableSearch` | `boolean` | `false` | `Ctrl+R` 역방향 검색 오버레이를 활성화합니다 |
+| `enableSearch` | `boolean` | `true` | `Ctrl+R` 역방향 검색 오버레이를 활성화합니다 |
 | `searchKeys` | `string[]` | `['Ctrl+R']` | 검색을 여는 조합 스펙(수정자 `Ctrl`/`Alt`/`Meta`/`Shift` + 키 이름); 잘못된 스펙은 브라우저 파이버를 크게 실패시킵니다 |
 | `searchCaseSensitive` | `boolean` | `false` | 검색 매칭이 대소문자를 구분하는지 여부 |
 | `includeCompactionSummaries` | `boolean` | `true` | `[compacted] …` 체크포인트 요약을 리콜과 검색에 포함 |
@@ -166,7 +166,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `searchKeys` 조합 | 컴포저 포커스, `plain` 페이즈, 메뉴/선택/IME 없음 | 역방향 검색 열기; 브라우징 종료, 표시된 텍스트가 초안이 됨 |
 | Shift/Alt/Meta+화살표, IME, 선택 영역 | 모두 | 항상 해제 |
 
-`upKey`/`downKey`/`escapeKey`/`searchKeys` 는 위 키들의 이름을 바꿉니다; 수정자 정책(그리고 검색 조합의 정확한 수정자 일치)은 그대로입니다. 검색 오버레이 안에서: ↑/↓ 가 매치 선택을 이동하고, Enter 가 채우며, Esc 가 취소하고, 클릭이 선택하며, 바깥 클릭이 취소합니다.
+`upKey`/`downKey`/`escapeKey`/`searchKeys` 는 위 키들의 이름을 바꿉니다; 수정자 정책(그리고 검색 조합의 정확한 수정자 일치)은 그대로입니다. 검색 오버레이 안에서: ↑/↓ 가 매치 선택을 이동(선택된 행은 보이는 영역으로 스크롤)하고, Enter 가 채우며, Esc 가 취소하고, 클릭이 선택하며, 바깥 클릭이 취소합니다. 일치한 부분 문자열은 각 행에서 강조 표시됩니다.
 
 ## 🔍 역방향 검색
 
@@ -190,7 +190,7 @@ harness 코어는 모든 dsh 세션에 슬라이딩 컨텍스트 창을 제공�
 
 ## 🔒 개인정보
 
-`persistHistory: true`(기본값)는 전송된 메시지를 이 브라우저의 `localStorage` 에 `dsh.composer-history.v1` 키로 기록하며, `maxPersisted` 로 상한이 정해지고, 어디에도 업로드되지 않으며, 같은 origin의 페이지만 읽을 수 있습니다. `persistHistory: false` 로 비활성화하세요 — 그러면 리콜은 v1 동작처럼 라이브 세션 투영(및 워크스페이스 범위)만 사용합니다. 손상되었거나 외부의 페이로드는 조용히 초기화됩니다.
+`persistHistory: true`(기본값)는 전송된 메시지를 이 브라우저의 `localStorage` 에 `dsh.composer-history.v1` 키로 기록하며, `maxPersisted` 로 상한이 정해지고, 어디에도 업로드되지 않으며, 같은 origin의 페이지만 읽을 수 있습니다. `persistHistory: false` 로 비활성화하세요 — 그러면 리콜은 v1 동작처럼 라이브 세션 투영(및 워크스페이스 범위)만 사용합니다. 손상되었거나 외부의 페이로드는 조용히 초기화됩니다. 이미 저장된 데이터를 모두 지우려면 페이지의 DevTools 콘솔에서 `localStorage.removeItem('dsh.composer-history.v1')` 를 실행하세요.
 
 ## ✅ 검증
 
@@ -252,4 +252,4 @@ harness 코어는 모든 dsh 세션에 슬라이딩 컨텍스트 창을 제공�
 
 ## 📄 License
 
-[Apache License 2.0](./LICENSE)
+[Apache License 2.0](./LICENSE) · 릴리스 이력은 [CHANGELOG.md](./CHANGELOG.md)

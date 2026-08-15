@@ -18,6 +18,7 @@ const REQUIRED = [
   'lib/types/index.d.ts',
   'lib/types/client/index.d.ts',
   'README.md',
+  'CHANGELOG.md',
   'LICENSE',
 ]
 

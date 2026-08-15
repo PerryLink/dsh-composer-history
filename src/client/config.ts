@@ -60,7 +60,7 @@ export const Config: z<ComposerHistoryConfig> = z.object({
   historyScope: z.union([z.const('session'), z.const('workspace')]).default('session'),
   persistHistory: z.boolean().default(true),
   maxPersisted: z.number().step(1).min(0).default(200),
-  enableSearch: z.boolean().default(false),
+  enableSearch: z.boolean().default(true),
   searchKeys: z.array(z.string()).default(['Ctrl+R']),
   searchCaseSensitive: z.boolean().default(false),
   includeCompactionSummaries: z.boolean().default(true),

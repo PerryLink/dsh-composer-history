@@ -10,9 +10,9 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.3.0-66ccff"></a>
+  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.4.0-66ccff"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
-  <img alt="tests" src="https://img.shields.io/badge/tests-200%2F200-brightgreen">
+  <img alt="tests" src="https://img.shields.io/badge/tests-217%2F217-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
 </p>
 
@@ -143,7 +143,7 @@ Every tunable lives in a Schemastery `Config` schema (no hardcoded knobs). Inval
 | `historyScope` | `'session' \| 'workspace'` | `'session'` | `'workspace'` prepends other listed sessions' user messages before the current session's |
 | `persistHistory` | `boolean` | `true` | append sent messages to the browser-local store (see [Privacy](#privacy)) |
 | `maxPersisted` | `number` | `200` | maximum stored entries; `0` = unlimited |
-| `enableSearch` | `boolean` | `false` | enable the `Ctrl+R` reverse-search overlay |
+| `enableSearch` | `boolean` | `true` | enable the `Ctrl+R` reverse-search overlay |
 | `searchKeys` | `string[]` | `['Ctrl+R']` | chord specs opening the search (modifiers `Ctrl`/`Alt`/`Meta`/`Shift` + a key name); a malformed spec fails the browser fiber loudly |
 | `searchCaseSensitive` | `boolean` | `false` | whether search matching distinguishes letter case |
 | `includeCompactionSummaries` | `boolean` | `true` | admit `[compacted] …` checkpoint summaries into recall and search |
@@ -166,12 +166,12 @@ Every tunable lives in a Schemastery `Config` schema (no hardcoded knobs). Inval
 | `searchKeys` chord | composer focused, `plain` phase, no menu/selection/IME | open reverse search; browsing ends, the shown text becomes the draft |
 | Shift/Alt/Meta+arrows, IME, selection | any | always released |
 
-`upKey`/`downKey`/`escapeKey`/`searchKeys` rename the keys above; the modifier policy (and the search chord's exact-modifier match) is unchanged. Inside the search overlay: ↑/↓ move the match selection, Enter fills, Esc cancels, a click picks, a press outside cancels.
+`upKey`/`downKey`/`escapeKey`/`searchKeys` rename the keys above; the modifier policy (and the search chord's exact-modifier match) is unchanged. Inside the search overlay: ↑/↓ move the match selection (the selected row scrolls into view), Enter fills, Esc cancels, a click picks, a press outside cancels; matched substrings are highlighted in every row.
 
 ## 🔍 Reverse search
 
 - **Open**: the `searchKeys` chord while the composer is focused and the input is `plain` (a `Ctrl+R` here also stops the browser's page reload — the key is consumed only inside the composer).
-- **Filter**: substring match over the merged history (current session + persisted + workspace entries); case sensitivity per `searchCaseSensitive`.
+- **Filter**: substring match over the merged history (current session + persisted + workspace entries); case sensitivity per `searchCaseSensitive`; matched substrings are highlighted in each row.
 - **Pick**: Enter fills the draft and moves the caret to the end — the same single `setDraft` write path as ordinary recall. Recalled text reaches the model only if you press Enter afterwards.
 - **Cancel**: Esc or a press outside the panel; the draft is untouched.
 
@@ -190,7 +190,7 @@ The harness core gives every dsh session a sliding context window, the same work
 
 ## 🔒 Privacy
 
-`persistHistory: true` (default) writes sent messages to this browser's `localStorage` under `dsh.composer-history.v1`, bounded by `maxPersisted`, never uploaded anywhere, and readable only by pages of the same origin. Disable it with `persistHistory: false` — recall then uses only the live session projection (and workspace scope), like the v1 behavior. Corrupt or foreign payloads are silently reset.
+`persistHistory: true` (default) writes sent messages to this browser's `localStorage` under `dsh.composer-history.v1`, bounded by `maxPersisted`, never uploaded anywhere, and readable only by pages of the same origin. Disable it with `persistHistory: false` — recall then uses only the live session projection (and workspace scope), like the v1 behavior. Corrupt or foreign payloads are silently reset. To erase everything already stored, run `localStorage.removeItem('dsh.composer-history.v1')` in the page's devtools console.
 
 ## ✅ Verification
 
@@ -252,4 +252,4 @@ Useful links: [github.com/topics/dsh-plugin](https://github.com/topics/dsh-plugi
 
 ## 📄 License
 
-[Apache License 2.0](./LICENSE)
+[Apache License 2.0](./LICENSE) · release history in [CHANGELOG.md](./CHANGELOG.md)

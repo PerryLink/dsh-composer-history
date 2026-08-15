@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createSearchOverlay, type SearchOverlay } from '../src/client/search-overlay.ts'
+import { createSearchOverlay, placePanel, type SearchOverlay } from '../src/client/search-overlay.ts'
 
 const ENTRIES = ['alpha prompt', 'beta prompt', 'gamma note']
 
@@ -44,6 +44,7 @@ function fixture(): Fixture {
 
 afterEach(() => {
   document.body.innerHTML = ''
+  delete (Element.prototype as unknown as Record<string, unknown>)['scrollIntoView']
   vi.restoreAllMocks()
 })
 
@@ -75,6 +76,30 @@ describe('open and filter', () => {
     expect(fx.root.textContent).toContain('3 entries')
     fx.query('prompt')
     expect(fx.root.textContent).toContain('2 matches')
+  })
+
+  it('marks the matched substring inside each row and preserves row text', () => {
+    const fx = fixture()
+    fx.query('prompt')
+    const marks = fx.root.querySelectorAll('mark')
+    expect(marks).toHaveLength(2)
+    expect(marks[0]?.textContent).toBe('prompt')
+    expect(marks[1]?.textContent).toBe('prompt')
+    expect(fx.rows()[0]?.textContent).toBe('alpha prompt')
+    expect(fx.rows()[1]?.textContent).toBe('beta prompt')
+  })
+
+  it('renders plain rows without marks for an empty query', () => {
+    const fx = fixture()
+    expect(fx.root.querySelectorAll('mark')).toHaveLength(0)
+  })
+
+  it('marks every occurrence of a repeated query substring', () => {
+    const fx = fixture()
+    fx.query('a')
+    const marks = fx.root.querySelectorAll('mark')
+    expect(marks.length).toBeGreaterThan(0)
+    for (const mark of marks) expect(mark.textContent).toBe('a')
   })
 })
 
@@ -139,6 +164,64 @@ describe('keyboard and pointer', () => {
     fx.root.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
     expect(fx.onCancel).not.toHaveBeenCalled()
     expect(fx.overlay.isOpen()).toBe(true)
+  })
+
+  it('scrolls the selected row into view as the selection moves', () => {
+    const scroll = vi.fn()
+    ;(Element.prototype as unknown as Record<string, unknown>)['scrollIntoView'] = scroll
+    const fx = fixture()
+    scroll.mockClear()
+    fx.dispatch('ArrowDown')
+    expect(scroll).toHaveBeenCalledTimes(1)
+    expect(scroll).toHaveBeenCalledWith({ block: 'nearest' })
+    expect(scroll.mock.instances[0]).toBe(fx.rows()[1])
+  })
+})
+
+describe('combobox accessibility', () => {
+  it('expands on open, tracks the active option, and collapses on cancel', () => {
+    const fx = fixture()
+    expect(fx.input.getAttribute('aria-expanded')).toBe('true')
+    expect(fx.input.getAttribute('aria-controls')).toBe('__dsh-composer-history-search__list')
+    expect(fx.input.getAttribute('aria-activedescendant')).toBe('__dsh-composer-history-search__option-0')
+    fx.dispatch('ArrowDown')
+    expect(fx.input.getAttribute('aria-activedescendant')).toBe('__dsh-composer-history-search__option-1')
+    fx.dispatch('Escape')
+    expect(fx.input.getAttribute('aria-expanded')).toBe('false')
+    expect(fx.input.hasAttribute('aria-activedescendant')).toBe(false)
+  })
+
+  it('clears the active option reference when there are no matches', () => {
+    const fx = fixture()
+    fx.query('zzz')
+    expect(fx.input.getAttribute('aria-activedescendant')).toBe('')
+  })
+
+  it('shows a placeholder on the query input', () => {
+    const fx = fixture()
+    expect(fx.input.placeholder).toBe('Search history…')
+  })
+})
+
+describe('placePanel', () => {
+  it('places below the anchor and enforces the minimum width', () => {
+    expect(placePanel({ left: 40, right: 100, top: 200, bottom: 230 }, { width: 1280, height: 800 }))
+      .toEqual({ left: 40, top: 238, width: 320 })
+  })
+
+  it('flips above the anchor when the panel would overflow downward', () => {
+    expect(placePanel({ left: 40, right: 100, top: 600, bottom: 630 }, { width: 1280, height: 800 }))
+      .toEqual({ left: 40, top: 264, width: 320 })
+  })
+
+  it('clamps horizontally into a narrow viewport', () => {
+    expect(placePanel({ left: 700, right: 760, top: 200, bottom: 230 }, { width: 720, height: 800 }))
+      .toEqual({ left: 392, top: 238, width: 320 })
+  })
+
+  it('shrinks the width below the minimum when the viewport is narrower', () => {
+    expect(placePanel({ left: 0, right: 300, top: 0, bottom: 40 }, { width: 300, height: 800 }))
+      .toEqual({ left: 8, top: 48, width: 284 })
   })
 })
 

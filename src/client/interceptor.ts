@@ -176,8 +176,9 @@ export function createComposerHistory(host: ComposerHistoryHost, config: Compose
         return
       }
       // A send committed while browsing clears the draft programmatically
-      // (no input event): leave browsing before any recall decisions.
-      if (machine.stateOf().kind === 'browsing' && input.draft === '' && input.phase === 'plain') {
+      // (no input event): leave browsing before any recall decisions. The
+      // phase is already known to be 'plain' at this point.
+      if (machine.stateOf().kind === 'browsing' && input.draft === '') {
         machine.reset()
       }
       const draft = input.draft

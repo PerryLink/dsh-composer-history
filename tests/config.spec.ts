@@ -17,7 +17,7 @@ describe('Config schema', () => {
       historyScope: 'session',
       persistHistory: true,
       maxPersisted: 200,
-      enableSearch: false,
+      enableSearch: true,
       searchKeys: ['Ctrl+R'],
       searchCaseSensitive: false,
       includeCompactionSummaries: true,

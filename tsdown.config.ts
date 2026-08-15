@@ -51,7 +51,7 @@ export default defineConfig([
     clean: false,
     // ESM output under a "type": "module" package must land on .js, not .mjs.
     fixedExtension: false,
-    external: [/^node:/],
+    deps: { neverBundle: [/^node:/] },
   },
   {
     name: `${PLUGIN_ID}/client`,
@@ -62,8 +62,15 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     clean: false,
-    external: [...PLATFORM_EXTERNALS],
-    noExternal: (id: string) => (PLATFORM_EXTERNALS.includes(id) ? undefined : true),
+    // The shell's platform modules stay external (the factory's `require`
+    // answers them from the frozen module table); everything else is
+    // inlined by default because this package declares no runtime
+    // `dependencies` — the only production dep is the type-only cordis
+    // peer, and `@deepseek-ai/schemastery` is an ordinary vendored library
+    // living in devDependencies. Any future runtime import outside the
+    // platform list must therefore stay out of `dependencies` (or be
+    // force-inlined with `deps.alwaysBundle`).
+    deps: { neverBundle: [...PLATFORM_EXTERNALS] },
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ?? 'production'),
       'import.meta.env.MODE': JSON.stringify(process.env.NODE_ENV ?? 'production'),

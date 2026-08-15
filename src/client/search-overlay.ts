@@ -4,10 +4,13 @@
  * styles, and listeners; keyboard events targeting the overlay pass the
  * window-capture interception untouched (the composerOf gate rejects them).
  * Pick (Enter / click) hands the chosen text to the caller; Escape or an
- * outside press cancels. All filter decisions delegate to search.ts.
+ * outside press cancels. All filter and highlight decisions delegate to
+ * search.ts; the panel placement is the pure placePanel clamp (below the
+ * composer, flipped above on downward overflow, horizontally clamped into
+ * the viewport).
  */
 
-import { filterEntries } from './search.ts'
+import { filterEntries, matchRanges } from './search.ts'
 
 /** Callbacks the owning wiring satisfies. */
 export interface SearchOverlayDeps {
@@ -27,8 +30,52 @@ export interface SearchOverlay {
   dispose(): void
 }
 
+/** Viewport-relative anchor rectangle (the composer's bounding rect). */
+export interface PanelAnchorRect {
+  readonly left: number
+  readonly right: number
+  readonly top: number
+  readonly bottom: number
+}
+
+/** Viewport size the panel is placed inside. */
+export interface PanelViewport {
+  readonly width: number
+  readonly height: number
+}
+
+/** Resolved fixed-position placement of the panel. */
+export interface PanelPlacement {
+  readonly left: number
+  readonly top: number
+  readonly width: number
+}
+
 const ROOT_CLASS = '__dsh-composer-history-search__'
 const STYLE_ID = '__dsh-composer-history-search-style__'
+const PANEL_MARGIN = 8
+const PANEL_MIN_WIDTH = 320
+const PANEL_MAX_HEIGHT = 328
+
+/**
+ * Resolve the panel's fixed-position placement for one composer anchor:
+ * at least {@link PANEL_MIN_WIDTH} wide (never wider than the viewport
+ * minus margins), horizontally clamped into the viewport, below the
+ * composer by default and above it when the panel would overflow downward.
+ * Pure over the injected rects so the clamp math is unit-testable.
+ * @param anchor - the composer's viewport-relative bounding rect.
+ * @param viewport - window inner size.
+ * @returns rounded pixel placement.
+ */
+export function placePanel(anchor: PanelAnchorRect, viewport: PanelViewport): PanelPlacement {
+  const width = Math.min(Math.max(anchor.right - anchor.left, PANEL_MIN_WIDTH), viewport.width - 2 * PANEL_MARGIN)
+  const left = Math.min(Math.max(anchor.left, PANEL_MARGIN), viewport.width - width - PANEL_MARGIN)
+  const belowTop = anchor.bottom + PANEL_MARGIN
+  const top = belowTop + PANEL_MAX_HEIGHT <= viewport.height
+    ? belowTop
+    : Math.max(PANEL_MARGIN, anchor.top - PANEL_MARGIN - PANEL_MAX_HEIGHT)
+  return { left: Math.round(left), top: Math.round(top), width: Math.round(width) }
+}
 
 /** Injected once per document: the panel chrome (positioned via inline rect math). */
 const STYLE_TEXT = [
@@ -43,6 +90,7 @@ const STYLE_TEXT = [
   'background:#10151b;border:1px solid #3d444d;color:#e6edf3;',
   '}',
   `.${ROOT_CLASS} input:focus{border-color:#58a6ff;}`,
+  `.${ROOT_CLASS} input::placeholder{color:#8b949e;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}list{overflow-y:auto;display:flex;flex-direction:column;gap:2px;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}status{padding:0 8px;color:#8b949e;font-size:11px;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}row{`,
@@ -50,6 +98,8 @@ const STYLE_TEXT = [
   'overflow-wrap:anywhere;color:#c9d1d9;max-height:36px;overflow:hidden;',
   '}',
   `.${ROOT_CLASS} .${ROOT_CLASS}row[aria-selected="true"]{background:#316dca;color:#ffffff;}`,
+  `.${ROOT_CLASS} .${ROOT_CLASS}match{background:transparent;color:#58a6ff;font-weight:600;}`,
+  `.${ROOT_CLASS} .${ROOT_CLASS}row[aria-selected="true"] .${ROOT_CLASS}match{color:#ffffff;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}empty{padding:5px 8px;color:#8b949e;font-style:italic;}`,
 ].join('')
 
@@ -75,10 +125,15 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
   const input = document.createElement('input')
   input.setAttribute('role', 'combobox')
   input.setAttribute('aria-label', 'Search query')
+  input.setAttribute('aria-autocomplete', 'list')
+  input.setAttribute('aria-expanded', 'false')
+  input.setAttribute('aria-controls', `${ROOT_CLASS}list`)
+  input.placeholder = 'Search history…'
   const status = document.createElement('div')
   status.className = `${ROOT_CLASS}status`
   const list = document.createElement('div')
   list.className = `${ROOT_CLASS}list`
+  list.id = `${ROOT_CLASS}list`
   list.setAttribute('role', 'listbox')
   root.append(input, status, list)
 
@@ -88,11 +143,35 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
   let selected = 0
   let matches: readonly string[] = []
 
+  /** Stable id of one option row (the combobox's activedescendant target). */
+  const rowId = (index: number): string => `${ROOT_CLASS}option-${index}`
+
   const close = (): void => {
     if (!open) return
     open = false
+    input.setAttribute('aria-expanded', 'false')
+    input.removeAttribute('aria-activedescendant')
     root.style.display = 'none'
     document.removeEventListener('mousedown', onOutside, true)
+  }
+
+  /** Append the row text with the matched substrings wrapped in mark spans. */
+  const appendRowText = (row: HTMLElement, text: string): void => {
+    const ranges = matchRanges(text, input.value, caseSensitive)
+    if (ranges.length === 0) {
+      row.textContent = text
+      return
+    }
+    let cursor = 0
+    for (const [start, end] of ranges) {
+      if (start > cursor) row.append(document.createTextNode(text.slice(cursor, start)))
+      const mark = document.createElement('mark')
+      mark.className = `${ROOT_CLASS}match`
+      mark.textContent = text.slice(start, end)
+      row.append(mark)
+      cursor = end
+    }
+    if (cursor < text.length) row.append(document.createTextNode(text.slice(cursor)))
   }
 
   const render = (): void => {
@@ -100,6 +179,7 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
     status.textContent = matches.length > 0
       ? `${matches.length} ${input.value === '' ? 'entries' : 'matches'}`
       : ''
+    input.setAttribute('aria-activedescendant', matches.length > 0 ? rowId(selected) : '')
     if (matches.length === 0) {
       const empty = document.createElement('div')
       empty.className = `${ROOT_CLASS}empty`
@@ -112,11 +192,16 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
       const row = document.createElement('div')
       row.className = `${ROOT_CLASS}row`
       row.setAttribute('role', 'option')
+      row.id = rowId(index)
       row.setAttribute('aria-selected', index === selected ? 'true' : 'false')
-      row.textContent = text
+      appendRowText(row, text)
       row.addEventListener('click', () => pick(index))
       list.append(row)
     })
+    // Keep the selected row inside the scrollable list (jsdom has no
+    // layout, so the optional call also keeps tests runnable).
+    const selectedRow = list.children[selected]
+    if (selectedRow instanceof HTMLElement) selectedRow.scrollIntoView?.({ block: 'nearest' })
   }
 
   const pick = (index: number): void => {
@@ -191,14 +276,11 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
       open = true
       root.style.display = 'flex'
       const rect = anchor.getBoundingClientRect()
-      root.style.left = `${Math.round(rect.left)}px`
-      root.style.width = `${Math.round(Math.max(rect.width, 320))}px`
-      // Below the composer by default; above it when the panel would
-      // overflow the viewport downward (328 = max panel height + margins).
-      const belowTop = rect.bottom + 8
-      root.style.top = belowTop + 328 <= window.innerHeight
-        ? `${Math.round(belowTop)}px`
-        : `${Math.round(Math.max(8, rect.top - 8 - 328))}px`
+      const placement = placePanel(rect, { width: window.innerWidth, height: window.innerHeight })
+      root.style.left = `${placement.left}px`
+      root.style.top = `${placement.top}px`
+      root.style.width = `${placement.width}px`
+      input.setAttribute('aria-expanded', 'true')
       if (root.parentNode === null) document.body.appendChild(root)
       input.focus()
       document.addEventListener('mousedown', onOutside, true)

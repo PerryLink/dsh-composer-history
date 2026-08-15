@@ -10,9 +10,9 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.3.0-66ccff"></a>
+  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.4.0-66ccff"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
-  <img alt="tests" src="https://img.shields.io/badge/tests-200%2F200-brightgreen">
+  <img alt="tests" src="https://img.shields.io/badge/tests-217%2F217-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
 </p>
 
@@ -143,7 +143,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `historyScope` | `'session' \| 'workspace'` | `'session'` | `'workspace'` は現在のセッションの前に他の一覧表示されたセッションのユーザーメッセージを前置 |
 | `persistHistory` | `boolean` | `true` | 送信済みメッセージをブラウザローカルストアに追記（[プライバシー](#プライバシー) 参照） |
 | `maxPersisted` | `number` | `200` | 保存する最大エントリ数；`0` = 無制限 |
-| `enableSearch` | `boolean` | `false` | `Ctrl+R` 逆検索オーバーレイを有効化 |
+| `enableSearch` | `boolean` | `true` | `Ctrl+R` 逆検索オーバーレイを有効化 |
 | `searchKeys` | `string[]` | `['Ctrl+R']` | 検索を開くコードスペック（修飾キー `Ctrl`/`Alt`/`Meta`/`Shift` + キー名）；不正なスペックはブラウザファイバーを大きなエラーで失敗させる |
 | `searchCaseSensitive` | `boolean` | `false` | 検索マッチングで大文字小文字を区別するか |
 | `includeCompactionSummaries` | `boolean` | `true` | `[compacted] …` チェックポイント要約をリコールと検索に取り込む |
@@ -166,7 +166,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `searchKeys` chord | コンポーザーにフォーカス、`plain` フェーズ、メニュー／選択／IME なし | 逆検索を開く；ブラウズ終了、表示中のテキストが下書きになる |
 | Shift/Alt/Meta+arrows, IME, selection | 任意 | 常に解放 |
 
-`upKey`/`downKey`/`escapeKey`/`searchKeys` は上記のキーを改名します。修飾キーポリシー（および検索コードの完全一致する修飾キー）は変わりません。検索オーバーレイ内では：↑/↓ でマッチ選択を移動、Enter で確定、Esc でキャンセル、クリックで選択、外側の押下でキャンセル。
+`upKey`/`downKey`/`escapeKey`/`searchKeys` は上記のキーを改名します。修飾キーポリシー（および検索コードの完全一致する修飾キー）は変わりません。検索オーバーレイ内では：↑/↓ でマッチ選択を移動（選択行は可視範囲までスクロール）、Enter で確定、Esc でキャンセル、クリックで選択、外側の押下でキャンセル。マッチした部分文字列は各行でハイライト表示されます。
 
 ## 🔍 逆検索
 
@@ -190,7 +190,7 @@ harness コアはすべての dsh セッションにスライディングコン�
 
 ## 🔒 プライバシー
 
-`persistHistory: true`（デフォルト）は、送信済みメッセージをこのブラウザの `localStorage` の `dsh.composer-history.v1` キーに書き込みます。上限は `maxPersisted`、どこにもアップロードされず、同じオリジンのページからのみ読み取れます。`persistHistory: false` で無効化すると——リコールはライブのセッション投影（とワークスペーススコープ）のみを使う v1 動作になります。破損または外部のペイロードは無言でリセットされます。
+`persistHistory: true`（デフォルト）は、送信済みメッセージをこのブラウザの `localStorage` の `dsh.composer-history.v1` キーに書き込みます。上限は `maxPersisted`、どこにもアップロードされず、同じオリジンのページからのみ読み取れます。`persistHistory: false` で無効化すると——リコールはライブのセッション投影（とワークスペーススコープ）のみを使う v1 動作になります。破損または外部のペイロードは無言でリセットされます。保存済みデータをすべて消去するには、ページの DevTools コンソールで `localStorage.removeItem('dsh.composer-history.v1')` を実行してください。
 
 ## ✅ 検証
 
@@ -252,4 +252,4 @@ harness コアはすべての dsh セッションにスライディングコン�
 
 ## 📄 License
 
-[Apache License 2.0](./LICENSE)
+[Apache License 2.0](./LICENSE) · リリース履歴は [CHANGELOG.md](./CHANGELOG.md)

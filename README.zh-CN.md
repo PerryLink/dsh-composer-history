@@ -10,9 +10,9 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.3.0-66ccff"></a>
+  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.4.0-66ccff"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
-  <img alt="tests" src="https://img.shields.io/badge/tests-200%2F200-brightgreen">
+  <img alt="tests" src="https://img.shields.io/badge/tests-217%2F217-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
 </p>
 
@@ -143,7 +143,7 @@ pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打�
 | `historyScope` | `'session' \| 'workspace'` | `'session'` | `'workspace'` 把其他已列表会话的用户消息排在当前会话之前 |
 | `persistHistory` | `boolean` | `true` | 把已发送消息追加到浏览器本地存储（见[隐私](#隐私)） |
 | `maxPersisted` | `number` | `200` | 存储条目上限；`0` = 不限 |
-| `enableSearch` | `boolean` | `false` | 启用 `Ctrl+R` 反向搜索覆盖层 |
+| `enableSearch` | `boolean` | `true` | 启用 `Ctrl+R` 反向搜索覆盖层 |
 | `searchKeys` | `string[]` | `['Ctrl+R']` | 打开搜索的组合键规格（修饰键 `Ctrl`/`Alt`/`Meta`/`Shift` + 键名）；非法规格会使浏览器 fiber 响亮失败 |
 | `searchCaseSensitive` | `boolean` | `false` | 搜索匹配是否区分字母大小写 |
 | `includeCompactionSummaries` | `boolean` | `true` | 把 `[compacted] …` 检查点摘要纳入召回与搜索 |
@@ -166,7 +166,7 @@ pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打�
 | `searchKeys` 组合键 | 作曲器聚焦、`plain` 阶段、无菜单/选区/IME | 打开反向搜索；浏览结束，当前显示的文本成为草稿 |
 | Shift/Alt/Meta+方向键、IME、选区 | 任意 | 始终放行 |
 
-`upKey`/`downKey`/`escapeKey`/`searchKeys` 可以重命名上表按键；修饰键策略（以及搜索组合键的精确修饰键匹配）不变。搜索覆盖层内：↑/↓ 移动匹配选择、Enter 填充、Esc 取消、点击选中、点击面板外取消。
+`upKey`/`downKey`/`escapeKey`/`searchKeys` 可以重命名上表按键；修饰键策略（以及搜索组合键的精确修饰键匹配）不变。搜索覆盖层内：↑/↓ 移动匹配选择（选中行自动滚入可见区域）、Enter 填充、Esc 取消、点击选中、点击面板外取消；匹配到的子串会在每行中高亮显示。
 
 ## 🔍 反向搜索
 
@@ -190,7 +190,7 @@ harness 核心给每个 dsh 会话提供滑动上下文窗口 —— 与 Claude 
 
 ## 🔒 隐私
 
-`persistHistory: true`（默认）把已发送消息写入本浏览器 `localStorage` 的 `dsh.composer-history.v1` 键，受 `maxPersisted` 限制，绝不上传，仅同源页面可读。用 `persistHistory: false` 关闭——召回随即只使用实时会话投影（和工作区范围），与 v1 行为一致。损坏或外来的载荷会被静默重置。
+`persistHistory: true`（默认）把已发送消息写入本浏览器 `localStorage` 的 `dsh.composer-history.v1` 键，受 `maxPersisted` 限制，绝不上传，仅同源页面可读。用 `persistHistory: false` 关闭——召回随即只使用实时会话投影（和工作区范围），与 v1 行为一致。损坏或外来的载荷会被静默重置。要清除全部已存储数据，请在页面 DevTools 控制台执行 `localStorage.removeItem('dsh.composer-history.v1')`。
 
 ## ✅ 验证
 
@@ -252,4 +252,4 @@ harness 核心给每个 dsh 会话提供滑动上下文窗口 —— 与 Claude 
 
 ## 📄 许可证
 
-[Apache License 2.0](./LICENSE)
+[Apache License 2.0](./LICENSE) · 发布历史见 [CHANGELOG.md](./CHANGELOG.md)

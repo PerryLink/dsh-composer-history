@@ -10,9 +10,9 @@
   <a href="https://github.com/topics/deepseek-harness"><img alt="topic: deepseek-harness" src="https://img.shields.io/badge/topic-deepseek--harness-8A2BE2"></a>
   <br>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.3.0-66ccff"></a>
+  <a href="./package.json"><img alt="version" src="https://img.shields.io/badge/version-0.4.0-66ccff"></a>
   <a href="./package.json"><img alt="node" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933"></a>
-  <img alt="tests" src="https://img.shields.io/badge/tests-200%2F200-brightgreen">
+  <img alt="tests" src="https://img.shields.io/badge/tests-217%2F217-brightgreen">
   <img alt="harness client" src="https://img.shields.io/badge/harness%20client-types%20rc.6-orange">
 </p>
 
@@ -143,7 +143,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `historyScope` | `'session' \| 'workspace'` | `'session'` | `'workspace'` ставит пользовательские сообщения других перечисленных сессий перед сообщениями текущей сессии |
 | `persistHistory` | `boolean` | `true` | добавляет отправленные сообщения в локальное хранилище браузера (см. [Приватность](#приватность)) |
 | `maxPersisted` | `number` | `200` | максимум хранимых записей; `0` = без ограничения |
-| `enableSearch` | `boolean` | `false` | включает оверлей обратного поиска `Ctrl+R` |
+| `enableSearch` | `boolean` | `true` | включает оверлей обратного поиска `Ctrl+R` |
 | `searchKeys` | `string[]` | `['Ctrl+R']` | спецификации аккордов, открывающих поиск (модификаторы `Ctrl`/`Alt`/`Meta`/`Shift` + имя клавиши); некорректная спецификация громко роняет браузерный fiber |
 | `searchCaseSensitive` | `boolean` | `false` | различает ли поиск регистр букв |
 | `includeCompactionSummaries` | `boolean` | `true` | включать сводки контрольных точек `[compacted] …` в вызов и поиск |
@@ -166,7 +166,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `searchKeys` chord | композер в фокусе, фаза `plain`, нет меню/выделения/IME | открыть обратный поиск; просмотр завершается, показанный текст становится черновиком |
 | Shift/Alt/Meta+arrows, IME, selection | любое | всегда отпускается |
 
-`upKey`/`downKey`/`escapeKey`/`searchKeys` переименовывают клавиши выше; политика модификаторов (и точное совпадение модификаторов поискового аккорда) не меняется. Внутри оверлея поиска: ↑/↓ двигают выбор совпадения, Enter заполняет, Esc отменяет, клик выбирает, нажатие снаружи отменяет.
+`upKey`/`downKey`/`escapeKey`/`searchKeys` переименовывают клавиши выше; политика модификаторов (и точное совпадение модификаторов поискового аккорда) не меняется. Внутри оверлея поиска: ↑/↓ двигают выбор совпадения (выбранная строка прокручивается в видимую область), Enter заполняет, Esc отменяет, клик выбирает, нажатие снаружи отменяет. Совпавшие подстроки подсвечиваются в каждой строке.
 
 ## 🔍 Обратный поиск
 
@@ -190,7 +190,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 
 ## 🔒 Приватность
 
-`persistHistory: true` (по умолчанию) записывает отправленные сообщения в `localStorage` этого браузера под ключом `dsh.composer-history.v1`, ограниченно `maxPersisted`, никуда не загружается и читается только страницами того же origin. Отключите через `persistHistory: false` — тогда вызов использует только живую проекцию сессии (и область воркспейса), как в поведении v1. Повреждённые или чужеродные данные молча сбрасываются.
+`persistHistory: true` (по умолчанию) записывает отправленные сообщения в `localStorage` этого браузера под ключом `dsh.composer-history.v1`, ограниченно `maxPersisted`, никуда не загружается и читается только страницами того же origin. Отключите через `persistHistory: false` — тогда вызов использует только живую проекцию сессии (и область воркспейса), как в поведении v1. Повреждённые или чужеродные данные молча сбрасываются. Чтобы стереть всё уже сохранённое, выполните `localStorage.removeItem('dsh.composer-history.v1')` в консоли DevTools страницы.
 
 ## ✅ Проверка
 
@@ -252,4 +252,4 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 
 ## 📄 Лицензия
 
-[Apache License 2.0](./LICENSE)
+[Apache License 2.0](./LICENSE) · история релизов в [CHANGELOG.md](./CHANGELOG.md)
