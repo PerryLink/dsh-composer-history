@@ -1,0 +1,7 @@
+# Bundle patch for `dsh plugin add`-style installation: inserts the plugin
+# row into the composition (id + bare package name; config defaults come
+# from the Config schema). Mirrors the registration block documented in
+# README.md § Installation.
+- insert:
+    - id: composer-history
+      name: dsh-composer-history

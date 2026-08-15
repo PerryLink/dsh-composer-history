@@ -63,7 +63,7 @@ pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打�
 
 启动**之前**先构建 —— 客户端包检查会拒绝从未构建产物启动。
 
-> 从 npm 安装：`pnpm add dsh-composer-history`（或 npm/yarn）自带构建产物——跳过步骤 1 和 5。
+> 从 npm 安装：`pnpm add dsh-composer-history`（或 npm/yarn）自带构建产物——跳过步骤 1 和 5。包同时声明了 `dsh.bundle` manifest（根目录 `cordis.patch.yml`），`dsh plugin add` 类安装器可直接注册插件行。
 
 1. 构建插件（见上）。
 2. 在 `$DSH_HOME/profiles/<your-profile>/cordis.patch.yml` 里注册这一行。行 `name` 用**裸包名**：浏览器图的行 id *就是*这个字符串，客户端 bundle 在构建时也盖上同一个 id。

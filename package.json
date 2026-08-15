@@ -31,6 +31,7 @@
     "lib/invariant.js",
     "lib/client.js",
     "lib/types/**/*.d.ts",
+    "cordis.patch.yml",
     "src",
     "docs",
     "README*.md",
@@ -41,6 +42,9 @@
     "access": "public"
   },
   "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
       "inject": [

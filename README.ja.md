@@ -63,7 +63,7 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 
 起動する**前に**ビルドしてください——未ビルドのバンドルに対してはクライアントパッケージの検証が起動を拒否します。
 
-> npm から: `pnpm add dsh-composer-history`（または npm / yarn）はビルド済みバンドルを同梱します——ステップ 1 と 5 は不要です。
+> npm から: `pnpm add dsh-composer-history`（または npm / yarn）はビルド済みバンドルを同梱します——ステップ 1 と 5 は不要です。本パッケージは `dsh.bundle` マニフェスト（ルートの `cordis.patch.yml`）も宣言しているため、`dsh plugin add` 系のインストーラーが行を自動登録できます。
 
 1. プラグインをビルドします（上記）。
 2. `$DSH_HOME/profiles/<your-profile>/cordis.patch.yml` に行を登録します。行の `name` には**裸のパッケージ名**を使ってください：ブラウザ側グラフの行 id はこの文字列そのもので、クライアントバンドルもビルド時に同じ id を埋め込みます。
