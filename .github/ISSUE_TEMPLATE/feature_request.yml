@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest an idea or improvement
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the problem this feature would solve, and when you hit it.
+      placeholder: e.g. I often want to recall drafts from a specific workspace only, but the persisted history mixes all workspaces.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: How the plugin should behave once the feature exists.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional)
+      description: Workarounds or alternative designs you already tried or thought about.
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context (optional)
+      description: Anything else that helps — related config, screenshots, links.
+    validations:
+      required: false

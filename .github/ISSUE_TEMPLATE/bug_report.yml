@@ -1,0 +1,64 @@
+name: Bug report
+description: Report a bug or unexpected behavior
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: The dsh-composer-history version (check package.json or the npm page).
+      placeholder: e.g. 0.4.0
+    validations:
+      required: true
+  - type: input
+    id: harness-version
+    attributes:
+      label: DeepSeek Harness version
+      description: The dsh runtime / client packages version you run.
+      placeholder: e.g. dsh 0.1.0-rc.6
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS / Node.js version
+      description: Operating system and Node.js version (plus browser, if the issue is UI-side).
+      placeholder: e.g. Windows 11, Node 22.19.0, Chrome 141
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered, minimal steps that reliably trigger the bug.
+      placeholder: |
+        1. Open the web GUI and focus the composer
+        2. Press ↑ with a half-typed draft
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (optional)
+      description: |
+        **Warning: redact all secrets before pasting — never include tokens, keys, cookies, or Authorization headers.**
+        Relevant console output, dsh boot logs, or reproduction screenshots.
+      render: text
+    validations:
+      required: false
