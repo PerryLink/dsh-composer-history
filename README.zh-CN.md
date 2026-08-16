@@ -54,7 +54,7 @@ $ 按 Ctrl+R → 输入片段 → ↑/↓ → Enter → 匹配项填入作曲器
 ```sh
 cd Project/Plugins/dsh-composer-history
 pnpm install
-pnpm run typecheck && pnpm run build && pnpm run test   # 全绿：200/200
+pnpm run typecheck && pnpm run build && pnpm run test   # 全绿：234/234
 pnpm run test:coverage                                  # 分模块覆盖率报告
 pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打包面
 ```
@@ -151,6 +151,12 @@ pnpm run check:readmes && pnpm run verify:pack          # 文档一致性 + 打�
 | `includeCompactionSummaries` | `boolean` | `true` | 把 `[compacted] …` 检查点摘要纳入召回与搜索 |
 | `showCompactionNotice` | `boolean` | `true` | 检查点落地时显示短暂通知 |
 | `compactCommandText` | `string` | `'/compact'` | 通知中"立即压缩"按钮填入作曲器的斜杠命令；`''` 隐藏该按钮 |
+| `enableSnippets` | `boolean` | `true` | 启用片段库（`/save`、`/load`、搜索面板选取） |
+| `maxSnippets` | `number` | `200` | 最大存储片段数；`0` = 无限制 |
+| `enableTemplates` | `boolean` | `true` | 启用提示词模板库（插入时填充变量） |
+| `enableInsights` | `boolean` | `true` | 启用复用洞察提示（本地使用统计） |
+| `insightMinUses` | `number` | `2` | 复用提示显示前的最少使用次数 |
+| `enableCompactionHighlight` | `boolean` | `true` | 在搜索面板中给 `[compacted] …` 摘要加醒目徽标 |
 
 ## 🎹 按键绑定
 
@@ -190,9 +196,15 @@ harness 核心给每个 dsh 会话提供滑动上下文窗口 —— 与 Claude 
 
 > 压缩本身（阈值、摘要模型、`/compact`）由 harness 核心的 compaction 插件负责 —— 本插件只观察客户端快照已经暴露的检查点标记，因此不需要任何 agent-loop 或模型请求改动。
 
+## 🧠 智能输入层
+
+在终端式历史之上，三套浏览器本地库把作曲器变成可复用的输入面：**片段库**（`/save <名字>` 把当前输入存为带标签的命名片段、`/load <名字>` 或 `Ctrl+R` 选取插入，工作区作用域、浏览器本地持久化）、**提示词模板**（`{{workspace}}`/`{{session}}`/`{{draft}}` 变量在插入时实时填充；模板库仅在显式点击时以 JSON 导出/导入）、**复用洞察**（本地统计高频提示词，作曲器下方轻量提示「在 N 个会话里用过 M 次」；绝不上传）。压缩摘要继续以 `[compacted] …` 形式与历史同源展示，并在搜索面板中加琥珀色徽标高亮。全部数据仅存本浏览器 `localStorage`（`dsh.composer-history.snippets.v1` / `.templates.v1` / `.insights.v1`），损坏载荷静默重置。
+
+## 🔒 隐私
 ## 🔒 隐私
 
 `persistHistory: true`（默认）把已发送消息写入本浏览器 `localStorage` 的 `dsh.composer-history.v1` 键，受 `maxPersisted` 限制，绝不上传，仅同源页面可读。用 `persistHistory: false` 关闭——召回随即只使用实时会话投影（和工作区范围），与 v1 行为一致。损坏或外来的载荷会被静默重置。要清除全部已存储数据，请在页面 DevTools 控制台执行 `localStorage.removeItem('dsh.composer-history.v1')`。
+智能输入层新增三个键，遵守同一策略（浏览器本地、绝不上传、损坏载荷静默重置）：`dsh.composer-history.snippets.v1`（片段文本 + 标签 + 使用计数）、`dsh.composer-history.templates.v1`（模板文本）、`dsh.composer-history.insights.v1`（去重提示词文本 + 每会话使用计数）。用同样的 `localStorage.removeItem(...)` 方式可清除任一库。
 
 ## ✅ 验证
 

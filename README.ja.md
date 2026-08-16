@@ -54,7 +54,7 @@ $ press Ctrl+R → type a fragment → ↑/↓ → Enter → the match fills the
 ```sh
 cd Project/Plugins/dsh-composer-history
 pnpm install
-pnpm run typecheck && pnpm run build && pnpm run test   # all green: 200/200
+pnpm run typecheck && pnpm run build && pnpm run test   # all green: 234/234
 pnpm run test:coverage                                  # per-module coverage report
 pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack surface
 ```
@@ -151,6 +151,12 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `includeCompactionSummaries` | `boolean` | `true` | `[compacted] …` チェックポイント要約をリコールと検索に取り込む |
 | `showCompactionNotice` | `boolean` | `true` | 圧縮チェックポイントの落地時に一時通知を表示 |
 | `compactCommandText` | `string` | `'/compact'` | 通知の「今すぐ圧縮」アクションがコンポーザーに入力するスラッシュコマンド；`''` で非表示 |
+| `enableSnippets` | `boolean` | `true` | スニペットライブラリを有効化（`/save`、`/load`、検索パネルからの選択） |
+| `maxSnippets` | `number` | `200` | 保存するスニペットの上限；`0` = 無制限 |
+| `enableTemplates` | `boolean` | `true` | プロンプトテンプレートライブラリを有効化（挿入時に変数を展開） |
+| `enableInsights` | `boolean` | `true` | 再利用インサイトのヒントを有効化（ローカル使用統計） |
+| `insightMinUses` | `number` | `2` | 再利用ヒントを表示する最小使用回数 |
+| `enableCompactionHighlight` | `boolean` | `true` | 検索パネルで `[compacted] …` サマリーにバッジを表示 |
 
 ## 🎹 キーバインド
 
@@ -190,9 +196,15 @@ harness コアはすべての dsh セッションにスライディングコン�
 
 > 圧縮そのもの（閾値、要約モデル、`/compact`）は harness コアの compaction プラグインが担います——本プラグインはクライアントスナップショットが既に公開しているチェックポイントマーカーを観察するだけなので、agent-loop やモデルリクエストの変更は一切必要ありません。
 
+## 🧠 スマート入力レイヤー
+
+端末式履歴の上に、3 つのブラウザローカルライブラリがコンポーザーを再利用可能な入力面にします：**スニペットライブラリ**（`/save <名前>` で現在の入力をタグ付きの名前付きスニペットとして保存、`/load <名前>` または `Ctrl+R` から挿入。ワークスペーススコープ、ブラウザローカル永続化）、**プロンプトテンプレート**（`{{workspace}}`/`{{session}}`/`{{draft}}` 変数を挿入時に展開。テンプレートライブラリは明示的なクリックでのみ JSON としてエクスポート/インポート）、**再利用インサイト**（頻出プロンプトをローカル集計し、コンポーザー下に「N セッションで M 回使用」と軽く表示。アップロードは一切なし）。圧縮サマリーは引き続き `[compacted] …` として履歴と同じソースで表示され、検索パネルでは琥珀色のバッジでハイライトされます。すべてのデータはこのブラウザの `localStorage`（`dsh.composer-history.snippets.v1` / `.templates.v1` / `.insights.v1`）にのみ保存され、壊れたペイロードは静かにリセットされます。
+
+## 🔒 プライバシー
 ## 🔒 プライバシー
 
 `persistHistory: true`（デフォルト）は、送信済みメッセージをこのブラウザの `localStorage` の `dsh.composer-history.v1` キーに書き込みます。上限は `maxPersisted`、どこにもアップロードされず、同じオリジンのページからのみ読み取れます。`persistHistory: false` で無効化すると——リコールはライブのセッション投影（とワークスペーススコープ）のみを使う v1 動作になります。破損または外部のペイロードは無言でリセットされます。保存済みデータをすべて消去するには、ページの DevTools コンソールで `localStorage.removeItem('dsh.composer-history.v1')` を実行してください。
+スマート入力レイヤーは同じポリシー（ブラウザローカル、アップロードなし、壊れたペイロードは静かにリセット）で 3 つのキーを追加します：`dsh.composer-history.snippets.v1`（スニペット本文 + タグ + 使用回数）、`dsh.composer-history.templates.v1`（テンプレート本文）、`dsh.composer-history.insights.v1`（重複排除したプロンプト本文 + セッションごとの使用回数）。同様の `localStorage.removeItem(...)` で各ライブラリを消去できます。
 
 ## ✅ 検証
 

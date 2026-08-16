@@ -54,7 +54,7 @@ $ press Ctrl+R → type a fragment → ↑/↓ → Enter → the match fills the
 ```sh
 cd Project/Plugins/dsh-composer-history
 pnpm install
-pnpm run typecheck && pnpm run build && pnpm run test   # all green: 200/200
+pnpm run typecheck && pnpm run build && pnpm run test   # all green: 234/234
 pnpm run test:coverage                                  # per-module coverage report
 pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack surface
 ```
@@ -151,6 +151,12 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `includeCompactionSummaries` | `boolean` | `true` | включать сводки контрольных точек `[compacted] …` в вызов и поиск |
 | `showCompactionNotice` | `boolean` | `true` | показывать краткое уведомление при появлении контрольной точки сжатия |
 | `compactCommandText` | `string` | `'/compact'` | slash-команда, которую вставляет в композер действие «Сжать сейчас»; `''` скрывает действие |
+| `enableSnippets` | `boolean` | `true` | включить библиотеку сниппетов（`/save`、`/load`、выбор из панели поиска） |
+| `maxSnippets` | `number` | `200` | максимум сохранённых сниппетов；`0` = без ограничения |
+| `enableTemplates` | `boolean` | `true` | включить библиотеку шаблонов промптов（переменные заполняются при вставке） |
+| `enableInsights` | `boolean` | `true` | включить подсказку повторного использования（локальная статистика） |
+| `insightMinUses` | `number` | `2` | минимальное число использований до показа подсказки |
+| `enableCompactionHighlight` | `boolean` | `true` | помечать сводки `[compacted] …` бейджем в панели поиска |
 
 ## 🎹 Раскладка клавиш
 
@@ -190,9 +196,15 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 
 > Само сжатие (пороги, модель сводки, `/compact`) принадлежит compaction-плагинам ядра harness — этот плагин лишь наблюдает маркеры контрольных точек, которые клиентский снимок уже отдаёт, поэтому никаких правок agent-loop или запросов к модели не требуется.
 
+## 🧠 Интеллектуальный слой ввода
+
+Поверх терминальной истории три локальные браузерные библиотеки превращают композер в поверхность многократного ввода：**библиотека сниппетов**（`/save <имя>` сохраняет текущий ввод как именованный сниппет с тегами、`/load <имя>` или выбор через `Ctrl+R` вставляет его；область действия — рабочая область、хранение локально в браузере）、**шаблоны промптов**（переменные `{{workspace}}`/`{{session}}`/`{{draft}}` заполняются при вставке；библиотека экспортируется/импортируется в JSON только явным кликом）、**инсайты повторного использования**（локальная статистика частых промптов и лёгкая подсказка под композером «использован M раз в N сессиях»；ничего не выгружается）。Сводки сжатия по-прежнему показываются как `[compacted] …` из того же источника, что и история, и подсвечиваются янтарным бейджем в панели поиска。Все данные хранятся только в `localStorage` этого браузера（`dsh.composer-history.snippets.v1` / `.templates.v1` / `.insights.v1`），повреждённые полезные нагрузки тихо сбрасываются。
+
+## 🔒 Приватность
 ## 🔒 Приватность
 
 `persistHistory: true` (по умолчанию) записывает отправленные сообщения в `localStorage` этого браузера под ключом `dsh.composer-history.v1`, ограниченно `maxPersisted`, никуда не загружается и читается только страницами того же origin. Отключите через `persistHistory: false` — тогда вызов использует только живую проекцию сессии (и область воркспейса), как в поведении v1. Повреждённые или чужеродные данные молча сбрасываются. Чтобы стереть всё уже сохранённое, выполните `localStorage.removeItem('dsh.composer-history.v1')` в консоли DevTools страницы.
+Интеллектуальный слой ввода добавляет три ключа по той же политике（локально в браузере、без выгрузки、повреждённые полезные нагрузки тихо сбрасываются）：`dsh.composer-history.snippets.v1`（тексты сниппетов + теги + счётчики использования）、`dsh.composer-history.templates.v1`（тексты шаблонов）、`dsh.composer-history.insights.v1`（дедуплицированные тексты промптов + счётчики по сессиям）。Любую библиотеку можно стереть тем же `localStorage.removeItem(...)`。
 
 ## ✅ Проверка
 

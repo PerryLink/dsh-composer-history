@@ -33,6 +33,10 @@ Press **↑** like you're in a terminal — but keep your half-typed prompt safe
 - 🔍 **Reverse search** — `Ctrl+R` (configurable) opens a query panel under the composer: type to filter, ↑/↓ to pick, Enter to fill, Esc to cancel.
 - 🎛️ **Every key is configurable** — `upKey`/`downKey`/`escapeKey`/`searchKeys` live in the Config schema, not in code.
 - 🧭 **Sliding-context aware** — when the harness auto-compacts (Claude Code / Codex-style), checkpoint summaries join ↑ recall and `Ctrl+R` search as `[compacted] …` entries, and a transient notice (with a one-click "Fill `/compact`" action) announces each compaction. See [Sliding context](#-sliding-context).
+- 📚 **Cross-session snippet library** — `/save <name>` turns the current input into a named, tagged snippet (workspace-scoped); `/load <name>` (or a `Ctrl+R` pick) inserts it. The library persists browser-locally and shares the search panel with history.
+- 🧩 **Prompt templates with variables** — a template library with `{{workspace}}` / `{{session}}` / `{{draft}}` placeholders filled at insertion; the library exports/imports as JSON on an explicit click only.
+- 🔁 **Reuse insights** — browser-local statistics count how often a prompt was used across sessions; a small hint under the composer reports "used M× in N sessions". Nothing is ever uploaded.
+- 🏷️ **Compaction summary highlight** — `[compacted] …` summaries badge amber in the search panel, visually distinct from history, snippets (green) and templates (purple).
 - ⚙️ **Settings integration** — the host half registers the `composer-history` settings namespace (cordis.yml config becomes the composition `base`); user overrides from the settings document reach the browser. Without a settings service the plugin keeps working exactly as composed.
 - 🚦 **Full gating** — intercepts only in the `plain` input phase; yields to the slash menu, command popups, IME composition, text selections, and alt/meta/shift combos. Pass-through paths have zero side effects.
 - 📐 **Two edge modes** — `logical` (newline-based, default) or `visual` (a hidden mirror div measures real wrapped lines).
@@ -54,7 +58,7 @@ $ press Ctrl+R → type a fragment → ↑/↓ → Enter → the match fills the
 ```sh
 cd Project/Plugins/dsh-composer-history
 pnpm install
-pnpm run typecheck && pnpm run build && pnpm run test   # all green: 200/200
+pnpm run typecheck && pnpm run build && pnpm run test   # all green: 234/234
 pnpm run test:coverage                                  # per-module coverage report
 pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack surface
 ```
@@ -151,6 +155,12 @@ Every tunable lives in a Schemastery `Config` schema (no hardcoded knobs). Inval
 | `includeCompactionSummaries` | `boolean` | `true` | admit `[compacted] …` checkpoint summaries into recall and search |
 | `showCompactionNotice` | `boolean` | `true` | show a transient notice when a compaction checkpoint lands |
 | `compactCommandText` | `string` | `'/compact'` | slash command the notice's "Compact now" action fills into the composer; `''` hides the action |
+| `enableSnippets` | `boolean` | `true` | enable the snippet library (`/save`, `/load`, search-panel picking) |
+| `maxSnippets` | `number` | `200` | maximum stored snippets; `0` = unlimited |
+| `enableTemplates` | `boolean` | `true` | enable the prompt-template library (variables fill at insertion) |
+| `enableInsights` | `boolean` | `true` | enable the reuse-insight hint (local usage statistics) |
+| `insightMinUses` | `number` | `2` | minimum uses before the reuse hint shows |
+| `enableCompactionHighlight` | `boolean` | `true` | badge `[compacted] …` summaries distinctly in the search panel |
 
 ## 🎹 Keybindings
 
@@ -190,9 +200,44 @@ The harness core gives every dsh session a sliding context window, the same work
 
 > Compaction itself (thresholds, summary model, `/compact`) is owned by the harness core's compaction plugins — this plugin only observes the checkpoint markers the client snapshot already exposes, so it works without any agent-loop or model-request changes.
 
+## 🧠 Smart input layer
+
+On top of the terminal-style history, three browser-local libraries turn the composer into a reusable input surface. Everything below lives in `localStorage` (keys `dsh.composer-history.snippets.v1`, `.templates.v1`, `.insights.v1`), never touches the network, and every switch is a Config field.
+
+**Snippets (cross-session command library)**
+
+```text
+/save ship-check --tag=release,ops
+check the build, run the smoke suite, tag the release        ← the rest of the draft is the snippet
+/save ship-check                                             → "snippet saved: ship-check"
+/load ship-check                                             → the snippet fills the composer
+Ctrl+R → search panel lists snippets (green badge = name) alongside history
+```
+
+- `/save <name>` consumes the Enter, stores the draft (minus the command line) under a kebab-case name with optional tags, and clears the composer. Nothing to save → an error notice, the command never sends.
+- `/load <name>` inserts the snippet at the caret (whole-draft replace, caret to end) and counts the use.
+- Scope: snippets saved with a workspace cwd are workspace-scoped; snippets saved without one are global. `maxSnippets` bounds the library; same-name saves replace.
+- The plugin never sends: every fill lands in the ordinary draft and your Enter stays yours.
+
+**Prompt templates with variables**
+
+Templates are stored prompt texts with `{{variable}}` placeholders. The search panel lists them with a purple badge; picking one fills the variables from the live session and inserts the result. Built-in variables: `{{workspace}}` (the session's cwd), `{{session}}` (the session id), `{{draft}}` (the current draft). A template referencing an unknown variable fails loudly with the missing list — a half-filled prompt is worse than an error.
+
+The template library exports to and imports from a JSON document (`composer-templates-v1`) through the panel's **Export templates / Import templates** buttons — an explicit user action; the plugin never writes files on its own.
+
+**Reuse insights**
+
+Every newly committed user message (and every snippet load) lands one browser-local usage record keyed by exact text. While you type, a small hint under the composer reports `used M× in N sessions · 在 N 个会话里用过 M 次` once the draft matches a prompt used in at least `insightMinUses` (default 2) sessions. Toggle with `enableInsights`; the statistics contain only the deduped texts and counters.
+
+**Compaction summary highlight**
+
+`Ctrl+R` marks `[compacted] …` summaries with an amber badge (history stays unbadged), snippets green, templates purple — the panel's provenance is visible at a glance. Toggle with `enableCompactionHighlight`.
+
 ## 🔒 Privacy
 
 `persistHistory: true` (default) writes sent messages to this browser's `localStorage` under `dsh.composer-history.v1`, bounded by `maxPersisted`, never uploaded anywhere, and readable only by pages of the same origin. Disable it with `persistHistory: false` — recall then uses only the live session projection (and workspace scope), like the v1 behavior. Corrupt or foreign payloads are silently reset. To erase everything already stored, run `localStorage.removeItem('dsh.composer-history.v1')` in the page's devtools console.
+
+The smart-input libraries add three more keys under the same policy (browser-local, never uploaded, corrupt payloads reset): `dsh.composer-history.snippets.v1` (snippet texts + tags + use counters), `dsh.composer-history.templates.v1` (template texts), `dsh.composer-history.insights.v1` (deduped prompt texts + per-session use counters). Remove any of them the same way to wipe that library.
 
 ## ✅ Verification
 
@@ -209,8 +254,12 @@ The harness core gives every dsh session a sliding context window, the same work
    - `Ctrl+R` opens the search panel; typing filters; ↑/↓ + Enter fills; Esc leaves the draft untouched.
    - After a page reload, ↑ recalls messages sent before the reload (with `persistHistory` on).
    - With `historyScope: 'workspace'`, entries from other listed sessions precede the current session's.
-   - After a compaction lands (auto or `/compact`), ↑ walks into the `[compacted] …` summary entry; `Ctrl+R` finds it by its text.
+   - After a compaction lands (auto or `/compact`), ↑ walks into the `[compacted] …` summary entry; `Ctrl+R` finds it by its text and badges it amber.
    - A compaction notice appears near the bottom, auto-dismisses, and its button fills `/compact` into the composer.
+    - /save ship-check followed by more lines saves the rest as a snippet; /load ship-check fills it back; Ctrl+R lists it with a green badge.
+    - A template pick fills {{workspace}}/{{session}}/{{draft}}; an unknown variable shows an error notice naming the missing ones.
+    - Typing a prompt used before shows the reuse hint under the composer; enableInsights: false hides it.
+    - Template Export downloads a JSON document; Import accepts it back and reports the count (invalid documents fail loudly).
 4. Gates: `pnpm run typecheck`, `pnpm run build`, `pnpm run test` — all green, including a smoke test that executes the **built bundle** in jsdom through the real `__ModuleLoader__` handshake; plus `pnpm run test:coverage`, `pnpm run check:readmes`, `pnpm run verify:pack`.
 
 ## 🔬 Compatibility baseline (measured on this machine, 2026-08-14)
@@ -239,6 +288,8 @@ The harness core gives every dsh session a sliding context window, the same work
 - The search overlay is plain DOM (no React dependency); it renders all matches up to the `maxHistory` bound.
 - **Compaction awareness is observational**: checkpoints that landed before the plugin install (or before a session switch) never trigger a notice; only markers landing while the page is open do. A checkpoint whose summary event fell outside the loaded window contributes no `[compacted] …` entry (`summary: null`).
 - The notice's "Compact now" action only *fills* the configured command text into the draft — sending (and `/compact`'s own admission) remains the user's Enter.
+- **Snippets, templates, and insights are browser-local**: each library lives in this browser's `localStorage` and never syncs between browsers or machines; corrupt payloads reset silently. Snippet/template names are kebab-case (1..64 chars); tags cap at 8 × 32 chars.
+- **Template variables resolve from the live session**: `{{draft}}` is the draft at pick time; values are never persisted inside templates.
 
 ## 🗺️ Upstream proposals
 
@@ -256,7 +307,7 @@ Useful links: [github.com/topics/dsh-plugin](https://github.com/topics/dsh-plugi
 
 Thanks to everyone who has contributed to this plugin:
 
-- [PerryLink](https://github.com/PerryLink) — creator and maintainer: every release from v0.1.0 to v0.4.0 (edge-first arrow recall, persisted history, reverse search, sliding-context awareness, search overlay polish, `dsh.bundle` and `dshWorkshop` manifests).
+- [PerryLink](https://github.com/PerryLink) — creator and maintainer: every release from v0.1.0 to v0.5.0 (edge-first arrow recall, persisted history, reverse search, sliding-context awareness, search overlay polish, snippet library, prompt templates, reuse insights, `dsh.bundle` and `dshWorkshop` manifests).
 
 Open a PR to join this list.
 

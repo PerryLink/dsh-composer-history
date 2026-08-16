@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-08-16
+
+### Added
+
+- **Cross-session snippet library** (`enableSnippets` / `maxSnippets`): `/save <name> [--tag=a,b]` stores the current input as a named, tagged snippet (workspace-scoped), `/load <name>` inserts it back, and the `Ctrl+R` panel lists snippets (green badge = name) alongside history. The library persists browser-locally (`dsh.composer-history.snippets.v1`), counts uses, and caps at `maxSnippets`. Enter on a snippet command is consumed — the command never reaches the send path.
+- **Prompt templates with variables** (`enableTemplates`): a browser-local template library with `{{workspace}}` / `{{session}}` / `{{draft}}` placeholders filled at insertion; unknown variables fail loudly with the missing list. The library exports/imports as a `composer-templates-v1` JSON document through the search panel's explicit Export/Import buttons — the plugin never writes files on its own.
+- **Reuse insights** (`enableInsights` / `insightMinUses`): browser-local usage statistics keyed by exact prompt text; the composer shows a small "used M× in N sessions · 在 N 个会话里用过 M 次" hint once a prompt passes `insightMinUses`. Nothing is ever uploaded.
+- **Compaction summary highlight** (`enableCompactionHighlight`): `[compacted] …` summaries badge amber in the search panel, visually distinct from snippets (green) and templates (purple).
+- Structured search entries (`SearchEntry` with source/label) and footer actions in the reverse-search overlay; text-only matching (labels never match).
+
+### Changed
+
+- Five-language READMEs: smart input layer section, six new Config fields, privacy keys, and the verification checklist; test count updated to 234.
+- `Config` gained six fields with schema defaults — existing cordis.yml blocks keep working unchanged.
+
 ## [0.4.0] - 2026-08-15
 
 ### Added

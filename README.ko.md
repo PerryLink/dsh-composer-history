@@ -54,7 +54,7 @@ $ press Ctrl+R → type a fragment → ↑/↓ → Enter → the match fills the
 ```sh
 cd Project/Plugins/dsh-composer-history
 pnpm install
-pnpm run typecheck && pnpm run build && pnpm run test   # all green: 200/200
+pnpm run typecheck && pnpm run build && pnpm run test   # all green: 234/234
 pnpm run test:coverage                                  # per-module coverage report
 pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack surface
 ```
@@ -151,6 +151,12 @@ pnpm run check:readmes && pnpm run verify:pack          # doc consistency + pack
 | `includeCompactionSummaries` | `boolean` | `true` | `[compacted] …` 체크포인트 요약을 리콜과 검색에 포함 |
 | `showCompactionNotice` | `boolean` | `true` | 압축 체크포인트가 도착할 때 일시 알림 표시 |
 | `compactCommandText` | `string` | `'/compact'` | 알림의 "지금 압축" 동작이 컴포저에 입력하는 슬래시 명령; `''` 이면 숨김 |
+| `enableSnippets` | `boolean` | `true` | 스니펫 라이브러리 활성화（`/save`、`/load`、검색 패널 선택） |
+| `maxSnippets` | `number` | `200` | 저장 스니펫 최대 개수；`0` = 무제한 |
+| `enableTemplates` | `boolean` | `true` | 프롬프트 템플릿 라이브러리 활성화（삽입 시 변수 채움） |
+| `enableInsights` | `boolean` | `true` | 재사용 인사이트 힌트 활성화（로컬 사용 통계） |
+| `insightMinUses` | `number` | `2` | 재사용 힌트 표시 전 최소 사용 횟수 |
+| `enableCompactionHighlight` | `boolean` | `true` | 검색 패널에서 `[compacted] …` 요약에 배지 표시 |
 
 ## 🎹 키 바인딩
 
@@ -190,9 +196,15 @@ harness 코어는 모든 dsh 세션에 슬라이딩 컨텍스트 창을 제공�
 
 > 압축 자체(임계값, 요약 모델, `/compact`)는 harness 코어의 compaction 플러그인이 담당합니다 — 이 플러그인은 클라이언트 스냅샷이 이미 노출하는 체크포인트 마커를 관찰할 뿐이므로, agent-loop나 모델 요청 변경이 전혀 필요 없습니다.
 
+## 🧠 스마트 입력 레이어
+
+터미널식 히스토리 위에 세 개의 브라우저 로컬 라이브러리가 컴포저를 재사용 가능한 입력면으로 만듭니다：**스니펫 라이브러리**（`/save <이름>` 이 현재 입력을 태그付き 이름付き 스니펫으로 저장、`/load <이름>` 또는 `Ctrl+R` 선택으로 삽입。워크스페이스 스코프、브라우저 로컬 영속화）、**프롬프트 템플릿**（`{{workspace}}`/`{{session}}`/`{{draft}}` 변수를 삽입 시 채움。템플릿 라이브러리는 명시적 클릭으로만 JSON 내보내기/가져오기）、**재사용 인사이트**（자주 쓰는 프롬프트를 로컬 집계해 컴포저 아래에「N 세션에서 M 회 사용」힌트 표시。업로드 없음）。압축 요약은 계속 `[compacted] …` 로 히스토리와 같은 소스에 표시되며 검색 패널에서 앰버 배지로 강조됩니다。모든 데이터는 이 브라우저의 `localStorage`（`dsh.composer-history.snippets.v1` / `.templates.v1` / `.insights.v1`）에만 저장되고 손상된 페이로드는 조용히 초기화됩니다。
+
+## 🔒 개인정보
 ## 🔒 개인정보
 
 `persistHistory: true`(기본값)는 전송된 메시지를 이 브라우저의 `localStorage` 에 `dsh.composer-history.v1` 키로 기록하며, `maxPersisted` 로 상한이 정해지고, 어디에도 업로드되지 않으며, 같은 origin의 페이지만 읽을 수 있습니다. `persistHistory: false` 로 비활성화하세요 — 그러면 리콜은 v1 동작처럼 라이브 세션 투영(및 워크스페이스 범위)만 사용합니다. 손상되었거나 외부의 페이로드는 조용히 초기화됩니다. 이미 저장된 데이터를 모두 지우려면 페이지의 DevTools 콘솔에서 `localStorage.removeItem('dsh.composer-history.v1')` 를 실행하세요.
+스마트 입력 레이어는 같은 정책（브라우저 로컬、업로드 없음、손상 페이로드 조용히 초기화）으로 키 3 개를 추가합니다：`dsh.composer-history.snippets.v1`（스니펫 본문 + 태그 + 사용 횟수）、`dsh.composer-history.templates.v1`（템플릿 본문）、`dsh.composer-history.insights.v1`（중복 제거된 프롬프트 본문 + 세션별 사용 횟수）。같은 `localStorage.removeItem(...)` 방식으로 각 라이브러리를 지울 수 있습니다。
 
 ## ✅ 검증
 
