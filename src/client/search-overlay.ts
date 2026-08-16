@@ -8,16 +8,27 @@
  * search.ts; the panel placement is the pure placePanel clamp (below the
  * composer, flipped above on downward overflow, horizontally clamped into
  * the viewport).
+ *
+ * Entries are either plain strings (history, backward compatible) or
+ * structured {@link SearchEntry} values carrying a provenance badge
+ * (compacted summaries are highlighted amber, snippets and templates show
+ * their name) and optional footer actions (template import/export).
  */
 
-import { filterEntries, matchRanges } from './search.ts'
+import { filterSearchEntries, matchRanges, type SearchEntry } from './search.ts'
 
 /** Callbacks the owning wiring satisfies. */
 export interface SearchOverlayDeps {
-  /** The chosen entry was confirmed. */
-  onPick(text: string): void
+  /** The chosen entry was confirmed (provenance passed through for templates/snippets). */
+  onPick(text: string, source?: SearchEntry['source'], label?: string): void
   /** The search was dismissed without a pick. */
   onCancel(): void
+}
+
+/** One footer action (rendered as a small button row under the list). */
+export interface OverlayAction {
+  readonly label: string
+  onClick(): void
 }
 
 /** Overlay handle owned by one plugin install. */
@@ -25,7 +36,7 @@ export interface SearchOverlay {
   /** Whether the panel is currently shown. */
   isOpen(): boolean
   /** Show the panel under the composer and list the matches for ''. */
-  open(anchor: HTMLElement, entries: readonly string[], caseSensitive: boolean): void
+  open(anchor: HTMLElement, entries: (string | SearchEntry)[], caseSensitive: boolean, actions?: OverlayAction[]): void
   /** Remove the panel node and every listener. */
   dispose(): void
 }
@@ -101,7 +112,29 @@ const STYLE_TEXT = [
   `.${ROOT_CLASS} .${ROOT_CLASS}match{background:transparent;color:#58a6ff;font-weight:600;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}row[aria-selected="true"] .${ROOT_CLASS}match{color:#ffffff;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}empty{padding:5px 8px;color:#8b949e;font-style:italic;}`,
+  `.${ROOT_CLASS} .${ROOT_CLASS}badge{`,
+  'display:inline-block;margin-right:6px;padding:0 5px;border-radius:4px;font-size:10px;',
+  'line-height:16px;vertical-align:1px;flex:none;',
+  '}',
+  `.${ROOT_CLASS} .${ROOT_CLASS}badge--compacted{background:#4a3b10;color:#e3b341;border:1px solid #9e7a16;}`,
+  `.${ROOT_CLASS} .${ROOT_CLASS}badge--snippet{background:#123b2a;color:#3fb950;border:1px solid #2ea043;}`,
+  `.${ROOT_CLASS} .${ROOT_CLASS}badge--template{background:#2a1f4d;color:#bc8cff;border:1px solid #8250df;}`,
+  `.${ROOT_CLASS} .${ROOT_CLASS}row[aria-selected="true"] .${ROOT_CLASS}badge{border-color:#ffffff;}`,
+  `.${ROOT_CLASS} .${ROOT_CLASS}actions{display:flex;gap:6px;padding-top:2px;}`,
+  `.${ROOT_CLASS} .${ROOT_CLASS}action{`,
+  'all:unset;cursor:pointer;padding:4px 8px;border-radius:6px;font-size:11px;',
+  'background:#21262d;border:1px solid #3d444d;color:#c9d1d9;',
+  '}',
+  `.${ROOT_CLASS} .${ROOT_CLASS}action:hover{border-color:#58a6ff;color:#e6edf3;}`,
 ].join('')
+
+/** The badge label for a structured entry's provenance ('' = no badge). */
+function badgeOf(entry: SearchEntry): string {
+  if (entry.source === 'compacted') return 'compacted'
+  if (entry.source === 'snippet') return entry.label ?? 'snippet'
+  if (entry.source === 'template') return entry.label ?? 'template'
+  return ''
+}
 
 /**
  * Create the overlay (injecting its shared stylesheet once per document).
@@ -135,13 +168,15 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
   list.className = `${ROOT_CLASS}list`
   list.id = `${ROOT_CLASS}list`
   list.setAttribute('role', 'listbox')
-  root.append(input, status, list)
+  const actions = document.createElement('div')
+  actions.className = `${ROOT_CLASS}actions`
+  root.append(input, status, list, actions)
 
   let open = false
-  let entries: readonly string[] = []
+  let entries: readonly SearchEntry[] = []
   let caseSensitive = false
   let selected = 0
-  let matches: readonly string[] = []
+  let matches: readonly SearchEntry[] = []
 
   /** Stable id of one option row (the combobox's activedescendant target). */
   const rowId = (index: number): string => `${ROOT_CLASS}option-${index}`
@@ -159,7 +194,7 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
   const appendRowText = (row: HTMLElement, text: string): void => {
     const ranges = matchRanges(text, input.value, caseSensitive)
     if (ranges.length === 0) {
-      row.textContent = text
+      row.append(document.createTextNode(text))
       return
     }
     let cursor = 0
@@ -188,13 +223,20 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
       selected = 0
       return
     }
-    matches.forEach((text, index) => {
+    matches.forEach((entry, index) => {
       const row = document.createElement('div')
       row.className = `${ROOT_CLASS}row`
       row.setAttribute('role', 'option')
       row.id = rowId(index)
       row.setAttribute('aria-selected', index === selected ? 'true' : 'false')
-      appendRowText(row, text)
+      const badgeText = badgeOf(entry)
+      if (badgeText !== '') {
+        const badge = document.createElement('span')
+        badge.className = `${ROOT_CLASS}badge ${ROOT_CLASS}badge--${entry.source}`
+        badge.textContent = badgeText
+        row.append(badge)
+      }
+      appendRowText(row, entry.text)
       row.addEventListener('click', () => pick(index))
       list.append(row)
     })
@@ -205,14 +247,14 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
   }
 
   const pick = (index: number): void => {
-    const text = matches[index]
-    if (text === undefined) return
+    const entry = matches[index]
+    if (entry === undefined) return
     close()
-    deps.onPick(text)
+    deps.onPick(entry.text, entry.source, entry.label)
   }
 
   const refilter = (): void => {
-    matches = filterEntries(entries, input.value, caseSensitive)
+    matches = filterSearchEntries(entries, input.value, caseSensitive)
     if (matches.length > 0 && selected >= matches.length) selected = matches.length - 1
     render()
   }
@@ -267,11 +309,22 @@ export function createSearchOverlay(deps: SearchOverlayDeps): SearchOverlay | un
 
   return {
     isOpen: () => open,
-    open: (anchor, history, matchCase) => {
-      entries = history
+    open: (anchor, rawEntries, matchCase, footerActions) => {
+      entries = rawEntries.map(entry => (typeof entry === 'string' ? { text: entry, source: 'history' } : entry))
       caseSensitive = matchCase
       selected = 0
       input.value = ''
+      actions.textContent = ''
+      if (footerActions !== undefined && footerActions.length > 0) {
+        for (const action of footerActions) {
+          const button = document.createElement('button')
+          button.className = `${ROOT_CLASS}action`
+          button.type = 'button'
+          button.textContent = action.label
+          button.addEventListener('click', () => action.onClick())
+          actions.append(button)
+        }
+      }
       refilter()
       open = true
       root.style.display = 'flex'

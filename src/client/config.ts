@@ -43,6 +43,18 @@ export interface ComposerHistoryConfig extends RecallOptions {
   readonly showCompactionNotice: boolean
   /** Slash command the notice's "Compact now" action fills; '' hides the action. */
   readonly compactCommandText: string
+  /** Enable the cross-session snippet library (`/save`, `/load`, overlay picking). */
+  readonly enableSnippets: boolean
+  /** Maximum stored snippets; 0 means unlimited. */
+  readonly maxSnippets: number
+  /** Enable the prompt-template library (variables fill at insertion). */
+  readonly enableTemplates: boolean
+  /** Enable the reuse-insight hint (local usage statistics). */
+  readonly enableInsights: boolean
+  /** Minimum uses before a reuse hint shows. */
+  readonly insightMinUses: number
+  /** Badge compacted summaries distinctly in the search overlay. */
+  readonly enableCompactionHighlight: boolean
 }
 
 /** Defaults are the plugin behavior baseline; every key is changeable from cordis.yml and the settings document. */
@@ -66,6 +78,12 @@ export const Config: z<ComposerHistoryConfig> = z.object({
   includeCompactionSummaries: z.boolean().default(true),
   showCompactionNotice: z.boolean().default(true),
   compactCommandText: z.string().default('/compact'),
+  enableSnippets: z.boolean().default(true),
+  maxSnippets: z.number().step(1).min(0).default(200),
+  enableTemplates: z.boolean().default(true),
+  enableInsights: z.boolean().default(true),
+  insightMinUses: z.number().step(1).min(1).default(2),
+  enableCompactionHighlight: z.boolean().default(true),
 })
 
 /**

@@ -120,7 +120,7 @@ describe('keyboard and pointer', () => {
     fx.dispatch('ArrowDown')
     fx.dispatch('Enter')
     await tick()
-    expect(fx.onPick).toHaveBeenCalledWith('beta prompt')
+    expect(fx.onPick).toHaveBeenCalledWith('beta prompt', 'history', undefined)
     expect(fx.overlay.isOpen()).toBe(false)
     expect(fx.root.style.display).toBe('none')
   })
@@ -129,7 +129,7 @@ describe('keyboard and pointer', () => {
     const fx = fixture()
     fx.rows()[2]?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await tick()
-    expect(fx.onPick).toHaveBeenCalledWith('gamma note')
+    expect(fx.onPick).toHaveBeenCalledWith('gamma note', 'history', undefined)
     expect(fx.overlay.isOpen()).toBe(false)
   })
 
@@ -199,7 +199,7 @@ describe('combobox accessibility', () => {
 
   it('shows a placeholder on the query input', () => {
     const fx = fixture()
-    expect(fx.input.placeholder).toBe('Search history…')
+    expect(fx.input.placeholder).toBe('Search history\u2026')
   })
 })
 

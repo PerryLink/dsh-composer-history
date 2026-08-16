@@ -23,6 +23,12 @@ describe('Config schema', () => {
       includeCompactionSummaries: true,
       showCompactionNotice: true,
       compactCommandText: '/compact',
+      enableSnippets: true,
+      maxSnippets: 200,
+      enableTemplates: true,
+      enableInsights: true,
+      insightMinUses: 2,
+      enableCompactionHighlight: true,
     })
   })
 

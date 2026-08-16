@@ -32,9 +32,14 @@ import { hasActiveTriggerToken, effectiveKinds } from './recall.ts'
 import { HistoryExtractor } from './history-extract.ts'
 import { viewOfNodes } from './node-views.ts'
 import { createSearchOverlay, type SearchOverlay } from './search-overlay.ts'
+import type { SearchEntry } from './search.ts'
 import { createCompactionNotice, type CompactionNotice } from './compaction-notice.ts'
 import { compactionAfter, latestCompactionSeq } from './compaction-watch.ts'
 import { STORE_KEY, appendEntries, loadEntries, safeStorage } from './history-store.ts'
+import { loadSnippets, noteSnippetUse, parseSnippetCommand, saveCommandText, upsertSnippet, type SnippetRecord } from './snippets.ts'
+import { fillTemplate, loadTemplates, mergeTemplates, templatesFromJson, templatesToJson } from './templates.ts'
+import { hintFor, hintText, noteUsage } from './insights.ts'
+import { createDraftHint, createTransientNotice } from './notice.ts'
 
 export { Config, resolveConfig } from './config.ts'
 export type { ComposerHistoryConfig } from './config.ts'
@@ -133,12 +138,113 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   let handle: ComposerHistoryHandle | undefined
   let searchAnchor: HTMLTextAreaElement | undefined
   let lastComposer: HTMLTextAreaElement | undefined
+
+  // The workspace key snippet scoping and template variables resolve against:
+  // the current session's cwd, falling back to its title (both browser-local).
+  const currentWorkspaceKey = (): string => {
+    const id = ctx.sessions.list.getSnapshot().current
+    if (id === undefined) return ''
+    const summary = (ctx.sessions.list.getSnapshot() as { byId?: Record<string, { cwd?: string; title?: string }> }).byId?.[String(id)]
+    return summary?.cwd ?? summary?.title ?? ''
+  }
+
+  // Snippet library scoped to this workspace: global snippets plus the ones
+  // saved under the current workspace key.
+  const visibleSnippets = (): SnippetRecord[] => {
+    if (!options.enableSnippets || storage === undefined) return []
+    const key = currentWorkspaceKey()
+    return loadSnippets(storage).filter(snippet => snippet.scope === 'global' || snippet.scope === key)
+  }
+
+  const transient = createTransientNotice()
+  const hint = createDraftHint()
+
+  /** Update the reuse-insight hint under the composer ('' hides it). */
+  const updateDraftHint = (composer: HTMLTextAreaElement): void => {
+    if (hint === undefined) return
+    if (!options.enableInsights || storage === undefined) {
+      hint.set('', composer)
+      return
+    }
+    const record = hintFor(storage, composer.value)
+    if (record === undefined || record.uses < options.insightMinUses) {
+      hint.set('', composer)
+      return
+    }
+    hint.set(hintText(record), composer)
+  }
+
+  /**
+   * `/save <name>` and `/load <name>` command handling on Enter: the draft's
+   * first line is parsed as a snippet command; a match consumes the Enter so
+   * the command never reaches the send path. The plugin never sends.
+   * @returns true when the Enter was consumed.
+   */
+  const runSnippetCommand = (composer: HTMLTextAreaElement): boolean => {
+    if (!options.enableSnippets || storage === undefined) return false
+    const input = host.inputState(composer)
+    if (input === undefined || input.phase !== 'plain') return false
+    if (host.menuOpen(composer)) return false
+    const command = parseSnippetCommand(input.draft)
+    if (command === undefined) return false
+    if (command.verb === 'save') {
+      const text = saveCommandText(input.draft)
+      if (text === '') {
+        transient?.show(`snippet ${command.name}: nothing to save (draft after the command is empty)`, 'error')
+        return true
+      }
+      try {
+        upsertSnippet(
+          storage,
+          { name: command.name, text, tags: command.tags, scope: currentWorkspaceKey() === '' ? 'global' : currentWorkspaceKey() },
+          options.maxSnippets,
+        )
+        transient?.show(`snippet saved: ${command.name}`)
+      } catch (error) {
+        transient?.show(`snippet ${command.name}: ${error instanceof Error ? error.message : String(error)}`, 'error')
+      }
+      handle?.fill(composer, '')
+      updateDraftHint(composer)
+      return true
+    }
+    const snippet = loadSnippets(storage).find(item => item.name === command.name)
+    if (snippet === undefined) {
+      transient?.show(`no snippet named ${command.name} (open Ctrl+R search to browse snippets)`, 'error')
+      return true
+    }
+    noteSnippetUse(storage, command.name)
+    transient?.show(`snippet loaded: ${command.name}`)
+    handle?.fill(composer, snippet.text)
+    updateDraftHint(composer)
+    return true
+  }
+
   const overlay: SearchOverlay | undefined = createSearchOverlay({
-    onPick: (text) => {
+    onPick: (text, source, label) => {
       const composer = searchAnchor
       // Return keyboard focus to the composer so typing continues naturally.
       composer?.focus()
-      if (handle !== undefined && composer !== undefined) handle.fill(composer, text)
+      if (handle !== undefined && composer !== undefined) {
+        if (source === 'template') {
+          try {
+            const values = {
+              workspace: currentWorkspaceKey() || 'workspace',
+              session: currentSessionId() ?? '',
+              draft: composer.value,
+            }
+            handle.fill(composer, fillTemplate(text, values))
+          } catch (error) {
+            transient?.show(`template ${label ?? ''}: ${error instanceof Error ? error.message : String(error)}`, 'error')
+          }
+        } else {
+          if (source === 'snippet' && label !== undefined && storage !== undefined) {
+            noteSnippetUse(storage, label)
+            transient?.show(`snippet loaded: ${label}`)
+          }
+          handle.fill(composer, text)
+        }
+        updateDraftHint(composer)
+      }
     },
     onCancel: () => {
       searchAnchor?.focus()
@@ -155,6 +261,41 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
       handle.fill(composer, options.compactCommandText)
     },
   })
+
+  /** Template library export: one explicit click downloads the JSON document. */
+  const exportTemplates = (): void => {
+    if (storage === undefined || typeof document === 'undefined') return
+    const json = templatesToJson(loadTemplates(storage))
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'dsh-composer-templates.json'
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  /** Template library import: one explicit file pick, validated fail-loud. */
+  const importTemplates = (): void => {
+    if (storage === undefined || typeof document === 'undefined') return
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'application/json,.json'
+    input.addEventListener('change', () => {
+      const file = input.files?.[0]
+      if (file === undefined) return
+      void file.text().then(raw => {
+        try {
+          const imported = templatesFromJson(raw)
+          const written = mergeTemplates(storage, imported)
+          transient?.show(`templates imported: ${written}`)
+        } catch (error) {
+          transient?.show(`template import failed: ${error instanceof Error ? error.message : String(error)}`, 'error')
+        }
+      })
+    })
+    input.click()
+  }
 
   const host: ComposerHistoryHost = {
     composerOf: (target) =>
@@ -220,7 +361,32 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     openSearch: (composer, history) => {
       if (overlay === undefined) return
       searchAnchor = composer
-      overlay.open(composer, history, options.searchCaseSensitive)
+      // Structured entries: compaction summaries badge amber (highlight),
+      // snippets and templates show their name and fill on pick.
+      const entries: Array<string | SearchEntry> = []
+      for (const text of history) {
+        if (options.enableCompactionHighlight && text.startsWith('[compacted]')) {
+          entries.push({ text, source: 'compacted' })
+        } else {
+          entries.push(text)
+        }
+      }
+      if (storage !== undefined) {
+        if (options.enableSnippets) {
+          for (const snippet of visibleSnippets()) {
+            entries.push({ text: snippet.text, source: 'snippet', label: snippet.name })
+          }
+        }
+        if (options.enableTemplates) {
+          for (const template of loadTemplates(storage)) {
+            entries.push({ text: template.text, source: 'template', label: template.name })
+          }
+        }
+      }
+      const actions = options.enableTemplates && storage !== undefined
+        ? [{ label: 'Export templates', onClick: exportTemplates }, { label: 'Import templates', onClick: importTemplates }]
+        : undefined
+      overlay.open(composer, entries, options.searchCaseSensitive, actions)
     },
   }
 
@@ -234,11 +400,22 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   const windowKeydown = (event: KeyboardEvent): void => {
     const composer = host.composerOf(event.target)
     if (composer !== undefined) lastComposer = composer
+    // Snippet commands consume Enter before the interceptor ever sees it:
+    // the draft's first line is a /save or /load command, so the send path
+    // is never reached with the command line.
+    if (composer !== undefined && event.key === 'Enter' && !event.isComposing && runSnippetCommand(composer)) {
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
     handle?.keydown(event)
   }
   const windowInput = (event: Event): void => {
     const composer = host.composerOf(event.target)
-    if (composer !== undefined) lastComposer = composer
+    if (composer !== undefined) {
+      lastComposer = composer
+      updateDraftHint(composer)
+    }
     handle?.input(event)
   }
   window.addEventListener('keydown', windowKeydown, true)
@@ -257,7 +434,12 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     const seq = typeof last?.seq === 'number' ? last.seq : -1
     if (nodes.length === lastSync.length && seq === lastSync.seq) return
     lastSync = { length: nodes.length, seq }
-    appendEntries(storage, STORE_KEY, extractPersist(nodes), options.maxPersisted)
+    const added = appendEntries(storage, STORE_KEY, extractPersist(nodes), options.maxPersisted)
+    // Reuse insights: every newly committed user message lands one usage
+    // record so the hint can report "used M times across N sessions".
+    if (options.enableInsights) {
+      for (const text of added) noteUsage(storage, text, currentSessionId() ?? '')
+    }
   }
 
   // Sliding-context observation: report compaction checkpoints that land
@@ -304,5 +486,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     overlay?.dispose()
     notice?.dispose()
     mirror?.dispose()
+    transient?.dispose()
+    hint?.dispose()
   }
 }

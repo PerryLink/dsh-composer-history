@@ -24,6 +24,12 @@ const CONFIG: ComposerHistoryConfig = {
   includeCompactionSummaries: true,
   showCompactionNotice: true,
   compactCommandText: '/compact',
+  enableSnippets: true,
+  maxSnippets: 200,
+  enableTemplates: true,
+  enableInsights: true,
+  insightMinUses: 2,
+  enableCompactionHighlight: true,
 }
 
 const user = (text: string): HistoryNodeView => ({ kind: 'user', texts: [text] })
