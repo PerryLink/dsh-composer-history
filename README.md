@@ -1,6 +1,7 @@
 <div align="center">
 
 # ⌨️ dsh-composer-history
+[![Gitee](https://img.shields.io/badge/Gitee-mirror-c71d23?logo=gitee)](https://gitee.com/perrylink/dsh-composer-history)
 
 **Terminal-style input history for the DeepSeek Harness Web GUI composer.**
 
