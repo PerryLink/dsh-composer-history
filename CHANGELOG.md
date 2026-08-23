@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Internal
+
+- Added a wiring-lifecycle (C1) test asserting the fiber disposer removes the
+  window-capture listeners and the sessions-list subscription — closing the
+  dispose-coverage gap flagged in the plugin inspection plan. No behavior
+  change.
+
 ## [0.5.2] - 2026-08-22
 
 ### Changed
