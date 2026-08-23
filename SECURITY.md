@@ -29,8 +29,8 @@ reporting:
 
 | Version | Supported |
 | --- | --- |
-| 0.4.x (latest) | ✅ |
-| < 0.4.0 | ❌ upgrade to the latest patch release |
+| 0.5.x (latest) | ✅ |
+| < 0.5.0 | ❌ upgrade to the latest patch release |
 
 ## Scope
 
