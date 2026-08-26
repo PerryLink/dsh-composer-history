@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-08-26
+
+### Added
+
+- **Versioned JSON export/import** — a unified browser-local backup covering history, snippets, templates, and insights as a schema-versioned JSON document (`schemaVersion` v1 + `exportedAt` + `data`). Export downloads or copies to clipboard; import merges from a file pick or pasted text with keep-newest-by-timestamp conflict resolution and skip counts, runs a stepwise migration, and rejects newer/unknown versions fail-closed.
+
 ## [0.5.3] - 2026-08-23
 
 ### Internal
