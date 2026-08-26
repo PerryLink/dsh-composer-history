@@ -47,7 +47,7 @@ function isStoredShape(value: unknown): value is StoredShape {
   return record['v'] === TEMPLATE_STORE_VERSION && Array.isArray(record['templates'])
 }
 
-function isTemplateRecord(value: unknown): value is TemplateRecord {
+export function isTemplateRecord(value: unknown): value is TemplateRecord {
   if (typeof value !== 'object' || value === null) return false
   const record = value as Record<string, unknown>
   return typeof record['name'] === 'string'
@@ -186,6 +186,17 @@ export function templatesFromJson(json: string): TemplateRecord[] {
   for (const item of templates) validateTemplate(item.name, item.text)
   if (templates.length > MAX_TEMPLATES) throw new Error(`template import exceeds ${MAX_TEMPLATES} templates`)
   return templates
+}
+
+/**
+ * Replace the stored template payload wholesale (used by the versioned
+ * backup import, which resolves conflicts before calling this).
+ * @param storage - readable and writable storage.
+ * @param templates - the templates to store.
+ */
+export function saveTemplates(storage: StorageLike, templates: readonly TemplateRecord[]): void {
+  const payload: StoredShape = { v: TEMPLATE_STORE_VERSION, templates: [...templates] }
+  storage.setItem(TEMPLATE_STORE_KEY, JSON.stringify(payload))
 }
 
 /**

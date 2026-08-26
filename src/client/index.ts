@@ -31,15 +31,16 @@ import { createMirrorMeasurer, type MirrorMeasurer } from './visual-mirror.ts'
 import { hasActiveTriggerToken, effectiveKinds } from './recall.ts'
 import { HistoryExtractor } from './history-extract.ts'
 import { viewOfNodes } from './node-views.ts'
-import { createSearchOverlay, type SearchOverlay } from './search-overlay.ts'
+import { createSearchOverlay, type OverlayAction, type SearchOverlay } from './search-overlay.ts'
 import type { SearchEntry } from './search.ts'
 import { createCompactionNotice, type CompactionNotice } from './compaction-notice.ts'
 import { compactionAfter, latestCompactionSeq } from './compaction-watch.ts'
 import { STORE_KEY, appendEntries, loadEntries, safeStorage } from './history-store.ts'
 import { loadSnippets, noteSnippetUse, parseSnippetCommand, saveCommandText, upsertSnippet, type SnippetRecord } from './snippets.ts'
-import { fillTemplate, loadTemplates, mergeTemplates, templatesFromJson, templatesToJson } from './templates.ts'
+import { fillTemplate, loadTemplates } from './templates.ts'
 import { hintFor, hintText, noteUsage } from './insights.ts'
 import { createDraftHint, createTransientNotice } from './notice.ts'
+import { exportBackupJson, importBackupJson, type ImportReport } from './backup.ts'
 
 export { Config, resolveConfig } from './config.ts'
 export type { ComposerHistoryConfig } from './config.ts'
@@ -57,6 +58,20 @@ const NAMESPACE = 'composer-history'
 /** Structural face of the command popup shell (ctx.commandUi, read defensively without a dependency edge). */
 interface PopupSelectFace {
   popupFor(actx: ClientContext): { readonly state: { getSnapshot(): { readonly open: boolean } } }
+}
+
+/** Collapse a backup import report into one short success line. */
+function summarizeImport(report: ImportReport): string {
+  const written = report.history.added
+    + report.snippets.added + report.snippets.updated
+    + report.templates.added + report.templates.updated
+    + report.insights.added + report.insights.updated
+  const skipped = report.history.skipped + report.snippets.skipped + report.templates.skipped + report.insights.skipped
+  if (written === 0 && skipped === 0) return 'backup imported: nothing to add'
+  const parts: string[] = []
+  if (written > 0) parts.push(`${written} written`)
+  if (skipped > 0) parts.push(`${skipped} skipped (older or duplicate)`)
+  return `backup imported: ${parts.join(', ')}`
 }
 
 /**
@@ -262,21 +277,46 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     },
   })
 
-  /** Template library export: one explicit click downloads the JSON document. */
-  const exportTemplates = (): void => {
+  /** Unified backup export: one explicit click downloads the versioned JSON document. */
+  const exportBackup = (): void => {
     if (storage === undefined || typeof document === 'undefined') return
-    const json = templatesToJson(loadTemplates(storage))
+    const json = exportBackupJson(storage)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
-    anchor.download = 'dsh-composer-templates.json'
+    anchor.download = `dsh-composer-history-${new Date().toISOString().slice(0, 10)}.json`
     anchor.click()
     URL.revokeObjectURL(url)
   }
 
-  /** Template library import: one explicit file pick, validated fail-loud. */
-  const importTemplates = (): void => {
+  /** Copy the backup JSON to the clipboard (an explicit user action, no network). */
+  const copyBackup = (): void => {
+    if (storage === undefined || typeof navigator === 'undefined') return
+    const clipboard: Clipboard | undefined = navigator.clipboard
+    if (clipboard === undefined) {
+      transient?.show('clipboard unavailable: use "Export JSON" to download the file instead', 'error')
+      return
+    }
+    void clipboard.writeText(exportBackupJson(storage)).then(
+      () => transient?.show('backup JSON copied to clipboard'),
+      (error: unknown) => transient?.show(`clipboard write failed: ${error instanceof Error ? error.message : String(error)}`, 'error'),
+    )
+  }
+
+  /** Run one import document through parse → migrate → merge, then report the result. */
+  const runImport = (raw: string): void => {
+    if (storage === undefined) return
+    try {
+      const report = importBackupJson(storage, raw, { history: options.maxPersisted, snippets: options.maxSnippets })
+      transient?.show(summarizeImport(report))
+    } catch (error) {
+      transient?.show(`import failed: ${error instanceof Error ? error.message : String(error)}`, 'error')
+    }
+  }
+
+  /** Backup import from a chosen JSON file (browser-local; nothing is uploaded). */
+  const importBackupFile = (): void => {
     if (storage === undefined || typeof document === 'undefined') return
     const input = document.createElement('input')
     input.type = 'file'
@@ -284,17 +324,17 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     input.addEventListener('change', () => {
       const file = input.files?.[0]
       if (file === undefined) return
-      void file.text().then(raw => {
-        try {
-          const imported = templatesFromJson(raw)
-          const written = mergeTemplates(storage, imported)
-          transient?.show(`templates imported: ${written}`)
-        } catch (error) {
-          transient?.show(`template import failed: ${error instanceof Error ? error.message : String(error)}`, 'error')
-        }
-      })
+      void file.text().then(runImport)
     })
     input.click()
+  }
+
+  /** Backup import from pasted JSON text (browser-local prompt; cancel is a no-op). */
+  const importBackupPaste = (): void => {
+    if (storage === undefined || typeof window === 'undefined') return
+    const raw = window.prompt('Paste the dsh-composer-history backup JSON:')
+    if (raw === null) return
+    runImport(raw)
   }
 
   const host: ComposerHistoryHost = {
@@ -383,9 +423,14 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
           }
         }
       }
-      const actions = options.enableTemplates && storage !== undefined
-        ? [{ label: 'Export templates', onClick: exportTemplates }, { label: 'Import templates', onClick: importTemplates }]
-        : undefined
+      const actions: OverlayAction[] | undefined = storage === undefined
+        ? undefined
+        : [
+            { label: 'Export JSON', onClick: exportBackup },
+            { label: 'Copy JSON', onClick: copyBackup },
+            { label: 'Import file', onClick: importBackupFile },
+            { label: 'Paste JSON', onClick: importBackupPaste },
+          ]
       overlay.open(composer, entries, options.searchCaseSensitive, actions)
     },
   }

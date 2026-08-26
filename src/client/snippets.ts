@@ -67,7 +67,7 @@ function isStoredShape(value: unknown): value is StoredShape {
 }
 
 /** Structural snippet guard: a stored record must carry every declared field with the right type. */
-function isSnippetRecord(value: unknown): value is SnippetRecord {
+export function isSnippetRecord(value: unknown): value is SnippetRecord {
   if (typeof value !== 'object' || value === null) return false
   const record = value as Record<string, unknown>
   return typeof record['name'] === 'string'
@@ -204,8 +204,8 @@ function normalizeTags(tags: readonly string[]): string[] {
   return [...new Set(tags.map(tag => tag.trim()).filter(tag => tag !== ''))]
 }
 
-/** Replace the stored payload wholesale. */
-function saveSnippets(storage: StorageLike, snippets: readonly SnippetRecord[]): void {
+/** Replace the stored payload wholesale (used by upsert and the versioned backup import). */
+export function saveSnippets(storage: StorageLike, snippets: readonly SnippetRecord[]): void {
   const payload: StoredShape = { v: SNIPPET_STORE_VERSION, snippets: [...snippets] }
   storage.setItem(SNIPPET_STORE_KEY, JSON.stringify(payload))
 }

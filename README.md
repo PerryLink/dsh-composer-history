@@ -39,6 +39,7 @@
 3. **Reverse search** — `Ctrl+R` (configurable) opens a query overlay over merged history, snippets, and templates.
 4. **Smart input layer** — `/save`/`/load` snippets, prompt templates with `{{workspace}}`/`{{session}}`/`{{draft}}` variables, and browser-local reuse insights.
 5. **Sliding-context aware** — compaction summaries join recall and search as `[compacted] …` entries, and a transient notice announces each compaction with a one-click `/compact` fill.
+6. **Versioned JSON backup** — export/import all four libraries (history, snippets, templates, insights) as one schema-versioned document; download or copy on export, file pick or paste on import.
 
 Pure UI behavior: no session events, no agent-loop changes, no model requests. Recalled text only enters the ordinary composer draft; it reaches the model only if *you* press Enter.
 
@@ -104,7 +105,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml and the
 | `Ctrl+R` | keybinding | Reverse-search overlay over merged history, snippets, and templates |
 | `/save` | command | Save the current draft as a named, tagged snippet |
 | `/load` | command | Insert a saved snippet at the caret |
-| `templates` | UI | Prompt-template export/import as a JSON document (explicit click only) |
+| `templates` | UI | Versioned JSON backup export/import of history, snippets, templates, and insights (explicit click only) |
 | `composer-history` | settings namespace | Carries the resolved config into the browser half |
 
 ## Keybindings
@@ -155,7 +156,7 @@ Ctrl+R → search panel lists snippets (green badge = name) alongside history
 
 Templates are stored prompt texts with `{{variable}}` placeholders. The search panel lists them with a purple badge; picking one fills the variables from the live session and inserts the result. Built-in variables: `{{workspace}}` (the session's cwd), `{{session}}` (the session id), `{{draft}}` (the current draft). A template referencing an unknown variable fails loudly with the missing list — a half-filled prompt is worse than an error.
 
-The template library exports to and imports from a JSON document (`composer-templates-v1`) through the panel's **Export templates / Import templates** buttons — an explicit user action; the plugin never writes files on its own.
+The whole library — history, snippets, templates, and insights — exports to and imports from a single versioned JSON document through the panel's **Export JSON / Import file** actions; see **Backup export & import** below. An explicit user action; the plugin never writes files on its own.
 
 **Reuse insights**
 
@@ -164,6 +165,36 @@ Every newly committed user message (and every snippet load) lands one browser-lo
 **Compaction summary highlight**
 
 `Ctrl+R` marks `[compacted] …` summaries with an amber badge (history stays unbadged), snippets green, templates purple — the panel's provenance is visible at a glance. Toggle with `enableCompactionHighlight`.
+
+## Backup export & import
+
+All four browser-local libraries export to and import from one versioned JSON document. The panel's **Export JSON / Copy JSON / Import file / Paste JSON** actions run entirely in the browser: download or copy to clipboard on export, file pick or pasted text on import — nothing is uploaded and no host RPC or network call is involved.
+
+**Document shape**
+
+```json
+{
+  "schemaVersion": 1,
+  "exportedAt": 1735689600000,
+  "data": {
+    "history": ["…"],
+    "snippets": [{ "name": "…", "text": "…", "tags": [], "scope": "global", "createdAt": 0, "updatedAt": 0, "useCount": 0, "lastUsedAt": 0 }],
+    "templates": [{ "name": "…", "text": "…", "description": "", "updatedAt": 0 }],
+    "insights": [{ "text": "…", "sessions": [], "uses": 0, "lastUsedAt": 0 }]
+  }
+}
+```
+
+**Merge & conflict strategy**
+
+- History entries are plain strings and deduplicate by exact text; a duplicate or blank entry is skipped, never overwritten.
+- Snippets and templates key on `name`; insights key on exact `text`. On a same-key conflict the **newest timestamp wins** (`updatedAt` for snippets/templates, `lastUsedAt` for insights); an older or equal-timestamp import is skipped, and new keys are appended.
+- The import respects `maxPersisted` and `maxSnippets`; templates and insights cap at their fixed protocol limits (`500` each).
+- The result notice reports how many records were written and how many were skipped (older/duplicate).
+
+**Schema versioning**
+
+`schemaVersion` starts at `1`. Imports run a stepwise migration (one version at a time) so future formats can upgrade old documents in place. A document whose `schemaVersion` is **newer** than the one this build understands is rejected with an error — it is never silently dropped or partially merged; a version too old to migrate is rejected the same way.
 
 ## Sliding context
 
@@ -187,7 +218,7 @@ The harness core gives every dsh session a sliding context window, the same work
 ## Security boundaries
 
 - **UI-only, never enforcement.** The plugin edits the composer draft only; the sandbox, approval, and session systems remain the enforcement authorities, and no command or tool is ever claimed or bypassed.
-- **No content leaves the browser.** History, snippets, templates, and insights live in `localStorage`; nothing is uploaded, and no model request or network call is made.
+- **No content leaves the browser** except an explicit export. History, snippets, templates, and insights live in `localStorage`; nothing is uploaded, and no model request or network call is made. The versioned backup export only writes a local download or the clipboard on an explicit click.
 - **Fail loud.** Invalid enum values fail the whole dsh boot; a malformed search chord fails the browser fiber — misconfiguration never silently degrades.
 - **Bounded everything.** `maxHistory`, `maxPersisted`, and `maxSnippets` cap retained entries; corrupt or foreign payloads reset silently.
 - **Zero side effects on pass-through.** The plugin intercepts only in the `plain` input phase and yields to the slash menu, command popups, IME composition, text selections, and modifier combos.

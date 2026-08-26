@@ -49,7 +49,7 @@ function isStoredShape(value: unknown): value is StoredShape {
   return record['v'] === INSIGHT_STORE_VERSION && Array.isArray(record['records'])
 }
 
-function isUsageRecord(value: unknown): value is UsageRecord {
+export function isUsageRecord(value: unknown): value is UsageRecord {
   if (typeof value !== 'object' || value === null) return false
   const record = value as Record<string, unknown>
   return typeof record['text'] === 'string'
@@ -107,6 +107,17 @@ export function noteUsage(storage: StorageLike, text: string, sessionId: string)
   const payload: StoredShape = { v: INSIGHT_STORE_VERSION, records: next.slice(-MAX_INSIGHT_RECORDS) }
   storage.setItem(INSIGHT_STORE_KEY, JSON.stringify(payload))
   return record
+}
+
+/**
+ * Replace the stored usage payload wholesale (used by the versioned backup
+ * import, which resolves conflicts before calling this).
+ * @param storage - readable and writable storage.
+ * @param records - the usage records to store.
+ */
+export function saveUsage(storage: StorageLike, records: readonly UsageRecord[]): void {
+  const payload: StoredShape = { v: INSIGHT_STORE_VERSION, records: [...records] }
+  storage.setItem(INSIGHT_STORE_KEY, JSON.stringify(payload))
 }
 
 /**
