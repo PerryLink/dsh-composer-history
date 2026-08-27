@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [0.6.1] - 2026-08-27
+
+### Fixed
+
+- **Ctrl+R history rows overlapping when the list overflows.** Rows are CSS scroll containers (`overflow:hidden` makes their automatic `min-height` resolve to 0) and defaulted to `flex-shrink:1`, so once the list outgrew the panel's `max-height:320px`, the column-flex layout squashed every row into the one above instead of scrolling. Rows now keep `flex-shrink:0` and the `overflow-y:auto` list scrolls (issue #3). Regression coverage in `tests/search-overlay.spec.ts`.
+
 ## [0.6.0] - 2026-08-26
 
 ### Added
