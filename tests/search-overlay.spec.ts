@@ -243,3 +243,24 @@ describe('lifecycle', () => {
     expect(fx.rows()[0]?.textContent).toBe('delta')
   })
 })
+
+describe('list layout styles', () => {
+  it('keeps rows at their own height so an overfull list scrolls instead of overlapping (issue #3)', () => {
+    fixture()
+    const style = document.getElementById('__dsh-composer-history-search-style__')
+    expect(style).not.toBeNull()
+    const css = style?.textContent ?? ''
+    const rowRule = css.match(/\.__dsh-composer-history-search__\s+\.__dsh-composer-history-search__row\{([^}]*)\}/)
+    expect(rowRule).not.toBeNull()
+    // flex-shrink:0 stops the column-flex list from squashing rows into one
+    // another once the panel's max-height constrains the list (jsdom has no
+    // layout, so the guard is asserted on the injected rule text).
+    expect(rowRule?.[1]).toContain('flex-shrink:0')
+    // The fixed row cap and its clip must survive the fix (multi-line entries
+    // stay bounded without bleeding into the next row).
+    expect(rowRule?.[1]).toContain('max-height:36px')
+    expect(rowRule?.[1]).toContain('overflow:hidden')
+    const listRule = css.match(/\.__dsh-composer-history-search__\s+\.__dsh-composer-history-search__list\{([^}]*)\}/)
+    expect(listRule?.[1]).toContain('overflow-y:auto')
+  })
+})

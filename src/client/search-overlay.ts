@@ -104,8 +104,13 @@ const STYLE_TEXT = [
   `.${ROOT_CLASS} input::placeholder{color:#8b949e;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}list{overflow-y:auto;display:flex;flex-direction:column;gap:2px;}`,
   `.${ROOT_CLASS} .${ROOT_CLASS}status{padding:0 8px;color:#8b949e;font-size:11px;}`,
+  // Rows must not shrink: they are scroll containers (overflow:hidden makes
+  // their automatic min-height resolve to 0), so a column-flex list that
+  // outgrows the panel would squash every row into the one above instead of
+  // scrolling. flex-shrink:0 keeps each row at its own height and lets the
+  // overflow-y:auto list scroll (issue #3).
   `.${ROOT_CLASS} .${ROOT_CLASS}row{`,
-  'padding:5px 8px;border-radius:6px;cursor:pointer;white-space:pre-wrap;',
+  'padding:5px 8px;border-radius:6px;cursor:pointer;white-space:pre-wrap;flex-shrink:0;',
   'overflow-wrap:anywhere;color:#c9d1d9;max-height:36px;overflow:hidden;',
   '}',
   `.${ROOT_CLASS} .${ROOT_CLASS}row[aria-selected="true"]{background:#316dca;color:#ffffff;}`,
