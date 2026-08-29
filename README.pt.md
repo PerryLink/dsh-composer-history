@@ -1,6 +1,7 @@
 <div align="center">
 
 # ⌨️ dsh-composer-history
+- **Canal 1024 store**: `npm i -g dsh1024` uma vez, depois `dsh1024 plugin --profile web add dsh-composer-history` (conta para o ranking de instalações do [deepseek1024.com](https://deepseek1024.com)).
 
 **Histórico de entrada estilo terminal para o compositor da Web GUI do DeepSeek Harness.**
 

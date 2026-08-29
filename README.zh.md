@@ -1,6 +1,7 @@
 <div align="center">
 
 # ⌨️ dsh-composer-history
+- **1024 商店渠道**：先 `npm i -g dsh1024`，再 `dsh1024 plugin --profile web add dsh-composer-history`（计入 [deepseek1024.com](https://deepseek1024.com) 安装排行）。
 
 **DeepSeek Harness Web GUI 作曲器的终端式输入历史。**
 
