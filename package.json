@@ -162,5 +162,9 @@
     "verify:pack": "node scripts/verify-pack.mjs",
     "prepublishOnly": "pnpm run check:readmes && pnpm run build && pnpm run test"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/PerryLink"
+  }
 }
