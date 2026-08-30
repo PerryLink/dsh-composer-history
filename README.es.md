@@ -165,6 +165,36 @@ Cada mensaje de usuario recién confirmado (y cada carga de fragmento) registra 
 
 `Ctrl+R` marca los resúmenes `[compacted] …` con una insignia ámbar (el historial permanece sin insignia), los fragmentos en verde, las plantillas en morado — la procedencia del panel es visible de un vistazo. Se alterna con `enableCompactionHighlight`.
 
+## Exportación e importación de respaldo
+
+Las cuatro bibliotecas locales del navegador exportan e importan desde un único documento JSON versionado. Las acciones **Export JSON / Copy JSON / Import file / Paste JSON** del panel se ejecutan completamente en el navegador: descarga o copia al portapapeles al exportar, selector de archivo o texto pegado al importar — nada se sube y no hay RPC de host ni llamadas de red.
+
+**Forma del documento**
+
+```json
+{
+  "schemaVersion": 1,
+  "exportedAt": 1735689600000,
+  "data": {
+    "history": ["…"],
+    "snippets": [{ "name": "…", "text": "…", "tags": [], "scope": "global", "createdAt": 0, "updatedAt": 0, "useCount": 0, "lastUsedAt": 0 }],
+    "templates": [{ "name": "…", "text": "…", "description": "", "updatedAt": 0 }],
+    "insights": [{ "text": "…", "sessions": [], "uses": 0, "lastUsedAt": 0 }]
+  }
+}
+```
+
+**Estrategia de fusión y conflictos**
+
+- Las entradas de historial son cadenas planas y se deduplican por texto exacto; una entrada duplicada o vacía se omite, nunca se sobrescribe.
+- Los snippets y plantillas se indexan por `name`; los insights por `text` exacto. En un conflicto de misma clave gana la **marca de tiempo más nueva** (`updatedAt` para snippets/plantillas, `lastUsedAt` para insights); una importación más antigua o de igual marca se omite, y las claves nuevas se añaden.
+- La importación respeta `maxPersisted` y `maxSnippets`; las plantillas e insights se limitan a sus topes de protocolo (`500` cada uno).
+- El aviso de resultado informa cuántos registros se escribieron y cuántos se omitieron (antiguos/duplicados).
+
+**Versionado de esquema**
+
+`schemaVersion` empieza en `1`. Las importaciones ejecutan una migración por pasos (una versión a la vez) para que los formatos futuros puedan actualizar documentos antiguos in situ. Un documento cuyo `schemaVersion` sea **más nuevo** que el que entiende esta compilación se rechaza con un error — nunca se descarta en silencio ni se fusiona parcialmente; una versión demasiado antigua para migrar se rechaza igual.
+
 ## Sliding context
 
 El núcleo del harness da a cada sesión de dsh una ventana de contexto deslizante, el mismo flujo de trabajo que ofrecen Claude Code y Codex: cuando una conversación se acerca al límite de contexto del modelo (o el proveedor informa un desbordamiento), el harness **auto-compacta** — los turnos antiguos se resumen detrás de un marcador de checkpoint `compaction` que permanece visible en la transcripción, el modelo conserva solo el resumen más la cola reciente, y la sesión continúa. `/compact` dispara la misma compactación bajo demanda, y el marcador se renderiza como una fila expandible "Context compacted".

@@ -165,6 +165,36 @@ Ctrl+R → 搜索面板在历史旁列出片段（绿色徽标 = 名称）
 
 `Ctrl+R` 给 `[compacted] …` 摘要加琥珀色徽标（历史不加徽标），片段绿色、模板紫色 —— 面板的来源一眼可见。用 `enableCompactionHighlight` 开关。
 
+## 备份导出与导入
+
+四个浏览器本地库统一导出/导入为一份带版本号的 JSON 文档。面板的 **Export JSON / Copy JSON / Import file / Paste JSON** 操作完全在浏览器内完成：导出时下载或复制到剪贴板，导入时选文件或粘贴文本——不会上传任何内容，不涉及宿主 RPC 或网络调用。
+
+**文档结构**
+
+```json
+{
+  "schemaVersion": 1,
+  "exportedAt": 1735689600000,
+  "data": {
+    "history": ["…"],
+    "snippets": [{ "name": "…", "text": "…", "tags": [], "scope": "global", "createdAt": 0, "updatedAt": 0, "useCount": 0, "lastUsedAt": 0 }],
+    "templates": [{ "name": "…", "text": "…", "description": "", "updatedAt": 0 }],
+    "insights": [{ "text": "…", "sessions": [], "uses": 0, "lastUsedAt": 0 }]
+  }
+}
+```
+
+**合并与冲突策略**
+
+- 历史条目是纯字符串，按精确文本去重；重复或空白条目被跳过，绝不覆盖。
+- 片段与模板按 `name` 为键；洞察按精确 `text` 为键。同键冲突时**最新时间戳胜出**（片段/模板看 `updatedAt`，洞察看 `lastUsedAt`）；更旧或等时间戳的导入被跳过，新键追加。
+- 导入遵守 `maxPersisted` 与 `maxSnippets`；模板与洞察止于固定协议上限（各 `500`）。
+- 结果通知会报告写入多少条、跳过多少条（更旧/重复）。
+
+**模式版本**
+
+`schemaVersion` 从 `1` 开始。导入按版本逐步迁移（一次一个版本），未来格式可就地升级旧文档。`schemaVersion` **高于**当前构建理解的文档以错误拒绝——绝不静默丢弃或部分合并；过旧无法迁移的版本同样拒绝。
+
 ## Sliding context
 
 harness 核心给每个 dsh 会话提供滑动上下文窗口 —— 与 Claude Code 和 Codex 同款的工作流：当会话接近模型的上下文上限（或提供方回报溢出）时，harness 会**自动压缩** —— 更早的轮次被总结为留在会话记录中的 `compaction` 检查点标记，模型只保留摘要加上最近的尾部，会话继续；`/compact` 可随时手动触发同样的压缩，标记在记录中渲染为可展开的"上下文已压缩"行。
