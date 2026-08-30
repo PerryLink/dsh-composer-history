@@ -10,8 +10,53 @@
  * from ↑ recall and Ctrl+R search after the model surface has slid past it.
  */
 
-import type { ConversationNode } from '@deepseek-ai/dsh-client-runtime/client'
 import type { HistoryNodeView } from './recall.ts'
+
+/**
+ * Local structural contract for the conversation snapshot nodes this plugin
+ * reads (user / steering / compaction). Declared locally because the owning
+ * package (`@deepseek-ai/dsh-client-ui-conversation`) re-exports the node
+ * union from its `client` entry only on the unreleased 0.1.2-alpha.1 host,
+ * while the published 0.1.1-rc.2 line keeps the union inside the removed
+ * `dsh-client-runtime` package. The runtime contract is structural: the
+ * session snapshot provides the same fields under both hosts, and every
+ * node kind outside this union projects to no view through the default arm.
+ */
+
+/** One text content block — the only block shape the recall views read. */
+interface TextContentBlock {
+  type: 'text'
+  text: string
+}
+
+/** One content block without composer text (images, chips, ...). */
+interface OpaqueContentBlock {
+  type: string
+}
+
+/** One finalized user message (fields the recall views read). */
+interface UserMessageNode {
+  kind: 'user'
+  seq: number
+  content: readonly (TextContentBlock | OpaqueContentBlock)[]
+}
+
+/** One steering message (fields the recall views read). */
+interface SteeringMessageNode {
+  kind: 'steering'
+  seq: number
+  content: readonly (TextContentBlock | OpaqueContentBlock)[]
+}
+
+/** One compaction checkpoint marker (fields the recall views read). */
+interface CompactionSummaryNode {
+  kind: 'compaction'
+  seq: number
+  summary: string | null
+}
+
+/** The conversation node kinds the recall views project. */
+export type ConversationNode = UserMessageNode | SteeringMessageNode | CompactionSummaryNode
 
 /** Prefix marking an entry that came from a compaction checkpoint, not the composer. */
 export const COMPACTED_PREFIX = '[compacted] '
@@ -30,7 +75,7 @@ export function viewOfNode(node: ConversationNode): HistoryNodeView | undefined 
     case 'steering': {
       const texts: string[] = []
       for (const block of node.content) {
-        if (block.type === 'text') texts.push(block.text)
+        if ('text' in block) texts.push(block.text)
       }
       return { kind: node.kind, texts }
     }

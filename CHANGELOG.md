@@ -4,6 +4,22 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- **Client dependency-surface migration.** The browser half no longer
+  type-imports the removed `@deepseek-ai/dsh-client-runtime` package: it
+  rides the cordis `Context` plus the published client packages. The
+  conversation node union is declared as a local structural contract (the
+  published `0.1.1-rc.2` line keeps the union inside the removed runtime
+  package), and the sessions service is read through a local structural
+  face via `ctx.get`. The tsdown external list drops
+  `dsh-client-web-react` / `dsh-client-schema-form` /
+  `dsh-client-runtime/client` and adds `dsh-client-ui-conversation/client`;
+  peers, devDeps, and the client inject manifest drop
+  `dsh-client-runtime`. No runtime behavior change.
+
 ## [0.6.1] - 2026-08-27
 
 ### Fixed

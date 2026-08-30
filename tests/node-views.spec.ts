@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ConversationNode } from '@deepseek-ai/dsh-client-runtime/client'
-import { COMPACTED_PREFIX, viewOfNode, viewOfNodes } from '../src/client/node-views.ts'
+import { COMPACTED_PREFIX, viewOfNode, viewOfNodes, type ConversationNode } from '../src/client/node-views.ts'
 
 /** Loose structural stand-ins for the runtime node union (fields beyond the projection stay absent). */
 const N = (node: object): ConversationNode => node as unknown as ConversationNode

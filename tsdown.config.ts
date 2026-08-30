@@ -21,9 +21,9 @@ const PLUGIN_ID = 'dsh-composer-history'
 
 /**
  * Module specifiers the shell shares into the frozen browser module table
- * (packages/client/web/src/platform.ts) plus the runtime store exemption
- * (`@deepseek-ai/dsh-client-runtime/client`). Any value import outside this
- * list must be inlined.
+ * (packages/client/web/src/platform.ts) plus the client bundle id the
+ * conversation domain registers (`@deepseek-ai/dsh-client-ui-conversation/client`).
+ * Any value import outside this list must be inlined.
  */
 const PLATFORM_EXTERNALS: readonly string[] = [
   'react',
@@ -31,12 +31,10 @@ const PLATFORM_EXTERNALS: readonly string[] = [
   'react-dom',
   'react-dom/client',
   '@deepseek-ai/cordis',
+  '@deepseek-ai/dsh-client-store',
   '@deepseek-ai/dsh-client-ui-slots',
-  '@deepseek-ai/dsh-client-web-react',
   '@deepseek-ai/dsh-client-ui-primitives',
-  '@deepseek-ai/dsh-client-ui-attachment',
-  '@deepseek-ai/dsh-client-schema-form',
-  '@deepseek-ai/dsh-client-runtime/client',
+  '@deepseek-ai/dsh-client-ui-conversation/client',
 ]
 
 export default defineConfig([

@@ -32,18 +32,18 @@ describe('wiring lifecycle (C1: fiber dispose)', () => {
 
     let listUnsubscribed = false
     let wiringDispose: (() => void) | undefined
+    const sessions = {
+      list: {
+        getSnapshot: () => ({ current: undefined, ids: [], byId: {} }),
+        subscribe: (): (() => void) => () => { listUnsubscribed = true },
+      },
+    }
     const ctx = {
       effect: (fn: () => unknown): (() => void) => {
         wiringDispose = fn() as (() => void) | undefined
         return () => wiringDispose?.()
       },
-      get: () => undefined,
-      sessions: {
-        list: {
-          getSnapshot: () => ({ current: undefined, ids: [], byId: {} }),
-          subscribe: (): (() => void) => () => { listUnsubscribed = true },
-        },
-      },
+      get: (name: string): unknown => (name === 'sessions' ? sessions : undefined),
       settingsScope: { bind: () => fakeScope() },
     }
 

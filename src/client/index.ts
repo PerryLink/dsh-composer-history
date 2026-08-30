@@ -18,7 +18,7 @@
  * search as prefixed entries, and a transient notice announces each
  * checkpoint that lands while the page is open.
  */
-import type { ClientContext, ConversationNode } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
 // Type-only: activates the ctx.conversation Context merge (IConversation face).
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 // Type-only: activates the ctx.inputTriggers merge and names the class face for the service assertion.
@@ -30,7 +30,7 @@ import { createComposerHistory, type ComposerHistoryHandle, type ComposerHistory
 import { createMirrorMeasurer, type MirrorMeasurer } from './visual-mirror.ts'
 import { hasActiveTriggerToken, effectiveKinds } from './recall.ts'
 import { HistoryExtractor } from './history-extract.ts'
-import { viewOfNodes } from './node-views.ts'
+import { viewOfNodes, type ConversationNode } from './node-views.ts'
 import { createSearchOverlay, type OverlayAction, type SearchOverlay } from './search-overlay.ts'
 import type { SearchEntry } from './search.ts'
 import { createCompactionNotice, type CompactionNotice } from './compaction-notice.ts'
@@ -58,6 +58,38 @@ const NAMESPACE = 'composer-history'
 /** Structural face of the command popup shell (ctx.commandUi, read defensively without a dependency edge). */
 interface PopupSelectFace {
   popupFor(actx: ClientContext): { readonly state: { getSnapshot(): { readonly open: boolean } } }
+}
+
+/**
+ * Structural face of the client sessions service this plugin reads (list
+ * snapshots, agent scoping, session bindings). Declared locally because the
+ * owning service's type lives in packages that publish differently across
+ * host lines (the removed `dsh-client-runtime` on 0.1.1-rc.2, the
+ * session-controller domain on 0.1.2-alpha.1); the runtime contract is
+ * structural and read through `ctx.get` without a dependency edge.
+ */
+interface SessionsFace {
+  readonly list: {
+    getSnapshot(): SessionsListSnapshot
+    subscribe(listener: () => void): () => void
+  }
+  scope(id: string): ClientContext | undefined
+  binding(id: string): SessionsBinding | undefined
+}
+
+/** One sessions-list snapshot (fields the wiring reads). */
+interface SessionsListSnapshot {
+  readonly current?: string
+  readonly ids: readonly string[]
+  readonly byId?: Record<string, { cwd?: string; title?: string; blank?: boolean }>
+}
+
+/** One stable session binding (fields the wiring reads). */
+interface SessionsBinding {
+  readonly session: {
+    getSnapshot(): { readonly nodes: readonly ConversationNode[] }
+    subscribe(listener: () => void): () => void
+  }
 }
 
 /** Collapse a backup import report into one short success line. */
@@ -123,15 +155,19 @@ export function apply(ctx: ClientContext, config: Partial<ComposerHistoryConfig>
  * @param storage - safe browser-local storage, or undefined outside a browser.
  */
 function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, storage: ReturnType<typeof safeStorage>): () => void {
+  // The sessions service arrives through the structural face: its owning
+  // package publishes differently across host lines, so the merge is read
+  // via ctx.get instead of a type edge.
+  const sessions = ctx.get('sessions') as SessionsFace
   const mirror: MirrorMeasurer | undefined = options.edgeMode === 'visual' ? createMirrorMeasurer() : undefined
 
   const currentActx = (): ClientContext | undefined => {
-    const id = ctx.sessions.list.getSnapshot().current
-    return id === undefined ? undefined : ctx.sessions.scope(id)
+    const id = sessions.list.getSnapshot().current
+    return id === undefined ? undefined : sessions.scope(id)
   }
 
   const currentSessionId = (): string | undefined => {
-    const id = ctx.sessions.list.getSnapshot().current
+    const id = sessions.list.getSnapshot().current
     return id === undefined ? undefined : String(id)
   }
 
@@ -157,9 +193,9 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   // The workspace key snippet scoping and template variables resolve against:
   // the current session's cwd, falling back to its title (both browser-local).
   const currentWorkspaceKey = (): string => {
-    const id = ctx.sessions.list.getSnapshot().current
+    const id = sessions.list.getSnapshot().current
     if (id === undefined) return ''
-    const summary = (ctx.sessions.list.getSnapshot() as { byId?: Record<string, { cwd?: string; title?: string }> }).byId?.[String(id)]
+    const summary = sessions.list.getSnapshot().byId?.[String(id)]
     return summary?.cwd ?? summary?.title ?? ''
   }
 
@@ -353,14 +389,14 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     },
 
     history: () => {
-      const id = ctx.sessions.list.getSnapshot().current
+      const id = sessions.list.getSnapshot().current
       if (id === undefined) return []
-      const nodes = ctx.sessions.binding(id)?.session.getSnapshot().nodes ?? []
+      const nodes = sessions.binding(id)?.session.getSnapshot().nodes ?? []
       return toViews(nodes)
     },
 
     supplementalHistory: () => {
-      const list = ctx.sessions.list.getSnapshot()
+      const list = sessions.list.getSnapshot()
       const current = list.current
       const parts: string[] = []
       if (options.persistHistory && storage !== undefined) {
@@ -369,9 +405,9 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
       if (options.historyScope === 'workspace') {
         for (const id of list.ids) {
           if (current !== undefined && id === current) continue
-          const summary = list.byId[id]
+          const summary = list.byId?.[id]
           if (summary === undefined || summary.blank) continue
-          const binding = ctx.sessions.binding(id)
+          const binding = sessions.binding(id)
           if (binding === undefined) continue
           parts.push(...extract(binding.session.getSnapshot().nodes, options.maxHistory))
         }
@@ -504,9 +540,9 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   const reconcileSession = (): void => {
     disposeSessionSub?.()
     disposeSessionSub = undefined
-    const id = ctx.sessions.list.getSnapshot().current
+    const id = sessions.list.getSnapshot().current
     if (id === undefined) return
-    const binding = ctx.sessions.binding(id)
+    const binding = sessions.binding(id)
     if (binding === undefined) return
     const session = binding.session
     lastCompactionSeq = latestCompactionSeq(session.getSnapshot().nodes)
@@ -518,7 +554,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
       watchCompaction(nodes)
     })
   }
-  const disposeListSub = ctx.sessions.list.subscribe(reconcileSession)
+  const disposeListSub = sessions.list.subscribe(reconcileSession)
   reconcileSession()
 
   return () => {

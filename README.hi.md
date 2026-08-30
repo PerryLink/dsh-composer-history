@@ -25,10 +25,12 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `0.1.1-rc.2` |
+| Harness | DeepSeek Harness `0.1.1-rc.2` (client peers `>=0.1.1-rc.2 <0.2.0`) |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | केवल Web GUI (क्लाइंट प्लगइन; ब्राउज़र-लोकल स्टोरेज; कोई नेटवर्क नहीं, कोई नेटिव कोड नहीं) |
 | Model | कोई भी (कोई मॉडल अनुरोध नहीं — शुद्ध UI व्यवहार) |
+
+ब्राउज़र हिस्सा प्रकाशित क्लाइंट पैकेजों (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) और cordis `Context` पर चलता है; यह अब हटाए गए `dsh-client-runtime` पैकेज पर निर्भर नहीं करता, इसलिए क्लाइंट सतह `0.1.2-alpha.1` होस्ट के साथ भी मेल खाती है।
 
 ## What you get
 

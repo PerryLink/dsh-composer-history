@@ -59,13 +59,12 @@ describe('built client bundle', () => {
         fn()
         return () => { disposed.push('effect') }
       },
-      get: () => undefined,
-      sessions: {
+      get: (name: string): unknown => (name === 'sessions' ? {
         list: {
           getSnapshot: () => ({ current: undefined }),
           subscribe: (): (() => void) => () => {},
         },
-      },
+      } : undefined),
       settingsScope: { bind: () => fakeScope },
     }
     expect(() => module.apply(fakeCtx)).not.toThrow()
