@@ -14,7 +14,7 @@
  * @module dsh-composer-history
  */
 import type { Context } from '@deepseek-ai/cordis'
-import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
+import type { SettingsNamespace } from '@deepseek-ai/dsh-settings'
 import { Config, type ComposerHistoryConfig } from './client/config.ts'
 
 export { Config, resolveConfig } from './client/config.ts'
@@ -23,23 +23,24 @@ export type { ComposerHistoryConfig } from './client/config.ts'
 /** Plugin name: matches the package name, the graph row id, and the bundle id. */
 export const name = 'dsh-composer-history'
 
-/** Settings is optional (installSettingsSection skips registration when absent). */
+/** Settings is optional (registration is skipped when the provider is absent). */
 export const inject: string[] = []
 
 /** Settings namespace carrying the resolved options into the browser half. */
-const NAMESPACE = settingsNamespace('composer-history')
+const NAMESPACE = 'composer-history' as SettingsNamespace
 
 /**
  * Register the settings section when a settings service exists; the entry
  * config is the composition `base`, and the browser half overlays user
  * overrides on top. No settings service means no registration and no
- * host-side behavior at all.
+ * host-side behavior at all. The 0.1.2-alpha.2 settings seam registers a
+ * namespace schema through `ctx.settings.register`; the removed
+ * `installSettingsSection` helper no longer exists.
  * @param ctx - host root context.
  * @param config - validated config (the composition base).
  */
 export function apply(ctx: Context, config: ComposerHistoryConfig): void {
-  installSettingsSection(ctx, NAMESPACE, Config, config, {
-    setSource: () => {},
-    onChange: () => {},
+  ctx.inject(['settings'], (settingsCtx) => {
+    settingsCtx.settings.register(NAMESPACE, Config, { base: config as never })
   })
 }
