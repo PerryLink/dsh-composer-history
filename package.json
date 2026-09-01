@@ -1,7 +1,7 @@
 {
   "name": "dsh-composer-history",
   "version": "0.6.2",
-  "description": "Terminal-style input history for the DeepSeek Harness web composer: edge-first arrows with exact draft/caret restore, browser-local persisted history, Ctrl+R reverse search, workspace-scoped recall, and fully configurable keys 閳?plus sliding-context awareness (compaction summaries join recall/search, a compaction notice with one-click /compact fill) layered on the ordinary composer draft only.",
+  "description": "Terminal-style input history for the DeepSeek Harness web composer: edge-first arrows with exact draft/caret restore, browser-local persisted history, Ctrl+R reverse search, workspace-scoped recall, and fully configurable keys 闁?plus sliding-context awareness (compaction summaries join recall/search, a compaction notice with one-click /compact fill) layered on the ordinary composer draft only.",
   "packageManager": "pnpm@11.7.0",
   "repository": {
     "type": "git",
@@ -76,7 +76,7 @@
     ],
     "compatibility": {
       "dshVersions": [
-        "0.1.1-rc.2"
+        "0.1.2-alpha.2"
       ]
     },
     "capability": {
