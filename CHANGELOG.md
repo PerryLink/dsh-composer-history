@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Align the devDependency pins to the published dsh `0.1.2-alpha.3` line (six `@deepseek-ai/dsh-*` packages), and align `cordis`/`schemastery` to `^4.0.2`/`^3.18.2`. No behavior change; the five-language READMEs record the alpha.3 fact.
+
 ## [0.6.2] - 2026-08-30
 
 ### Changed
