@@ -30,7 +30,8 @@
 | Platforms | केवल Web GUI (क्लाइंट प्लगइन; ब्राउज़र-लोकल स्टोरेज; कोई नेटवर्क नहीं, कोई नेटिव कोड नहीं) |
 | Model | कोई भी (कोई मॉडल अनुरोध नहीं — शुद्ध UI व्यवहार) |
 
-ब्राउज़र हिस्सा प्रकाशित क्लाइंट पैकेजों (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) और cordis `Context` पर चलता है; यह अब हटाए गए `dsh-client-runtime` पैकेज पर निर्भर नहीं करता, इसलिए क्लाइंट सतह `0.1.2-alpha.1` होस्ट के साथ भी मेल खाती है।
+ब्राउज़र हिस्सा प्रकाशित क्लाइंट पैकेजों (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) और cordis `Context` पर चलता है; यह अब हटाए गए `dsh-client-runtime` पैकेज पर निर्भर नहीं करता, इसलिए क्लाइंट सतह `0.1.2-alpha.2` होस्ट के साथ भी मेल खाती है।
+0.1.2-alpha.2 (2026-08-31 को अनुकूलित): सत्र लिफ़ाफ़ा अपना ignorable फ़ील्ड केवल संग्रहीत-लॉग पठन संगतता के लिए रखता है - Session.append अभी भी इसे स्टैम्प नहीं कर सकता, इसलिए गेट व्यवहार अपरिवर्तित है।
 
 ## What you get
 

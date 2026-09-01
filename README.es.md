@@ -30,7 +30,8 @@
 | Platforms | Solo Web GUI (plugin de cliente; almacenamiento local del navegador; sin red, sin código nativo) |
 | Model | Cualquiera (sin peticiones al modelo — comportamiento puramente de UI) |
 
-La mitad de navegador se apoya en los paquetes de cliente publicados (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) y en el `Context` de cordis; ya no depende del paquete eliminado `dsh-client-runtime`, por lo que la superficie de cliente también encaja con hosts `0.1.2-alpha.1`.
+La mitad de navegador se apoya en los paquetes de cliente publicados (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) y en el `Context` de cordis; ya no depende del paquete eliminado `dsh-client-runtime`, por lo que la superficie de cliente también encaja con hosts `0.1.2-alpha.2`.
+0.1.2-alpha.2 (adaptado el 2026-08-31): el sobre de sesión conserva su campo ignorable solo para compatibilidad de lectura de logs almacenados - Session.append aún no puede estamparlo, por lo que el comportamiento de la puerta no cambia.
 
 ## What you get
 

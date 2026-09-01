@@ -30,7 +30,8 @@
 | Platforms | Somente Web GUI (plugin de cliente; armazenamento local do navegador; sem rede, sem código nativo) |
 | Model | Qualquer um (sem requisições ao modelo — comportamento puramente de UI) |
 
-A metade de navegador usa os pacotes de cliente publicados (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) e o `Context` do cordis; ela não depende mais do pacote removido `dsh-client-runtime`, então a superfície de cliente também se alinha com hosts `0.1.2-alpha.1`.
+A metade de navegador usa os pacotes de cliente publicados (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) e o `Context` do cordis; ela não depende mais do pacote removido `dsh-client-runtime`, então a superfície de cliente também se alinha com hosts `0.1.2-alpha.2`.
+0.1.2-alpha.2 (adaptado em 2026-08-31): o envelope de sessão mantém seu campo ignorable apenas para compatibilidade de leitura de logs armazenados - o Session.append ainda não consegue estampá-lo, então o comportamento da porta não muda.
 
 ## What you get
 
