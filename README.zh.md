@@ -30,8 +30,8 @@
 | Platforms | 仅 Web GUI（客户端插件；浏览器本地存储；无网络、无原生代码） |
 | Model | 任意（不发模型请求 —— 纯 UI 行为） |
 
-浏览器半边基于已发布的客户端包（`dsh-client-ui-conversation`、`dsh-client-ui-input-trigger`、`dsh-client-ui-settings`）与 cordis `Context`；它不再依赖已移除的 `dsh-client-runtime` 包，因此客户端接口面同样对齐 `0.1.2-alpha.3` 宿主。
-0.1.2-alpha.3（2026-09-01 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。
+浏览器半边基于已发布的客户端包（`dsh-client-ui-conversation`、`dsh-client-ui-input-trigger`、`dsh-client-ui-settings`）与 cordis `Context`；它不再依赖已移除的 `dsh-client-runtime` 包，因此客户端接口面同样对齐 `0.1.2-alpha.5` 宿主。
+0.1.2-alpha.5（2026-09-02 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。
 
 ## What you get
 
