@@ -26,7 +26,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `0.1.1-rc.2` (client peers `>=0.1.1-rc.2 <0.2.0`) |
+| Harness | DeepSeek Harness `0.1.2-alpha.5` (client peers `>=0.1.1-rc.2 <0.2.0`) |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Web GUI only (client plugin; browser-local storage; no network, no native code) |
 | Model | Any (no model requests — pure UI behavior) |
