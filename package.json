@@ -76,7 +76,7 @@
     ],
     "compatibility": {
       "dshVersions": [
-        "0.1.2-alpha.3"
+        "0.1.2-alpha.5"
       ]
     },
     "capability": {
@@ -127,15 +127,15 @@
       "optional": true
     }
   },
-  "devDependencies": {"@deepseek-ai/dsh-attachment": "0.1.2-alpha.3", 
+  "devDependencies": {"@deepseek-ai/dsh-attachment": "0.1.2-alpha.5", 
     "@deepseek-ai/cordis": "^4.0.2",
     "@deepseek-ai/cordis-plugin-include": "1.0.6",
     "@deepseek-ai/cordis-plugin-loader": "1.0.2",
-    "@deepseek-ai/dsh-api-remotes": "0.1.2-alpha.3",
-    "@deepseek-ai/dsh-client-ui-conversation": "0.1.2-alpha.3",
-    "@deepseek-ai/dsh-client-ui-input-trigger": "0.1.2-alpha.3",
-    "@deepseek-ai/dsh-client-ui-settings": "0.1.2-alpha.3",
-    "@deepseek-ai/dsh-settings": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-api-remotes": "0.1.2-alpha.5",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.1.2-alpha.5",
+    "@deepseek-ai/dsh-client-ui-input-trigger": "0.1.2-alpha.5",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.2-alpha.5",
+    "@deepseek-ai/dsh-settings": "0.1.2-alpha.5",
     "@deepseek-ai/schemastery": "^3.18.2",
     "@types/node": "^22.19.0",
     "@vitest/coverage-v8": "^3.2.0",
