@@ -3,9 +3,9 @@
  * Wiring lifecycle (community five-layer model, C1): the plugin's
  * authoritative registry is the window event surface plus the sessions-list
  * subscription. This suite proves the fiber disposer removes every
- * registration the wiring made — the two window-capture listeners and the
- * list subscription — rather than only the component-level disposers the
- * individual modules test.
+ * registration the wiring made — the window-capture keydown listener, the
+ * bubble-phase input listener, and the list subscription — rather than only
+ * the component-level disposers the individual modules test.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apply } from '../src/client/index.ts'
@@ -26,7 +26,7 @@ describe('wiring lifecycle (C1: fiber dispose)', () => {
     document.body.innerHTML = ''
   })
 
-  it('registers window-capture listeners and the list subscription, then removes them all on dispose', () => {
+  it('registers the window listeners and the list subscription, then removes them all on dispose', () => {
     const addSpy = vi.spyOn(window, 'addEventListener')
     const removeSpy = vi.spyOn(window, 'removeEventListener')
 
@@ -49,16 +49,17 @@ describe('wiring lifecycle (C1: fiber dispose)', () => {
 
     apply(ctx as unknown as Parameters<typeof apply>[0])
 
-    // Authoritative registry part 1: the two window-capture listeners.
+    // Authoritative registry part 1: keydown on capture, input on bubble
+    // (the contenteditable DOM carries the edit only from the bubble phase).
     expect(addSpy).toHaveBeenCalledWith('keydown', expect.any(Function), true)
-    expect(addSpy).toHaveBeenCalledWith('input', expect.any(Function), true)
+    expect(addSpy).toHaveBeenCalledWith('input', expect.any(Function), false)
 
     wiringDispose?.()
 
     // Disposing the wiring must remove exactly those registrations and
     // cancel the sessions-list subscription.
     expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function), true)
-    expect(removeSpy).toHaveBeenCalledWith('input', expect.any(Function), true)
+    expect(removeSpy).toHaveBeenCalledWith('input', expect.any(Function), false)
     expect(listUnsubscribed).toBe(true)
   })
 })

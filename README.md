@@ -26,13 +26,14 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `0.1.2-alpha.5` (client peers `>=0.1.1-rc.2 <0.2.0`) |
+| Harness | DeepSeek Harness `0.1.2-rc.1` (client peers `>=0.1.1-rc.2 <0.2.0`) |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Web GUI only (client plugin; browser-local storage; no network, no native code) |
 | Model | Any (no model requests — pure UI behavior) |
 
-The browser half rides the published client packages (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) and the cordis `Context`; it no longer depends on the removed `dsh-client-runtime` package, so the client surface also lines up with `0.1.2-alpha.5` hosts.
-0.1.2-alpha.5 (adapted 2026-09-02): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged.
+The browser half rides the published client packages (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) and the cordis `Context`; it no longer depends on the removed `dsh-client-runtime` package, so the client surface also lines up with `0.1.2-rc.1` hosts.
+Interception anchors on the web composer's DOM: the contenteditable surface `div[data-composer-input]` inside `[data-input-scroll]` (the Lexical composer shipped since 0.1.2-alpha.5 / 0.1.2-rc.1), with the legacy textarea composer inside `[data-input-scroll]` (harness lines up to 0.1.1-rc.2) still matched; textareas elsewhere pass through. The compat workflow's jsdom web-behavior smoke asserts this identity/text/caret face against the packed bundle.
+0.1.2-rc.1 (adapted 2026-09-04): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged.
 
 ## What you get
 
@@ -229,7 +230,8 @@ The harness core gives every dsh session a sliding context window, the same work
 
 ## Known limitations
 
-- **Logical vs visual lines.** Default `logical` keys off `\n` (a long auto-wrapped message counts as one line); `visual` measures real wraps via a hidden mirror (O(lines·log n) binary search per edge check, memoized per draft/width). Mirror measurement needs a real layout engine — the pure span math is unit-tested instead.
+- **Composer DOM face.** Interception anchors on host-private DOM: the contenteditable `div[data-composer-input]` inside `[data-input-scroll]` (harness 0.1.2-alpha.5 / 0.1.2-rc.1 and later); the legacy textarea composer inside `[data-input-scroll]` (lines up to 0.1.1-rc.2) stays matched. This shape is not a published API (upstream proposal C3 records that plugins can only guess host DOM), so a future host DOM change can break interception silently — the compat workflow's jsdom smoke re-asserts the face against the packed bundle.
+- **Logical vs visual lines.** Default `logical` keys off `\n` (a long auto-wrapped message counts as one line); `visual` measures real wraps via a hidden mirror that copies the contenteditable surface's computed box (O(lines·log n) binary search per edge check, memoized per draft/width). Mirror measurement needs a real layout engine — the pure span math is unit-tested instead, and measured spans on the Lexical composer stay best-effort (logical remains the default).
 - **Persisted history is per-browser.** The store lives in one origin's `localStorage`; it never syncs between browsers or machines. Corrupt payloads reset silently.
 - **Undo stack includes recall transactions.** Every fill/restore is one `setDraft` transaction in the input machine's undo log; Ctrl+Z steps back through recalls. The precision fix needs the upstream edit-range exposure.
 - Recalling a `/xxx` entry then Enter follows the normal command claim/adjudication path (expected, and Enter is never intercepted).

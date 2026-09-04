@@ -1,10 +1,18 @@
 /**
  * DOM mirror measurement for edgeMode='visual': a hidden div replicating the
- * textarea's width/font/line-height/padding/white-space pre-wrap geometry
+ * composer surface's width/font/line-height/padding/white-space geometry
  * exposes the real wrapped line boxes, and a Range over the mirror text
  * yields one client rect per visual line. Character offsets of the wrap
  * boundaries are recovered by binary-searching rect tops, which produces
  * the {@link VisualLineSpan} list consumed by the pure edge predicates.
+ *
+ * The composer surface is the contenteditable div (`data-composer-input`)
+ * since harness 0.1.2-alpha.5 / 0.1.2-rc.1 (and the legacy textarea on
+ * older lines); the mirror copies that element's computed box, so the wrap
+ * width derives from the same width/padding/border the surface renders
+ * with. On the Lexical composer the measured spans stay best-effort — the
+ * suite cannot verify real layout-engine geometry (jsdom has none), which
+ * is why `logical` remains the default edgeMode.
  *
  * The span math is a pure seam over an injected `topAt(offset)` line-top
  * probe ({@link nextWrapOffsetBy}/{@link computeSpans}), so the binary search
@@ -13,27 +21,39 @@
  * because every key press re-measures while browsing.
  */
 
+import { type ComposerElement } from './composer-dom.ts'
 import type { VisualLineSpan } from './visual-edge.ts'
 
 /** Hidden measurement mirror bound to one plugin lifetime. */
 export interface MirrorMeasurer {
   /**
    * Measure the visual line spans of a draft for one composer.
-   * @param composer - the textarea whose geometry the mirror copies.
+   * @param composer - the composer surface whose geometry the mirror copies.
    * @param draft - the text to lay out.
    * @returns spans in character order, or undefined when no measurement is possible.
    */
-  spans(composer: HTMLTextAreaElement, draft: string): VisualLineSpan[] | undefined
+  spans(composer: ComposerElement, draft: string): VisualLineSpan[] | undefined
   /** Remove the mirror node. */
   dispose(): void
 }
 
-/** Computed styles the mirror copies so its line boxes match the textarea's. */
+/** Computed styles the mirror copies so its line boxes match the composer surface's. */
 const COPIED_PROPERTIES: readonly string[] = [
   'boxSizing', 'width', 'fontFamily', 'fontSize', 'fontStyle', 'fontVariant',
   'fontWeight', 'lineHeight', 'letterSpacing', 'wordSpacing', 'textIndent',
   'tabSize', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
   'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth',
+]
+
+/**
+ * Text-layout properties with hardcoded fallbacks: copied from the computed
+ * style when the engine resolves them (real browsers), else the fallback
+ * keeps the mirror's text layout well-defined (jsdom resolves nothing).
+ */
+const LAYOUT_OR_DEFAULT: ReadonlyArray<readonly [property: string, fallback: string]> = [
+  ['whiteSpace', 'pre-wrap'],
+  ['wordBreak', 'break-word'],
+  ['overflowWrap', 'break-word'],
 ]
 
 /** Safety bound against a pathological rect/loop disagreement. */
@@ -115,14 +135,11 @@ export function createMirrorMeasurer(): MirrorMeasurer | undefined {
   style.top = '0'
   style.visibility = 'hidden'
   style.pointerEvents = 'none'
-  style.setProperty('white-space', 'pre-wrap')
-  style.setProperty('word-break', 'break-word')
-  style.setProperty('overflow-wrap', 'break-word')
   document.body.appendChild(mirror)
 
   // Measurement memo: browsing re-measures on every key press; identical
   // (composer, draft, width) input must not re-run the binary search.
-  let cachedComposer: HTMLTextAreaElement | undefined
+  let cachedComposer: ComposerElement | undefined
   let cachedDraft: string | undefined
   let cachedWidth = -1
   let cachedSpans: VisualLineSpan[] | undefined
@@ -144,16 +161,22 @@ export function createMirrorMeasurer(): MirrorMeasurer | undefined {
 }
 
 /**
- * Copy the textarea's computed metrics onto the mirror and measure.
+ * Copy the composer surface's computed metrics onto the mirror and measure.
  * @param mirror - the hidden mirror div.
- * @param composer - the textarea to copy geometry from.
+ * @param composer - the composer surface to copy geometry from.
  * @param draft - the text to lay out.
  * @returns visual line spans, or undefined when rect measurement is unavailable.
  */
-function measureSpans(mirror: HTMLDivElement, composer: HTMLTextAreaElement, draft: string): VisualLineSpan[] | undefined {
+function measureSpans(mirror: HTMLDivElement, composer: ComposerElement, draft: string): VisualLineSpan[] | undefined {
   const computed = window.getComputedStyle(composer)
   for (const property of COPIED_PROPERTIES) {
     (mirror.style as CSSStyleDeclaration & Record<string, string>)[property] = computed.getPropertyValue(property)
+  }
+  for (const entry of LAYOUT_OR_DEFAULT) {
+    const property = entry[0]
+    const fallback = entry[1]
+    const value = computed.getPropertyValue(property)
+    ;(mirror.style as CSSStyleDeclaration & Record<string, string>)[property] = value === '' ? fallback : value
   }
   mirror.textContent = draft === '' ? EMPTY_TEXT : draft
   const node = mirror.firstChild

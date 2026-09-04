@@ -25,13 +25,14 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `0.1.2-alpha.5` (client peers `>=0.1.1-rc.2 <0.2.0`) |
+| Harness | DeepSeek Harness `0.1.2-rc.1` (client peers `>=0.1.1-rc.2 <0.2.0`) |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Solo Web GUI (plugin de cliente; almacenamiento local del navegador; sin red, sin código nativo) |
 | Model | Cualquiera (sin peticiones al modelo — comportamiento puramente de UI) |
 
-La mitad de navegador se apoya en los paquetes de cliente publicados (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) y en el `Context` de cordis; ya no depende del paquete eliminado `dsh-client-runtime`, por lo que la superficie de cliente también encaja con hosts `0.1.2-alpha.5`.
-0.1.2-alpha.5 (adaptado el 2026-09-02): el sobre de sesión conserva su campo ignorable solo para compatibilidad de lectura de logs almacenados - Session.append aún no puede estamparlo, por lo que el comportamiento de la puerta no cambia.
+La mitad de navegador se apoya en los paquetes de cliente publicados (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) y en el `Context` de cordis; ya no depende del paquete eliminado `dsh-client-runtime`, por lo que la superficie de cliente también encaja con hosts `0.1.2-rc.1`.
+La intercepción se ancla en el DOM del compositor web: la superficie contenteditable `div[data-composer-input]` dentro de `[data-input-scroll]` (el compositor Lexical incluido desde 0.1.2-alpha.5 / 0.1.2-rc.1), manteniendo además el compositor textarea heredado dentro de `[data-input-scroll]` (líneas hasta 0.1.1-rc.2); otros textareas pasan de largo. El smoke de comportamiento web en jsdom del flujo de compatibilidad reafirma esta cara identidad/texto/cursor contra el paquete empaquetado.
+0.1.2-rc.1 (adaptado el 2026-09-04): el sobre de sesión conserva su campo ignorable solo para compatibilidad de lectura de logs almacenados - Session.append aún no puede estamparlo, por lo que el comportamiento de la puerta no cambia.
 
 ## What you get
 
@@ -227,7 +228,8 @@ El núcleo del harness da a cada sesión de dsh una ventana de contexto deslizan
 
 ## Known limitations
 
-- **Líneas lógicas vs visuales.** El `logical` por defecto se basa en `\n` (un mensaje largo con ajuste automático cuenta como una línea); `visual` mide los ajustes reales mediante un mirror oculto (búsqueda binaria O(líneas·log n) por comprobación de borde, memorizado por borrador/ancho). La medición del mirror necesita un motor de layout real — la matemática pura de spans está cubierta por pruebas unitarias.
+- **Cara DOM del compositor.** La intercepción se ancla en DOM privado del host: el `div[data-composer-input]` contenteditable dentro de `[data-input-scroll]` (host 0.1.2-alpha.5 / 0.1.2-rc.1 y posteriores); el compositor textarea heredado dentro de `[data-input-scroll]` (líneas hasta 0.1.1-rc.2) sigue coincidiendo. Esta forma no es una API publicada (la propuesta upstream C3 registra que los plugins solo pueden adivinar el DOM del host), así que un cambio futuro del DOM del host puede romper la intercepción en silencio — el smoke jsdom del flujo de compatibilidad reafirma la cara contra el paquete empaquetado.
+- **Líneas lógicas vs visuales.** El `logical` por defecto se basa en `\n` (un mensaje largo con ajuste automático cuenta como una línea); `visual` mide los ajustes reales mediante un mirror oculto que copia la caja computada de la superficie contenteditable (búsqueda binaria O(líneas·log n) por comprobación de borde, memorizado por borrador/ancho). La medición del mirror necesita un motor de layout real — la matemática pura de spans está cubierta por pruebas unitarias, y los spans medidos sobre el compositor Lexical siguen siendo de mejor esfuerzo (`logical` sigue siendo el valor por defecto).
 - **El historial persistente es por navegador.** El almacén vive en el `localStorage` de un origen; nunca se sincroniza entre navegadores o máquinas. Las cargas corruptas se reinician silenciosamente.
 - **La pila de deshacer incluye transacciones de recuperación.** Cada relleno/restauración es una transacción `setDraft` en el registro de deshacer de la máquina de entrada; Ctrl+Z retrocede por las recuperaciones. La corrección de precisión necesita la exposición del edit-range aguas arriba.
 - Recuperar una entrada `/xxx` y pulsar Enter sigue la ruta normal de claim/adjudication del comando (esperado, y Enter nunca se intercepta).

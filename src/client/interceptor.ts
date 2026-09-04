@@ -9,9 +9,10 @@
  * Contract: an event is only prevented once the machine produced a non-pass
  * effect; every pass path leaves the event untouched. After a takeover the
  * caret is moved to the end of the filled text on the next animation frame
- * (requestAnimationFrame + setSelectionRange, pending frames cancelled on
- * reschedule and dispose), and the draft write always goes through the
- * host's setDraft (the input machine's single write path).
+ * (requestAnimationFrame + the Selection/Range caret face from
+ * composer-dom.ts, pending frames cancelled on reschedule and dispose), and
+ * the draft write always goes through the host's setDraft (the input
+ * machine's single write path).
  */
 
 import {
@@ -22,6 +23,7 @@ import {
   downAtLastVisualLine, upAtFirstVisualLine, type VisualLineSpan,
 } from './visual-edge.ts'
 import { chordMatches, parseChord, type KeyChord } from './keys.ts'
+import { composerCaret, composerText, setComposerCaret, type ComposerElement } from './composer-dom.ts'
 import type { ComposerHistoryConfig } from './config.ts'
 
 /** The input-machine slice the interceptor reads (phase gates interception). */
@@ -35,24 +37,24 @@ export interface ComposerInputView {
  * event-handler reads of live snapshots are the sanctioned pattern.
  */
 export interface ComposerHistoryHost {
-  /** The composer textarea behind an event target, or undefined outside the composer. */
-  composerOf(target: EventTarget | null): HTMLTextAreaElement | undefined
+  /** The composer element behind an event target, or undefined outside the composer. */
+  composerOf(target: EventTarget | null): ComposerElement | undefined
   /** Stable identity of the session the composer belongs to (resets on switch). */
-  sessionKey(composer: HTMLTextAreaElement): string | undefined
+  sessionKey(composer: ComposerElement): string | undefined
   /** Live input machine state of the composer's session. */
-  inputState(composer: HTMLTextAreaElement): ComposerInputView | undefined
+  inputState(composer: ComposerElement): ComposerInputView | undefined
   /** Session nodes for the fresh history extraction (called per key press). */
-  history(composer: HTMLTextAreaElement): readonly HistoryNodeView[]
+  history(composer: ComposerElement): readonly HistoryNodeView[]
   /** Already-extracted entries from beyond the current session (persisted, workspace). */
-  supplementalHistory?(composer: HTMLTextAreaElement): readonly string[]
+  supplementalHistory?(composer: ComposerElement): readonly string[]
   /** A picker owning the arrow keys is open (slash menu, command popup, token fallback). */
-  menuOpen(composer: HTMLTextAreaElement): boolean
+  menuOpen(composer: ComposerElement): boolean
   /** Single programmatic draft write path. */
-  setDraft(composer: HTMLTextAreaElement, text: string): void
+  setDraft(composer: ComposerElement, text: string): void
   /** Open the reverse-search overlay for the merged history (search chord takeover). */
-  openSearch(composer: HTMLTextAreaElement, history: readonly string[]): void
+  openSearch(composer: ComposerElement, history: readonly string[]): void
   /** Measured visual line spans for edgeMode='visual'; absent in logical mode. */
-  visualSpans?(composer: HTMLTextAreaElement, draft: string): readonly VisualLineSpan[] | undefined
+  visualSpans?(composer: ComposerElement, draft: string): readonly VisualLineSpan[] | undefined
 }
 
 /** Handle owned by one plugin apply: the window-capture listeners plus introspection. */
@@ -62,7 +64,7 @@ export interface ComposerHistoryHandle {
   state(): RecallState
   reset(): void
   /** Write a text into the draft and move the caret to its end (search picks). */
-  fill(composer: HTMLTextAreaElement, text: string): void
+  fill(composer: ComposerElement, text: string): void
   /** Cancel pending caret frames and leave the machine idle (owner teardown). */
   dispose(): void
 }
@@ -89,21 +91,21 @@ export function createComposerHistory(host: ComposerHistoryHost, config: Compose
     return undefined
   }
 
-  const caretTo = (composer: HTMLTextAreaElement, caret: number): void => {
+  const caretTo = (composer: ComposerElement, caret: number): void => {
     // Defer past React's discrete-event render commit, which applies the
-    // setDraft value to the textarea before the next frame.
+    // setDraft value to the composer surface before the next frame.
     if (rafId !== undefined) cancelAnimationFrame(rafId)
     rafId = requestAnimationFrame(() => {
       rafId = undefined
-      composer.setSelectionRange(caret, caret)
+      setComposerCaret(composer, caret)
     })
   }
 
-  const caretToEnd = (composer: HTMLTextAreaElement): void => {
-    caretTo(composer, composer.value.length)
+  const caretToEnd = (composer: ComposerElement): void => {
+    caretTo(composer, composerText(composer).length)
   }
 
-  const apply = (composer: HTMLTextAreaElement, effect: RecallEffect): void => {
+  const apply = (composer: ComposerElement, effect: RecallEffect): void => {
     switch (effect.kind) {
       case 'pass':
         return
@@ -123,7 +125,7 @@ export function createComposerHistory(host: ComposerHistoryHost, config: Compose
     }
   }
 
-  const edgeVerdicts = (composer: HTMLTextAreaElement, draft: string, caret: number): { upEdge: boolean; downEdge: boolean } => {
+  const edgeVerdicts = (composer: ComposerElement, draft: string, caret: number): { upEdge: boolean; downEdge: boolean } => {
     if (config.edgeMode === 'visual') {
       const spans = host.visualSpans?.(composer, draft) ?? [{ start: 0, end: draft.length }]
       return { upEdge: upAtFirstVisualLine(spans, caret), downEdge: downAtLastVisualLine(spans, caret) }
@@ -132,7 +134,7 @@ export function createComposerHistory(host: ComposerHistoryHost, config: Compose
   }
 
   /** Fresh merged history for this key press: supplemental entries, then the current session's. */
-  const mergedHistory = (composer: HTMLTextAreaElement): string[] => {
+  const mergedHistory = (composer: ComposerElement): string[] => {
     const kinds = effectiveKinds(config.includeKinds, config.includeCompactionSummaries)
     const current = extractHistory(host.history(composer), { kinds, max: config.maxHistory })
     const merged = composeHistory(host.supplementalHistory?.(composer) ?? [], current)
@@ -156,8 +158,8 @@ export function createComposerHistory(host: ComposerHistoryHost, config: Compose
     if (input === undefined) return
     if (input.phase !== 'plain') return
     if (host.menuOpen(composer)) return
-    const caret = composer.selectionStart
-    if (composer.selectionEnd !== caret) return
+    const caret = composerCaret(composer)
+    if (caret === undefined) return
     if (event.isComposing) return
     let effect: RecallEffect
     if (searchChord !== undefined) {
@@ -218,9 +220,11 @@ export function createComposerHistory(host: ComposerHistoryHost, config: Compose
       machine.reset()
       lastSession = sessionKey
     }
-    // The DOM value already carries the edit at capture time; the machine
-    // snapshot updates only after React handles the event in the bubble phase.
-    machine.noteDraftChange(composer.value)
+    // The surface text already carries the edit by the time this bubble
+    // listener runs (the editor library writes the contenteditable DOM in
+    // its own target-phase listeners); the machine snapshot updates only
+    // after the full dispatch.
+    machine.noteDraftChange(composerText(composer))
   }
 
   return {

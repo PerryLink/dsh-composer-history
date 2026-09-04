@@ -25,13 +25,14 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `0.1.2-alpha.5`（client peers `>=0.1.1-rc.2 <0.2.0`） |
+| Harness | DeepSeek Harness `0.1.2-rc.1`（client peers `>=0.1.1-rc.2 <0.2.0`） |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | 仅 Web GUI（客户端插件；浏览器本地存储；无网络、无原生代码） |
 | Model | 任意（不发模型请求 —— 纯 UI 行为） |
 
-浏览器半边基于已发布的客户端包（`dsh-client-ui-conversation`、`dsh-client-ui-input-trigger`、`dsh-client-ui-settings`）与 cordis `Context`；它不再依赖已移除的 `dsh-client-runtime` 包，因此客户端接口面同样对齐 `0.1.2-alpha.5` 宿主。
-0.1.2-alpha.5（2026-09-02 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。
+浏览器半边基于已发布的客户端包（`dsh-client-ui-conversation`、`dsh-client-ui-input-trigger`、`dsh-client-ui-settings`）与 cordis `Context`；它不再依赖已移除的 `dsh-client-runtime` 包，因此客户端接口面同样对齐 `0.1.2-rc.1` 宿主。
+拦截锚定 Web 作曲器的 DOM：`[data-input-scroll]` 内的 contenteditable 表面 `div[data-composer-input]`（自 0.1.2-alpha.5 / 0.1.2-rc.1 起随附的 Lexical 作曲器），同时保留对 `[data-input-scroll]` 内旧式 textarea 作曲器（0.1.1-rc.2 及以前宿主线）的匹配；其余 textarea 一律穿过。compat 工作流的 jsdom web 行为冒烟针对打包产物断言该身份/文本/光标面。
+0.1.2-rc.1（2026-09-04 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。
 
 ## What you get
 
@@ -227,7 +228,8 @@ harness 核心给每个 dsh 会话提供滑动上下文窗口 —— 与 Claude 
 
 ## Known limitations
 
-- **逻辑行 vs 视觉行。** 默认 `logical` 按 `\n` 判定（一条自动折行的长消息算一行）；`visual` 通过隐藏 mirror（每次边缘检查 O(行数·log n) 二分，按草稿/宽度 memoize）测量真实折行。mirror 测量需要真实布局引擎 —— 纯 span 数学已单测覆盖。
+- **作曲器 DOM 面。** 拦截锚定宿主私有 DOM：`[data-input-scroll]` 内的 contenteditable `div[data-composer-input]`（0.1.2-alpha.5 / 0.1.2-rc.1 及以后的宿主）；`[data-input-scroll]` 内的旧式 textarea 作曲器（0.1.1-rc.2 及以前）保持匹配。该形状并非公开 API（上游提案 C3 记载插件只能猜测宿主 DOM），未来宿主 DOM 变化可能让拦截静默失效 —— compat 工作流的 jsdom 冒烟针对打包产物重新断言该面。
+- **逻辑行 vs 视觉行。** 默认 `logical` 按 `\n` 判定（一条自动折行的长消息算一行）；`visual` 通过复制 contenteditable 表面计算盒的隐藏 mirror（每次边缘检查 O(行数·log n) 二分，按草稿/宽度 memoize）测量真实折行。mirror 测量需要真实布局引擎 —— 纯 span 数学已单测覆盖；Lexical 作曲器上测得的 span 保持尽力而为（默认仍为 `logical`）。
 - **持久化历史按浏览器隔离。** 存储位于某一 origin 的 `localStorage`，不在浏览器或机器间同步。损坏载荷静默重置。
 - **撤销栈包含召回事务。** 每次填充/还原都是输入机撤销日志里的一条 `setDraft` 事务；Ctrl+Z 会一步步退回召回。精确化需要上游暴露 edit-range。
 - 召回 `/xxx` 条目后按 Enter 走正常的命令 claim/adjudication 路径（符合预期，且 Enter 从不被拦截）。

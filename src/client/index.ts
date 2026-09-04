@@ -6,7 +6,10 @@
  * the slash-menu gate reads the inputTriggers service, asserted to its
  * exported class type — the sanctioned cross-package pattern for service
  * instances — and falls back to the trigger-token heuristic when the
- * service is absent.
+ * service is absent. Keydown listens on capture (the interception must
+ * beat the machine's own handlers); input listens on bubble, because the
+ * Lexical contenteditable DOM is written by the editor library during the
+ * target phase and only carries the edit from the bubble phase on.
  *
  * Effective options resolve from three layers: the boot config (none today),
  * the settings scope (the host namespace carrying the cordis.yml `base` plus
@@ -27,6 +30,7 @@ import type { InputTriggerService } from '@deepseek-ai/dsh-client-ui-input-trigg
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import { resolveConfig, type ComposerHistoryConfig } from './config.ts'
 import { createComposerHistory, type ComposerHistoryHandle, type ComposerHistoryHost } from './interceptor.ts'
+import { composerCaret, composerOf, composerText, type ComposerElement } from './composer-dom.ts'
 import { createMirrorMeasurer, type MirrorMeasurer } from './visual-mirror.ts'
 import { hasActiveTriggerToken, effectiveKinds } from './recall.ts'
 import { HistoryExtractor } from './history-extract.ts'
@@ -45,6 +49,10 @@ import { exportBackupJson, importBackupJson, type ImportReport } from './backup.
 export { Config, resolveConfig } from './config.ts'
 export type { ComposerHistoryConfig } from './config.ts'
 export type { RecallEffect, RecallOptions, RecallState } from './recall.ts'
+// Composer DOM face: exported so the compat workflow's jsdom web-behavior
+// smoke can assert the identity/text/caret contract against the packed bundle.
+export { composerCaret, composerOf, composerText, setComposerCaret } from './composer-dom.ts'
+export type { ComposerElement } from './composer-dom.ts'
 
 /** Plugin name: matches the package name, the graph row id, and the bundle id. */
 export const name = 'dsh-composer-history'
@@ -187,8 +195,8 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   const extractPersist = (nodes: readonly ConversationNode[]): string[] => persistExtractor.extract(nodes, 0)
 
   let handle: ComposerHistoryHandle | undefined
-  let searchAnchor: HTMLTextAreaElement | undefined
-  let lastComposer: HTMLTextAreaElement | undefined
+  let searchAnchor: ComposerElement | undefined
+  let lastComposer: ComposerElement | undefined
 
   // The workspace key snippet scoping and template variables resolve against:
   // the current session's cwd, falling back to its title (both browser-local).
@@ -211,13 +219,13 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   const hint = createDraftHint()
 
   /** Update the reuse-insight hint under the composer ('' hides it). */
-  const updateDraftHint = (composer: HTMLTextAreaElement): void => {
+  const updateDraftHint = (composer: ComposerElement): void => {
     if (hint === undefined) return
     if (!options.enableInsights || storage === undefined) {
       hint.set('', composer)
       return
     }
-    const record = hintFor(storage, composer.value)
+    const record = hintFor(storage, composerText(composer))
     if (record === undefined || record.uses < options.insightMinUses) {
       hint.set('', composer)
       return
@@ -231,7 +239,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
    * the command never reaches the send path. The plugin never sends.
    * @returns true when the Enter was consumed.
    */
-  const runSnippetCommand = (composer: HTMLTextAreaElement): boolean => {
+  const runSnippetCommand = (composer: ComposerElement): boolean => {
     if (!options.enableSnippets || storage === undefined) return false
     const input = host.inputState(composer)
     if (input === undefined || input.phase !== 'plain') return false
@@ -281,7 +289,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
             const values = {
               workspace: currentWorkspaceKey() || 'workspace',
               session: currentSessionId() ?? '',
-              draft: composer.value,
+              draft: composerText(composer),
             }
             handle.fill(composer, fillTemplate(text, values))
           } catch (error) {
@@ -374,10 +382,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   }
 
   const host: ComposerHistoryHost = {
-    composerOf: (target) =>
-      target instanceof HTMLTextAreaElement && target.closest('[data-input-scroll]') !== null
-        ? target
-        : undefined,
+    composerOf,
 
     sessionKey: () => currentSessionId(),
 
@@ -425,7 +430,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
       }
       // Service missing (or popup controller unresolvable): approximate the
       // open menu with the live trigger token under the caret.
-      return triggers === undefined && hasActiveTriggerToken(composer.value, composer.selectionStart)
+      return triggers === undefined && hasActiveTriggerToken(composerText(composer), composerCaret(composer) ?? 0)
     },
 
     setDraft: (_composer, text) => {
@@ -473,7 +478,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
 
   const visualSpans = mirror === undefined
     ? undefined
-    : (composer: HTMLTextAreaElement, draft: string) => mirror.spans(composer, draft)
+    : (composer: ComposerElement, draft: string) => mirror.spans(composer, draft)
   const hostWithSpans: ComposerHistoryHost = visualSpans === undefined ? host : { ...host, visualSpans }
 
   handle = createComposerHistory(hostWithSpans, options)
@@ -500,7 +505,9 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     handle?.input(event)
   }
   window.addEventListener('keydown', windowKeydown, true)
-  window.addEventListener('input', windowInput, true)
+  // Bubble phase: the contenteditable DOM only carries the edit after the
+  // editor library's target-phase listeners have written it.
+  window.addEventListener('input', windowInput, false)
 
   // Persistence: append newly committed user messages of the current session
   // to the bounded local store. The subscription re-targets on session
@@ -561,7 +568,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     disposeListSub()
     disposeSessionSub?.()
     window.removeEventListener('keydown', windowKeydown, true)
-    window.removeEventListener('input', windowInput, true)
+    window.removeEventListener('input', windowInput, false)
     handle?.dispose()
     handle = undefined
     overlay?.dispose()
