@@ -4,6 +4,49 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] - 2026-09-04
+
+### Fixed
+
+- **Contenteditable composer adaptation.** The harness composer has been a
+  Lexical contenteditable div (`div[data-composer-input]` inside
+  `[data-input-scroll]`) since commit b519cb87b0 (an ancestor of the
+  published 0.1.2-alpha.5 / 0.1.2-rc.1 lines); the plugin's only
+  interception gate matched `HTMLTextAreaElement` inside the scrollport, so
+  on those hosts arrow-up recall, Ctrl+R, /save, /load, the hint line, and
+  the visual edge math all silently no-opped. The identity face now anchors
+  on the contenteditable surface (textareas outside the scrollport stay
+  negative cases; the legacy textarea composer inside `[data-input-scroll]`
+  keeps matching), the read/write face uses the contenteditable text face
+  plus the Selection/Range caret API, and the visual mirror copies the
+  contenteditable surface's computed box. The interception specs now run
+  against the real host DOM shape instead of textarea fakes (plus a
+  dedicated composer-dom face suite), and the compat workflow gained a
+  jsdom web-behavior smoke that asserts the identity/text/caret face and an
+  ArrowUp recall against the packed bundle.
+
+### Changed
+
+- DevDependency pins and the workshop compatibility manifest move to the
+  published `0.1.2-rc.1` line; the compat workflow's dsh/dsh-base/
+  dsh-headless pins follow (0.1.1-rc.2 → 0.1.2-rc.1). Peer ranges stay
+  `>=0.1.1-rc.2 <0.2.0`; the config schema and localStorage keys are
+  unchanged.
+- The input listener moved from window capture to window bubble: the
+  contenteditable DOM only carries an edit after the editor library's
+  target-phase listeners have written it.
+
+### Docs
+
+- Five-language READMEs record the 0.1.2-rc.1 baseline and the composer
+  DOM-face dependency (Compatibility + Known limitations); DSH Desktop
+  Market install note added.
+
+### Internal
+
+- Align cordis-plugin-loader ^1.0.3 / cordis-plugin-include ^1.0.7 with the
+  cordis 4.0.2 peers (no behavior change).
+
 ## [0.6.5] - 2026-09-02
 
 ### Docs
