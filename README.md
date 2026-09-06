@@ -33,7 +33,7 @@
 
 The browser half rides the published client packages (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) and the cordis `Context`; it no longer depends on the removed `dsh-client-runtime` package, so the client surface also lines up with `0.1.2-rc.1` hosts.
 Interception anchors on the web composer's DOM: the contenteditable surface `div[data-composer-input]` inside `[data-input-scroll]` (the Lexical composer shipped since 0.1.2-alpha.5 / 0.1.2-rc.1), with the legacy textarea composer inside `[data-input-scroll]` (harness lines up to 0.1.1-rc.2) still matched; textareas elsewhere pass through. The compat workflow's jsdom web-behavior smoke asserts this identity/text/caret face against the packed bundle.
-0.1.2-rc.1 (adapted 2026-09-04): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged.
+0.1.2-rc.1 (adapted 2026-09-04): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged. Verified 2026-09-06 against the dsh-v0.1.3-alpha.1 master checkout (full gate chain + profile install smoke).
 
 ## What you get
 

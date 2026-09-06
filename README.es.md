@@ -32,7 +32,7 @@
 
 La mitad de navegador se apoya en los paquetes de cliente publicados (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) y en el `Context` de cordis; ya no depende del paquete eliminado `dsh-client-runtime`, por lo que la superficie de cliente también encaja con hosts `0.1.2-rc.1`.
 La intercepción se ancla en el DOM del compositor web: la superficie contenteditable `div[data-composer-input]` dentro de `[data-input-scroll]` (el compositor Lexical incluido desde 0.1.2-alpha.5 / 0.1.2-rc.1), manteniendo además el compositor textarea heredado dentro de `[data-input-scroll]` (líneas hasta 0.1.1-rc.2); otros textareas pasan de largo. El smoke de comportamiento web en jsdom del flujo de compatibilidad reafirma esta cara identidad/texto/cursor contra el paquete empaquetado.
-0.1.2-rc.1 (adaptado el 2026-09-04): el sobre de sesión conserva su campo ignorable solo para compatibilidad de lectura de logs almacenados - Session.append aún no puede estamparlo, por lo que el comportamiento de la puerta no cambia.
+0.1.2-rc.1 (adaptado el 2026-09-04): el sobre de sesión conserva su campo ignorable solo para compatibilidad de lectura de logs almacenados - Session.append aún no puede estamparlo, por lo que el comportamiento de la puerta no cambia. Verificado el 2026-09-06 contra el checkout master de dsh-v0.1.3-alpha.1 (cadena completa de puertas + smoke de instalación de perfil).
 
 ## What you get
 

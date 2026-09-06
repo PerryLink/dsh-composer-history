@@ -32,7 +32,7 @@
 
 浏览器半边基于已发布的客户端包（`dsh-client-ui-conversation`、`dsh-client-ui-input-trigger`、`dsh-client-ui-settings`）与 cordis `Context`；它不再依赖已移除的 `dsh-client-runtime` 包，因此客户端接口面同样对齐 `0.1.2-rc.1` 宿主。
 拦截锚定 Web 作曲器的 DOM：`[data-input-scroll]` 内的 contenteditable 表面 `div[data-composer-input]`（自 0.1.2-alpha.5 / 0.1.2-rc.1 起随附的 Lexical 作曲器），同时保留对 `[data-input-scroll]` 内旧式 textarea 作曲器（0.1.1-rc.2 及以前宿主线）的匹配；其余 textarea 一律穿过。compat 工作流的 jsdom web 行为冒烟针对打包产物断言该身份/文本/光标面。
-0.1.2-rc.1（2026-09-04 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。
+0.1.2-rc.1（2026-09-04 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。已于 2026-09-06 对照 dsh-v0.1.3-alpha.1 master checkout 核验（全部门禁链 + profile 试装冒烟）。
 
 ## What you get
 
