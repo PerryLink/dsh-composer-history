@@ -17,6 +17,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { SettingsNamespace } from '@deepseek-ai/dsh-settings'
 import { Config, type ComposerHistoryConfig } from './client/config.ts'
 
+// Service Definition: the exported Config schema — the contract the Loader validates cordis.yml `config:` blocks against, and the namespace schema the browser half receives.
 export { Config, resolveConfig } from './client/config.ts'
 export type { ComposerHistoryConfig } from './client/config.ts'
 
@@ -40,6 +41,8 @@ const NAMESPACE = 'composer-history' as SettingsNamespace
  * @param config - validated config (the composition base).
  */
 export function apply(ctx: Context, config: ComposerHistoryConfig): void {
+  // Consumer: the optional settings service is consumed through ctx.inject(...); without a settings provider the entry registers nothing.
+  // Service Provider: registers the composer-history settings namespace through ctx.settings.register (canonical optional-settings wiring).
   ctx.inject(['settings'], (settingsCtx) => {
     settingsCtx.settings.register(NAMESPACE, Config, { base: config as never })
   })
