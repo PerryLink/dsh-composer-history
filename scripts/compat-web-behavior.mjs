@@ -91,20 +91,35 @@ assert(module.composerText(composer) === 'alpha\nbeta', 'text face must read the
 module.setComposerCaret(composer, 6)
 assert(module.composerCaret(composer) === 6, 'caret face must round-trip the written caret')
 
-// ArrowUp recall through the real apply() wiring (faked services only).
+// ArrowUp recall through the real apply() wiring (faked services only). The
+// history channel is ui-conversation's per-Session Chat target (CP-7): the
+// target publishes only after the first subscribe, so the fake mirrors that
+// activation semantics and would catch a wiring that reads before subscribing.
 let draft = ''
 const setDraftCalls = []
 const actx = {}
+let chatActivated = false
+const chatTarget = {
+  getSnapshot: () => (chatActivated
+    ? { legacy: { nodes: [{ kind: 'user', seq: 1, content: [{ type: 'text', text: 'hello' }] }] } }
+    : undefined),
+  subscribe: () => { chatActivated = true; return () => {} },
+}
 const fakeCtx = {
   effect: (fn) => { fn(); return () => {} },
-  get: (name) => (name === 'sessions' ? {
-    list: {
-      getSnapshot: () => ({ current: 's1', ids: ['s1'], byId: { s1: { title: 't', blank: false } } }),
-      subscribe: () => () => {},
-    },
-    scope: () => actx,
-    binding: () => ({ session: { getSnapshot: () => ({ nodes: [{ kind: 'user', seq: 1, content: [{ type: 'text', text: 'hello' }] }] }), subscribe: () => () => {} } }),
-  } : undefined),
+  get: (name) => {
+    if (name === 'sessions') {
+      return {
+        list: {
+          getSnapshot: () => ({ current: 's1', ids: ['s1'], byId: { s1: { title: 't', blank: false } } }),
+          subscribe: () => () => {},
+        },
+        scope: () => actx,
+      }
+    }
+    if (name === 'uiConversation') return { binding: () => ({ target: () => chatTarget }) }
+    return undefined
+  },
   settingsScope: {
     bind: () => ({
       getSnapshot: () => ({ status: 'unavailable', value: undefined, writable: false, mode: 'memory' }),
@@ -125,6 +140,7 @@ const fakeCtx = {
   },
 }
 module.apply(fakeCtx)
+assert(chatActivated === true, 'apply() must subscribe the Chat target (the first subscribe activates it)')
 module.setComposerCaret(composer, 0)
 const event = new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true })
 composer.dispatchEvent(event)

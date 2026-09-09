@@ -1,13 +1,15 @@
 /**
  * dsh-composer-history, browser half: window-capture keyboard interception
- * that layers terminal-style draft recall over the composer. All reads go
- * through the session services (current session snapshot for history, the
- * input machine facade for draft/phase and the single setDraft write path);
- * the slash-menu gate reads the inputTriggers service, asserted to its
- * exported class type — the sanctioned cross-package pattern for service
- * instances — and falls back to the trigger-token heuristic when the
- * service is absent. Keydown listens on capture (the interception must
- * beat the machine's own handlers); input listens on bubble, because the
+ * that layers terminal-style draft recall over the composer. History comes
+ * from the current Session's Chat target (the ui-conversation assembly's
+ * compatibility projection, see ./session-nodes.ts), the input machine
+ * facade provides draft/phase and the single setDraft write path, and the
+ * sessions service provides list/scope; the slash-menu gate reads the
+ * inputTriggers service, asserted to its exported class type — the sanctioned
+ * cross-package pattern for service instances — and falls back to the
+ * trigger-token heuristic when the service is absent. Keydown listens on
+ * capture (the interception must beat the machine's own handlers); input
+ * listens on bubble, because the
  * Lexical contenteditable DOM is written by the editor library during the
  * target phase and only carries the edit from the bubble phase on.
  *
@@ -39,6 +41,7 @@ import { createSearchOverlay, type OverlayAction, type SearchOverlay } from './s
 import type { SearchEntry } from './search.ts'
 import { createCompactionNotice, type CompactionNotice } from './compaction-notice.ts'
 import { compactionAfter, latestCompactionSeq } from './compaction-watch.ts'
+import { chatNodes, chatSourceFor, type UiConversationFace } from './session-nodes.ts'
 import { STORE_KEY, appendEntries, loadEntries, safeStorage } from './history-store.ts'
 import { loadSnippets, noteSnippetUse, parseSnippetCommand, saveCommandText, upsertSnippet, type SnippetRecord } from './snippets.ts'
 import { fillTemplate, loadTemplates } from './templates.ts'
@@ -58,7 +61,7 @@ export type { ComposerElement } from './composer-dom.ts'
 export const name = 'dsh-composer-history'
 
 /** Services the interception reads; activation waits on them. */
-export const inject = ['conversation', 'sessions', 'inputTriggers', 'settingsScope']
+export const inject = ['conversation', 'sessions', 'inputTriggers', 'settingsScope', 'uiConversation']
 
 /** Settings namespace the host half registers (lowercase kebab-case). */
 const NAMESPACE = 'composer-history'
@@ -70,11 +73,12 @@ interface PopupSelectFace {
 
 /**
  * Structural face of the client sessions service this plugin reads (list
- * snapshots, agent scoping, session bindings). Declared locally because the
- * owning service's type lives in packages that publish differently across
- * host lines (the removed `dsh-client-runtime` on 0.1.1-rc.2, the
+ * snapshots and agent scoping). Declared locally because the owning
+ * service's type lives in packages that publish differently across host
+ * lines (the removed `dsh-client-runtime` on 0.1.1-rc.2, the
  * session-controller domain on 0.1.2-alpha.1); the runtime contract is
- * structural and read through `ctx.get` without a dependency edge.
+ * structural and read through `ctx.get` without a dependency edge. Session
+ * history no longer comes from here (see ./session-nodes.ts).
  */
 interface SessionsFace {
   readonly list: {
@@ -82,7 +86,6 @@ interface SessionsFace {
     subscribe(listener: () => void): () => void
   }
   scope(id: string): ClientContext | undefined
-  binding(id: string): SessionsBinding | undefined
 }
 
 /** One sessions-list snapshot (fields the wiring reads). */
@@ -90,14 +93,6 @@ interface SessionsListSnapshot {
   readonly current?: string
   readonly ids: readonly string[]
   readonly byId?: Record<string, { cwd?: string; title?: string; blank?: boolean }>
-}
-
-/** One stable session binding (fields the wiring reads). */
-interface SessionsBinding {
-  readonly session: {
-    getSnapshot(): { readonly nodes: readonly ConversationNode[] }
-    subscribe(listener: () => void): () => void
-  }
 }
 
 /** Collapse a backup import report into one short success line. */
@@ -167,6 +162,10 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   // package publishes differently across host lines, so the merge is read
   // via ctx.get instead of a type edge.
   const sessions = ctx.get('sessions') as SessionsFace
+  // History comes from ui-conversation's per-Session Chat target (declared in
+  // inject, so cordis guarantees the service is present here); it is read
+  // structurally so no ui-chat type edge is needed for the `chat` key.
+  const uiConversation = ctx.get('uiConversation') as unknown as UiConversationFace | undefined
   const mirror: MirrorMeasurer | undefined = options.edgeMode === 'visual' ? createMirrorMeasurer() : undefined
 
   const currentActx = (): ClientContext | undefined => {
@@ -396,8 +395,8 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     history: () => {
       const id = sessions.list.getSnapshot().current
       if (id === undefined) return []
-      const nodes = sessions.binding(id)?.session.getSnapshot().nodes ?? []
-      return toViews(nodes)
+      const source = chatSourceFor(uiConversation, String(id))
+      return source === undefined ? [] : toViews(chatNodes(source))
     },
 
     supplementalHistory: () => {
@@ -412,9 +411,12 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
           if (current !== undefined && id === current) continue
           const summary = list.byId?.[id]
           if (summary === undefined || summary.blank) continue
-          const binding = sessions.binding(id)
-          if (binding === undefined) continue
-          parts.push(...extract(binding.session.getSnapshot().nodes, options.maxHistory))
+          // Other Sessions publish their Chat target only after the shell (or
+          // this plugin's current-Session wiring) activated it; until then the
+          // source reads undefined and contributes nothing, exactly as before.
+          const source = chatSourceFor(uiConversation, String(id))
+          if (source === undefined) continue
+          parts.push(...extract(chatNodes(source), options.maxHistory))
         }
       }
       return parts
@@ -549,17 +551,21 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     disposeSessionSub = undefined
     const id = sessions.list.getSnapshot().current
     if (id === undefined) return
-    const binding = sessions.binding(id)
-    if (binding === undefined) return
-    const session = binding.session
-    lastCompactionSeq = latestCompactionSeq(session.getSnapshot().nodes)
-    lastSync = { length: -1, seq: -1 }
-    syncPersisted(session.getSnapshot().nodes)
-    disposeSessionSub = session.subscribe(() => {
-      const nodes = session.getSnapshot().nodes
+    const source = chatSourceFor(uiConversation, String(id))
+    if (source === undefined) return
+    // Subscribe first: the first subscribe activates the Chat target, and
+    // activation materializes the snapshot synchronously (assembler
+    // activateTarget → replaceView), so the reads below see the nodes even on
+    // the very first install. Reading before subscribing yields [].
+    disposeSessionSub = source.subscribe(() => {
+      const nodes = chatNodes(source)
       syncPersisted(nodes)
       watchCompaction(nodes)
     })
+    const nodes = chatNodes(source)
+    lastCompactionSeq = latestCompactionSeq(nodes)
+    lastSync = { length: -1, seq: -1 }
+    syncPersisted(nodes)
   }
   const disposeListSub = sessions.list.subscribe(reconcileSession)
   reconcileSession()
