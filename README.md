@@ -208,12 +208,12 @@ The harness core gives every dsh session a sliding context window, the same work
 
 `dsh-composer-history` plugs the composer into that workflow so the window slide never costs you your typing history:
 
-- **Recall survives compaction** — shadowed turns stay in the session snapshot, so ↑ still walks every message you sent before and after a checkpoint.
+- **Recall survives compaction** — shadowed turns stay in the finalized conversation the Chat view publishes, so ↑ still walks every message you sent before and after a checkpoint.
 - **Summaries join the history** — each checkpoint's summary text enters ↑ recall and `Ctrl+R` search as a `[compacted] …` entry (toggle: `includeCompactionSummaries`), so context the model no longer sees verbatim stays one keystroke away.
 - **Compaction notice** — when a checkpoint lands while the page is open, a transient snackbar announces it (the Claude Code "Auto-compacting conversation…" moment) with the summary snippet and a one-click **Fill `/compact`** action (`showCompactionNotice`, `compactCommandText`); the fill lands in the ordinary draft, and only your Enter sends it.
 - **Search counts** — the `Ctrl+R` panel now shows a live `N entries` / `N matches` status line, and long entries are clamped to two lines.
 
-> Compaction itself (thresholds, summary model, `/compact`) is owned by the harness core's compaction plugins — this plugin only observes the checkpoint markers the client snapshot already exposes, so it works without any agent-loop or model-request changes.
+> Compaction itself (thresholds, summary model, `/compact`) is owned by the harness core's compaction plugins — this plugin only observes the checkpoint markers the Chat view's conversation projection already publishes (`uiConversation.binding(id).target('chat').legacy.nodes`), so it works without any agent-loop or model-request changes.
 
 ## Permissions & data
 
@@ -238,7 +238,7 @@ The harness core gives every dsh session a sliding context window, the same work
 - Recalling a `/xxx` entry then Enter follows the normal command claim/adjudication path (expected, and Enter is never intercepted).
 - Menus/popups and non-`plain` phases always win; a committed send and session switches both reset to IDLE.
 - Reference chips (U+FFFC placeholders) ride along with recalled/restored draft text.
-- `historyScope: 'workspace'` reads the live assemblies of other listed sessions; sessions whose assembly has not materialized contribute nothing yet.
+- `historyScope: 'workspace'` reads the Chat targets of other listed sessions; a session whose Chat view has not been activated in this page contributes nothing yet.
 - The search overlay is plain DOM (no React dependency); it renders all matches up to the `maxHistory` bound.
 - **Compaction awareness is observational.** Checkpoints landed before install (or before a session switch) never trigger a notice; a checkpoint whose summary event fell outside the loaded window contributes no `[compacted] …` entry (`summary: null`).
 - The notice's "Compact now" action only *fills* the configured command text into the draft — sending remains the user's Enter.

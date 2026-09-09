@@ -206,12 +206,12 @@ O núcleo do harness dá a cada sessão do dsh uma janela de contexto deslizante
 
 `dsh-composer-history` conecta o compositor a esse fluxo para que o deslizamento da janela nunca custe seu histórico de digitação:
 
-- **A recuperação sobrevive à compactação** — os turnos sombreados permanecem no snapshot da sessão, então ↑ ainda percorre cada mensagem enviada antes e depois de um checkpoint.
+- **A recuperação sobrevive à compactação** — os turnos sombreados permanecem na conversa finalizada que a vista Chat publica, então ↑ ainda percorre cada mensagem enviada antes e depois de um checkpoint.
 - **Os resumos entram no histórico** — o texto do resumo de cada checkpoint entra na recuperação ↑ e na busca `Ctrl+R` como uma entrada `[compacted] …` (alternância: `includeCompactionSummaries`), de modo que o contexto que o modelo já não vê literalmente fica a uma tecla de distância.
 - **Aviso de compactação** — quando um checkpoint aterrissa com a página aberta, um snackbar transitório o anuncia (o momento "Auto-compacting conversation…" do Claude Code) com o trecho do resumo e uma ação de um clique **Fill `/compact`** (`showCompactionNotice`, `compactCommandText`); o preenchimento cai no rascunho comum, e somente seu Enter o envia.
 - **Contagens de busca** — o painel `Ctrl+R` agora mostra uma linha de status ao vivo `N entries` / `N matches`, e entradas longas se limitam a duas linhas.
 
-> A compactação em si (limiares, modelo de resumo, `/compact`) pertence aos plugins de compactação do núcleo do harness — este plugin apenas observa os marcadores de checkpoint que o snapshot do cliente já expõe, então funciona sem nenhuma mudança de agent-loop ou requisição ao modelo.
+> A compactação em si (limiares, modelo de resumo, `/compact`) pertence aos plugins de compactação do núcleo do harness — este plugin apenas observa os marcadores de checkpoint que a projeção de conversa da vista Chat já expõe (`uiConversation.binding(id).target('chat').legacy.nodes`), então funciona sem nenhuma mudança de agent-loop ou requisição ao modelo.
 
 ## Permissions & data
 
@@ -236,7 +236,7 @@ O núcleo do harness dá a cada sessão do dsh uma janela de contexto deslizante
 - Recuperar uma entrada `/xxx` e pressionar Enter segue o caminho normal de claim/adjudication do comando (esperado, e Enter nunca é interceptado).
 - Menus/popups e fases que não são `plain` sempre vencem; um envio confirmado e as trocas de sessão redefinem para IDLE.
 - Os chips de referência (marcadores U+FFFC) viajam junto com o texto de rascunho recuperado/restaurado.
-- `historyScope: 'workspace'` lê os assemblies em tempo real de outras sessões listadas; sessões cujo assembly não se materializou ainda não contribuem.
+- `historyScope: 'workspace'` lê os alvos Chat de outras sessões listadas; uma sessão cuja vista Chat ainda não foi ativada nesta página não contribui.
 - O painel de busca é DOM puro (sem dependência de React); renderiza todas as correspondências até o limite `maxHistory`.
 - **A consciência de compactação é observacional.** Checkpoints que aterrissaram antes da instalação (ou antes de uma troca de sessão) nunca disparam um aviso; um checkpoint cujo evento de resumo caiu fora da janela carregada não contribui com nenhuma entrada `[compacted] …` (`summary: null`).
 - A ação "Compact now" do aviso apenas *preenche* o texto de comando configurado no rascunho — o envio continua sendo seu Enter.

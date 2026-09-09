@@ -206,12 +206,12 @@ harness 核心给每个 dsh 会话提供滑动上下文窗口 —— 与 Claude 
 
 `dsh-composer-history` 把作曲器接入这个工作流，让上下文窗口滑动时你的输入历史一条不丢：
 
-- **召回跨压缩留存** —— 被遮蔽的轮次仍留在会话快照里，↑ 依旧能走过检查点前后你发送过的每一条消息。
+- **召回跨压缩留存** —— 被遮蔽的轮次仍留在 Chat 视图发布的已结算会话里，↑ 依旧能走过检查点前后你发送过的每一条消息。
 - **摘要加入历史** —— 每个检查点的摘要文本以 `[compacted] …` 条目进入 ↑ 召回和 `Ctrl+R` 搜索（开关：`includeCompactionSummaries`），模型不再逐字看到的上下文仍然一键可达。
 - **压缩通知** —— 页面打开期间有检查点落地时，底部弹出短暂通知（Claude Code 的"自动压缩会话…"时刻），附摘要片段和一键**填入 `/compact`** 按钮（`showCompactionNotice`、`compactCommandText`）；填入只进普通草稿，只有你按 Enter 才发送。
 - **搜索计数** —— `Ctrl+R` 面板新增实时的 `N entries` / `N matches` 状态行，长条目限两行显示。
 
-> 压缩本身（阈值、摘要模型、`/compact`）由 harness 核心的 compaction 插件负责 —— 本插件只观察客户端快照已经暴露的检查点标记，因此不需要任何 agent-loop 或模型请求改动。
+> 压缩本身（阈值、摘要模型、`/compact`）由 harness 核心的 compaction 插件负责 —— 本插件只观察 Chat 视图的会话投影（`uiConversation.binding(id).target('chat').legacy.nodes`）已经发布的检查点标记，因此不需要任何 agent-loop 或模型请求改动。
 
 ## Permissions & data
 
@@ -236,7 +236,7 @@ harness 核心给每个 dsh 会话提供滑动上下文窗口 —— 与 Claude 
 - 召回 `/xxx` 条目后按 Enter 走正常的命令 claim/adjudication 路径（符合预期，且 Enter 从不被拦截）。
 - 菜单/弹窗与非 `plain` 阶段永远优先；提交发送与会话切换都会重置为 IDLE。
 - 引用 chip（U+FFFC 占位符）随召回/还原的草稿文本一起保留。
-- `historyScope: 'workspace'` 读取其他已列表会话的实时装配；装配尚未物化的会话暂时没有贡献。
+- `historyScope: 'workspace'` 读取其他已列表会话的 Chat 目标；本页面尚未激活过 Chat 视图的会话暂时没有贡献。
 - 搜索覆盖层是纯 DOM（无 React 依赖）；最多渲染 `maxHistory` 条匹配。
 - **压缩感知是观察性的。** 安装前（或会话切换前）已落地的检查点绝不触发通知；摘要事件落在已加载窗口之外的检查点不产生 `[compacted] …` 条目（`summary: null`）。
 - 通知的"Compact now"按钮只把配置的命令文本*填入*草稿 —— 发送仍由你的 Enter 决定。
