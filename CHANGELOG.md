@@ -4,11 +4,53 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] - 2026-09-09
+
+### Fixed
+
+- **Session history now comes from a live source (CP-7).** Every supported
+  host line publishes a lifecycle-only per-session snapshot (queue, pending
+  submissions, running/open state), so the `session.getSnapshot().nodes` read
+  the plugin was originally written against returned `undefined` on every
+  install, and the `?? []` fallback silently emptied ↑ recall, `Ctrl+R` search,
+  cross-session persistence, and compaction notices; on a hot reload with a
+  current Session the same `undefined` reached `latestCompactionSeq()` and
+  failed the browser fiber with `TypeError: nodes is not iterable`. History is
+  now read from the official per-Session Chat target —
+  `uiConversation.binding(id).target('chat')`, whose compatibility projection
+  `legacy.nodes` carries the finalized conversation union in seq order (the
+  same array the host's own StatsPills reads). The wiring subscribes before
+  its first read, because a target publishes only after activation and the
+  first `subscribe` activates it synchronously.
+- `historyScope: 'workspace'` reads the other listed Sessions' Chat targets
+  instead of the removed session-snapshot field; a Session whose Chat view has
+  not been activated in this page still contributes nothing.
+
+### Changed
+
+- `inject` gains `uiConversation` (provided by the already-declared
+  `@deepseek-ai/dsh-client-ui-conversation` peer): the browser fiber now waits
+  for the service instead of silently degrading to an empty history.
+- The compat workflow's jsdom web-behavior smoke encodes the Chat-target face
+  (activation-on-subscribe, `legacy.nodes`) instead of the removed
+  session-snapshot field, so this class of drift fails the gate again.
+- New `tests/session-nodes.spec.ts` (projection, inactive target, binding
+  error) and `tests/wiring-recall.spec.ts` (cold install subscribe-before-read,
+  late mount through the sessions list, live checkpoint notice, dispose); the
+  built-bundle smoke now drives one ArrowUp recall through `lib/client.js`.
+
+### Docs
+
+- Rewrite the sliding-context and workspace-scope README claims in all five
+  languages: history and checkpoint markers come from the Chat view's
+  conversation projection, not from a session snapshot field that does not
+  exist.
+
 ## [0.7.4] - 2026-09-09
 
 ### Changed
 
-- Align the `@deepseek-ai/dsh-*` peer ranges to `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0` and pin the dev/test dependencies to the published `0.1.5-alpha.1` line: adaptation to DeepSeek Harness `dsh-v0.1.5-alpha.1` (session format V3, `ctx.agent` removal, `Inbox` type-only interface); runtime behavior is unchanged for every supported host line.
+- Align the `@deepseek-ai/dsh-*` peer ranges to `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0` and pin the dev/test dependencies to the published `0.1.5-alpha.1` line: adaptation to DeepSeek Harness `dsh-v0.1.5-alpha.1` (session format V3, `ctx.agent` removal, `Inbox` type-only interface); no host API breakage on any supported line.
 - Record `0.1.5-alpha.1` in `dshWorkshop.compatibility.dshVersions`.
 
 ### Docs
