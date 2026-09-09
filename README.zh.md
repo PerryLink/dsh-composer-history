@@ -25,7 +25,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.3-alpha.1`（GitHub tag，2026-09-06 已核验；client peers `>=0.1.2-rc.1 <0.2.0`） |
+| Harness | DeepSeek Harness `dsh-v0.1.5-alpha.1`（GitHub tag，2026-09-09 已核验；client peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`） |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | 仅 Web GUI（客户端插件；浏览器本地存储；无网络、无原生代码） |
 | Model | 任意（不发模型请求 —— 纯 UI 行为） |

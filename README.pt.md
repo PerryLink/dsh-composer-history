@@ -25,7 +25,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.3-alpha.1` (tag do GitHub, verificado em 2026-09-06; client peers `>=0.1.2-rc.1 <0.2.0`) |
+| Harness | DeepSeek Harness `dsh-v0.1.5-alpha.1` (tag do GitHub, verificado em 2026-09-09; client peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`) |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Somente Web GUI (plugin de cliente; armazenamento local do navegador; sem rede, sem código nativo) |
 | Model | Qualquer um (sem requisições ao modelo — comportamento puramente de UI) |
