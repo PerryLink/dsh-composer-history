@@ -89,3 +89,74 @@ re-derived gates" into a supported extension point.
 **Alternative considered:** keep window capture as the sanctioned pattern and
 only document it — acceptable as an interim step, but it leaves the
 multi-plugin ordering problem unsolved.
+
+---
+
+## Alignment notes (0.1.5-alpha.1, 2026-09-09)
+
+> Status check against `origin/master` = `5dda764e` (`0.1.5-alpha.1`),
+> read-only. The official vocabulary is now the `ui-input-trigger`
+> subsystem: `packages/client/ui-input-trigger`
+> (`@deepseek-ai/dsh-client-ui-input-trigger`), whose pure core lives in
+> `src/core/` (`detect.ts` holds the `detectTrigger` value, zero
+> React/DOM/cordis; `contract.ts` and `menu.ts` complete it) and whose
+> browser half lives in `src/client/` (`InputTriggerService` =
+> `ctx.inputTriggers`, `InputTriggerController`, `MenuView` into the
+> `conversation.input.overlay` slot). Guard tiers are
+> `TriggerGuard.tier: 'plain' | 'claimed' | 'frozen'` (plain = `/` and `@`
+> live; claimed = `/` suppressed, `@` live; frozen = none); the boundary
+> rules are exactly the ones C2 lists (leading, after whitespace or
+> punctuation, the two URL carve-outs for `/`, `user@host` dead). Per
+> proposal, the diffs against that official state:
+
+### C1 -- edit-range write: still open
+
+- `editRange` has **zero hits** in `packages/client/ui-conversation` on
+  master (grep measured). The public write remains
+  `setDraft(text: string): void` on both `SessionInput` and `InputActions`
+  -- and the contract moved to `src/client/contract/input.ts` (now
+  documented as the frozen input-machine contract).
+- `ComposerKeyboard` no longer carries `setDraft(text, editRange?)`. Its
+  current members are `snapshot`, `editor`, `submit(mode)`, `steerQueue()`,
+  `paste(text)`, `caretSpan()`, `arbitrate(key, composing)`, `space()`,
+  `dismissPopup()`. Text editing rides the shell's Lexical editor; the
+  machine is the submit plane alone.
+- Rewording: ask for a span-scoped public write verb over the editor
+  currency (`EditSelection` / `TokenSpan`), e.g. a `SessionInput`-level
+  replacement with span CAS -- the old "add `editRange` to the internal
+  `setDraft`" phrasing no longer names real code.
+
+### C2 -- detectTrigger value export: still open
+
+- `detectTrigger` exists as a runtime value at `src/core/detect.ts` (the
+  `InputTriggerController` imports and calls it), and the `/client` entry
+  still exports only `DetectTrigger` and friends as **types** -- verified
+  on master.
+- The package export map carries a `./src/*` source subpath, but `files`
+  ships only `lib/index.js`, `lib/client.js`, `lib/types/**/*.d.ts`, so
+  the source deep import is not a consumable npm surface and does not
+  resolve C2.
+- Proposal unchanged: export `detectTrigger` as a value from
+  `@deepseek-ai/dsh-client-ui-input-trigger/client`.
+
+### C3 -- keyboard arbitration chain: mostly landed upstream
+
+- An arbitration seam now **exists**: `arbitrate(key, composing)` returns
+  `'consumed' | 'pick-highlighted' | 'pass'` for
+  `ArbitrateKey = 'up' | 'down' | 'enter' | 'escape' | 'tab'`, on both the
+  `InputTriggerController` and `ComposerKeyboard`. The composer keymap
+  (`src/client/input/editor/keymap.ts`) drives it from Lexical commands
+  registered at CRITICAL priority, with the IME guard (including the
+  Safari compositionend window); `'pass'` falls through to Lexical
+  defaults -- the waterline model C3 asked for. The conversation wiring
+  layer (`facade.ts`) routes arbitration through `ctx.inputTriggers`
+  (`?? 'pass'` when absent), so the gates this plugin used to re-derive
+  in window listeners (phase, menu state, IME) are now owned upstream.
+- What remains open: the chain is **single-owner** -- the trigger pipeline
+  arbitrates its own menu keys, and there is no third-party key-handler
+  registration with priorities, so the multi-plugin ordering problem C3
+  named is unsolved.
+- Rewording: from "create a composer keyboard arbitration chain" to
+  "extend the existing `arbitrate` waterline with priority-ordered
+  third-party key-handler registration on the capture path, keeping the
+  current menu-key arbitration as the built-in claimant".
