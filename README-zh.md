@@ -26,7 +26,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.5-rc.1`（GitHub tag，2026-09-10 已核验；client peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`） |
+| Harness | DeepSeek Harness `dsh-v0.1.5-rc.2`（GitHub tag，2026-09-11 已核验；client peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`） |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | 仅 Web GUI（客户端插件；浏览器本地存储；无网络、无原生代码） |
 | Model | 任意（不发模型请求 —— 纯 UI 行为） |
@@ -35,6 +35,7 @@
 拦截锚定 Web 作曲器的 DOM：`[data-input-scroll]` 内的 contenteditable 表面 `div[data-composer-input]`（自 0.1.2-alpha.5 / 0.1.2-rc.1 起随附的 Lexical 作曲器），同时保留对 `[data-input-scroll]` 内旧式 textarea 作曲器（0.1.1-rc.2 及以前宿主线）的匹配；其余 textarea 一律穿过。compat 工作流的 jsdom web 行为冒烟针对打包产物断言该身份/文本/光标面。
 0.1.2-rc.1（2026-09-04 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。已于 2026-09-06 对照 dsh-v0.1.3-alpha.1 master checkout 核验（全部门禁链 + profile 试装冒烟）。
 0.1.5-rc.1（2026-09-10 已适配）：依赖钉号移至已发布的 0.1.5-rc.1 线；无接缝变更影响本插件行为。
+0.1.5-rc.2（2026-09-11 已适配）：依赖钉号移至已发布的 0.1.5-rc.2 线；无接缝变更影响本插件行为。
 
 ## What you get
 
