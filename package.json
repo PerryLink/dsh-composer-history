@@ -42,6 +42,7 @@
     "access": "public"
   },
   "dsh": {
+    "manifestVersion": 1,
     "bundle": {
       "patch": "./cordis.patch.yml"
     },
@@ -110,9 +111,9 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
-    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0",
-    "@deepseek-ai/dsh-client-ui-input-trigger": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0",
-    "@deepseek-ai/dsh-client-ui-settings": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0"
+    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0",
+    "@deepseek-ai/dsh-client-ui-input-trigger": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0",
+    "@deepseek-ai/dsh-client-ui-settings": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh-client-ui-conversation": {
@@ -147,6 +148,7 @@
   "scripts": {
     "build": "node scripts/clean.mjs && tsc -p tsconfig.build.json && tsdown && node scripts/fix-dts.mjs",
     "typecheck": "tsc --noEmit",
+    "typecheck:ci": "tsc -p tsconfig.ci.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

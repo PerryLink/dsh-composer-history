@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- History injection, the snippet library, template variables and the input-state reads work again on hosts where `SessionListState.current` was removed. The current session is now derived from the snapshot's retention facts (`byId[].retainedBy.mainView > 0`, the upstream `ui-session` pattern), with the legacy `current` field still winning where a host publishes it; all six read sites go through one helper, so the wiring can no longer silently degrade to "no current session" (which left the history queue empty, the snippet library unscoped and the draft restore inert).
+
+- A throwing wiring reinstall keeps the previous listeners alive instead of leaving the composer with none: the new wiring is installed first and the old one is torn down only after it exists. The failure path warns once with the error.
+
+- The conversation nodes prefer the newer snapshot store (`nodes.values()`) and fall back to the compatibility projection (`legacy.nodes`), warning once on that first fallback. Merging the two shapes is deliberately not done — it would duplicate every node and mix two orderings.
+
+### Changed
+
+- Declare `dsh.manifestVersion: 1` and the canonical three-clause `engines.dsh` (G-3).
+
 ## [0.8.2] - 2026-09-12
 
 ### Changed

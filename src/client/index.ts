@@ -88,11 +88,41 @@ interface SessionsFace {
   scope(id: string): ClientContext | undefined
 }
 
-/** One sessions-list snapshot (fields the wiring reads). */
+/**
+ * One sessions-list snapshot (fields the wiring reads). `current` was removed
+ * on the 0.1.6 line (B5) and is kept optional for older hosts; the main-view
+ * session is derived from the retention facts instead.
+ */
 interface SessionsListSnapshot {
+  /** @deprecated Removed on the 0.1.6 line; older hosts still publish it. */
   readonly current?: string
   readonly ids: readonly string[]
-  readonly byId?: Record<string, { cwd?: string; title?: string; blank?: boolean }>
+  readonly byId?: Record<string, {
+    cwd?: string
+    title?: string
+    blank?: boolean
+    /** Retention facts: the main view holds the session while `mainView > 0`. */
+    retainedBy?: { mainView?: number }
+  }>
+}
+
+/**
+ * The current session id. On the 0.1.6 line `SessionListState.current` is gone,
+ * so the session retained by the main view is derived from the snapshot's
+ * retention facts (upstream `ui-session` pattern); older hosts keep publishing
+ * `current`, which wins when present so both lines agree.
+ * @param list - the sessions list face.
+ * @returns the current session id, or undefined when no session is retained.
+ */
+function currentSessionIdOf(list: SessionsFace['list']): string | undefined {
+  const snapshot = list.getSnapshot()
+  if (snapshot.current !== undefined) return String(snapshot.current)
+  const entries = snapshot.byId
+  if (entries === undefined) return undefined
+  for (const [id, entry] of Object.entries(entries)) {
+    if ((entry?.retainedBy?.mainView ?? 0) > 0) return id
+  }
+  return undefined
 }
 
 /** Collapse a backup import report into one short success line. */
@@ -128,15 +158,25 @@ export function apply(ctx: ClientContext, config: Partial<ComposerHistoryConfig>
     let disposeWiring: (() => void) | undefined
 
     const install = (): void => {
-      disposeWiring?.()
-      disposeWiring = undefined
       const snapshot = scope.getSnapshot()
       // The host namespace resolves base (cordis.yml) + user layer; before
       // the first acceptance the boot config is the effective value.
       const options = snapshot.status === 'ready' && snapshot.value !== undefined
         ? resolveConfig(snapshot.value)
         : fallback
-      disposeWiring = installWiring(ctx, options, storage)
+      // Install first, tear the previous wiring down only after the new one
+      // exists: a throwing install keeps the previous listeners alive instead
+      // of leaving the composer with none (and never partially registers).
+      let next: (() => void) | undefined
+      try {
+        next = installWiring(ctx, options, storage)
+      } catch (error) {
+        console.warn('dsh-composer-history: capture wiring install failed; keeping the previous wiring', error)
+        return
+      }
+      const previous = disposeWiring
+      disposeWiring = next
+      previous?.()
     }
 
     install()
@@ -169,14 +209,11 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   const mirror: MirrorMeasurer | undefined = options.edgeMode === 'visual' ? createMirrorMeasurer() : undefined
 
   const currentActx = (): ClientContext | undefined => {
-    const id = sessions.list.getSnapshot().current
+    const id = currentSessionIdOf(sessions.list)
     return id === undefined ? undefined : sessions.scope(id)
   }
 
-  const currentSessionId = (): string | undefined => {
-    const id = sessions.list.getSnapshot().current
-    return id === undefined ? undefined : String(id)
-  }
+  const currentSessionId = (): string | undefined => currentSessionIdOf(sessions.list)
 
   // Extraction memo over the immutable snapshot arrays (B3): the persistence
   // path extracts the configured kinds only (model-written summaries never
@@ -200,9 +237,9 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   // The workspace key snippet scoping and template variables resolve against:
   // the current session's cwd, falling back to its title (both browser-local).
   const currentWorkspaceKey = (): string => {
-    const id = sessions.list.getSnapshot().current
+    const id = currentSessionIdOf(sessions.list)
     if (id === undefined) return ''
-    const summary = sessions.list.getSnapshot().byId?.[String(id)]
+    const summary = sessions.list.getSnapshot().byId?.[id]
     return summary?.cwd ?? summary?.title ?? ''
   }
 
@@ -393,7 +430,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     },
 
     history: () => {
-      const id = sessions.list.getSnapshot().current
+      const id = currentSessionIdOf(sessions.list)
       if (id === undefined) return []
       const source = chatSourceFor(uiConversation, String(id))
       return source === undefined ? [] : toViews(chatNodes(source))
@@ -401,7 +438,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
 
     supplementalHistory: () => {
       const list = sessions.list.getSnapshot()
-      const current = list.current
+      const current = currentSessionIdOf(sessions.list)
       const parts: string[] = []
       if (options.persistHistory && storage !== undefined) {
         parts.push(...loadEntries(storage, STORE_KEY))
@@ -549,7 +586,7 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
   const reconcileSession = (): void => {
     disposeSessionSub?.()
     disposeSessionSub = undefined
-    const id = sessions.list.getSnapshot().current
+    const id = currentSessionIdOf(sessions.list)
     if (id === undefined) return
     const source = chatSourceFor(uiConversation, String(id))
     if (source === undefined) return

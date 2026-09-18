@@ -11,6 +11,7 @@ import type { ConversationNode } from '../src/client/node-views.ts'
 
 const N = (node: object): ConversationNode => node as unknown as ConversationNode
 const hello = N({ kind: 'user', seq: 1, content: [{ type: 'text', text: 'hello' }] })
+const bye = N({ kind: 'assistant', seq: 2, content: [{ type: 'text', text: 'bye' }] })
 
 /** One observable target source double; `activate` models the first subscribe. */
 function fakeSource(initial: { legacy: { nodes: readonly ConversationNode[] } } | undefined): {
@@ -31,9 +32,19 @@ function fakeSource(initial: { legacy: { nodes: readonly ConversationNode[] } } 
 }
 
 describe('chatNodes', () => {
-  it('reads the finalized nodes from the compatibility projection', () => {
-    const { source } = fakeSource({ legacy: { nodes: [hello] } })
-    expect(chatNodes(source)).toEqual([hello])
+  it('reads the finalized nodes from the compatibility projection and warns exactly once', () => {
+    // The warning flag is module-global, so this first legacy read is where the
+    // once-only invariant is asserted: a second read must not warn again.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    try {
+      const { source } = fakeSource({ legacy: { nodes: [hello] } })
+      expect(chatNodes(source)).toEqual([hello])
+      expect(chatNodes(source)).toEqual([hello])
+      const legacyWarnings = warn.mock.calls.filter(([message]) => String(message).includes('legacy `legacy.nodes` shape'))
+      expect(legacyWarnings).toHaveLength(1)
+    } finally {
+      warn.mockRestore()
+    }
   })
 
   it('returns [] while the target is not activated (getSnapshot undefined)', () => {
@@ -44,6 +55,16 @@ describe('chatNodes', () => {
   it('returns [] when the snapshot carries no legacy projection or no nodes', () => {
     expect(chatNodes({ getSnapshot: () => ({}), subscribe: () => () => {} })).toEqual([])
     expect(chatNodes({ getSnapshot: () => ({ legacy: {} }), subscribe: () => () => {} })).toEqual([])
+  })
+
+  it('prefers the newer node store over the compatibility projection', () => {
+    // Strict A-else-B: the store wins outright, so a snapshot carrying both
+    // shapes never duplicates nodes or mixes two orderings.
+    const source = {
+      getSnapshot: () => ({ nodes: { values: () => [bye] }, legacy: { nodes: [hello] } }),
+      subscribe: () => () => {},
+    }
+    expect(chatNodes(source)).toEqual([bye])
   })
 })
 
