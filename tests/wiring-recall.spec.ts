@@ -62,7 +62,7 @@ function chatTarget(nodes: readonly ConversationNode[]) {
 function sessionsList(initial: {
   current?: string | undefined
   ids: readonly string[]
-  byId?: Record<string, { title?: string; blank?: boolean }> | undefined
+  byId?: Record<string, { title?: string; blank?: boolean; retainedBy?: { mainView?: number } }> | undefined
 }) {
   let snapshot = initial
   const listeners = new Set<() => void>()
@@ -169,6 +169,26 @@ describe('Chat-target history wiring (CP-7)', () => {
     const composer = composerElement()
     expect(pressArrowUp(composer).defaultPrevented).toBe(true)
     expect(h.setDraft).toHaveBeenCalledWith('hello')
+  })
+
+  it('derives the current session from the main-view retention when `current` is gone (B5)', () => {
+    // The 0.1.6 line removed SessionListState.current: the snapshot only
+    // carries retention facts, so the wiring must pick the session the main
+    // view holds (retainedBy.mainView > 0) instead of degrading to undefined.
+    const list = sessionsList({
+      current: undefined,
+      ids: ['s1', 's2'],
+      byId: { s1: { title: 'other', blank: false }, s2: { title: 'main', blank: false, retainedBy: { mainView: 1 } } },
+    })
+    const chat = chatTarget([hello])
+    const h = harness(list, chat)
+    apply(h.ctx as unknown as Parameters<typeof apply>[0])
+    expect(chat.activated()).toBe(true)
+
+    const composer = composerElement()
+    expect(pressArrowUp(composer).defaultPrevented).toBe(true)
+    expect(h.setDraft).toHaveBeenCalledWith('hello')
+    h.dispose()
   })
 
   it('observes checkpoints published through the Chat subscription', () => {
