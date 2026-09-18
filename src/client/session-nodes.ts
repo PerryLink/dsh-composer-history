@@ -23,6 +23,8 @@ import type { ConversationNode } from './node-views.ts'
 
 /** Structural face of one Chat target snapshot (the fields this plugin reads). */
 interface ChatSnapshotFace {
+  /** Preferred shape on newer host lines: the node store itself. */
+  readonly nodes?: { values(): readonly ConversationNode[] }
   readonly legacy?: { readonly nodes?: readonly ConversationNode[] }
 }
 
@@ -45,14 +47,31 @@ export interface UiConversationFace {
   binding(id: string): { target(target: 'chat'): ChatTargetSource }
 }
 
+/** Whether the one-time legacy-shape warning has been emitted. */
+let warnedLegacyNodes = false
+
 /**
- * The finalized conversation nodes of one Chat target source.
+ * The finalized conversation nodes of one Chat target source. The newer
+ * snapshot shape (`nodes`, a store exposing `values()`) wins when present;
+ * otherwise the compatibility projection (`legacy.nodes`) is read. Strict
+ * A-else-B: merging the two would duplicate every node and mix two orderings.
+ * The legacy path warns once so the fallback stays visible.
  * @param source - the Chat target source.
- * @returns `legacy.nodes` in seq order; `[]` before activation or without a
- *   compatibility projection.
+ * @returns the finalized nodes in seq order; `[]` before activation or when
+ *   neither shape carries nodes.
  */
 export function chatNodes(source: ChatTargetSource): readonly ConversationNode[] {
-  return source.getSnapshot()?.legacy?.nodes ?? []
+  const snapshot = source.getSnapshot()
+  if (snapshot === undefined) return []
+  const store = snapshot.nodes
+  if (store !== undefined) return store.values()
+  const legacy = snapshot.legacy?.nodes
+  if (legacy === undefined) return []
+  if (!warnedLegacyNodes) {
+    warnedLegacyNodes = true
+    console.warn('dsh-composer-history: the conversation target exposes only the legacy `legacy.nodes` shape; the newer `nodes` store is absent on this host line')
+  }
+  return legacy
 }
 
 /**
