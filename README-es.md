@@ -27,7 +27,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.5-rc.2` (tag de GitHub, verificado el 2026-09-11; client peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`) |
+| Harness | DeepSeek Harness `dsh-v0.1.6-alpha.2` (verificado el 2026-09-18: doble typecheck + 286 pruebas; client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0`). En esta línea `SessionListState.current` ya no existe: la sesión actual se deriva de los hechos de retención, así que la inyección de historial y la biblioteca de fragmentos siguen funcionando. |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Solo Web GUI (plugin de cliente; almacenamiento local del navegador; sin red, sin código nativo) |
 | Model | Cualquiera (sin peticiones al modelo — comportamiento puramente de UI) |

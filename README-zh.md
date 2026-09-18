@@ -27,7 +27,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.5-rc.2`（GitHub tag，2026-09-11 已核验；client peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`） |
+| Harness | DeepSeek Harness `dsh-v0.1.6-alpha.2`（2026-09-18 核验：双 typecheck 尺子 + 286 项测试；client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0`）。该线上 `SessionListState.current` 已删除——当前会话改由保留事实推导，因此历史注入/片段库恢复工作。 |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | 仅 Web GUI（客户端插件；浏览器本地存储；无网络、无原生代码） |
 | Model | 任意（不发模型请求 —— 纯 UI 行为） |

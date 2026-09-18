@@ -27,7 +27,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.5-rc.2` (GitHub tag, verified 2026-09-11; client peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`) |
+| Harness | DeepSeek Harness `dsh-v0.1.6-alpha.2` (verified 2026-09-18: dual typecheck rulers + 286 tests; client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0`). On this line `SessionListState.current` is gone — the current session is derived from the retention facts, so history injection / the snippet library keep working. |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Web GUI only (client plugin; browser-local storage; no network, no native code) |
 | Model | Any (no model requests — pure UI behavior) |
