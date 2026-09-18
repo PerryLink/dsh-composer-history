@@ -158,15 +158,25 @@ export function apply(ctx: ClientContext, config: Partial<ComposerHistoryConfig>
     let disposeWiring: (() => void) | undefined
 
     const install = (): void => {
-      disposeWiring?.()
-      disposeWiring = undefined
       const snapshot = scope.getSnapshot()
       // The host namespace resolves base (cordis.yml) + user layer; before
       // the first acceptance the boot config is the effective value.
       const options = snapshot.status === 'ready' && snapshot.value !== undefined
         ? resolveConfig(snapshot.value)
         : fallback
-      disposeWiring = installWiring(ctx, options, storage)
+      // Install first, tear the previous wiring down only after the new one
+      // exists: a throwing install keeps the previous listeners alive instead
+      // of leaving the composer with none (and never partially registers).
+      let next: (() => void) | undefined
+      try {
+        next = installWiring(ctx, options, storage)
+      } catch (error) {
+        console.warn('dsh-composer-history: capture wiring install failed; keeping the previous wiring', error)
+        return
+      }
+      const previous = disposeWiring
+      disposeWiring = next
+      previous?.()
     }
 
     install()
