@@ -269,7 +269,7 @@ pnpm run verify:pack   # pack-surface check
 
 ## PerryLink DSH Plugin Family
 
-This project is one of the [40 DeepSeek Harness plugins](https://github.com/PerryLink) maintained by [PerryLink](https://github.com/PerryLink). If this one helps you, the others likely will too:
+This project is one of the [41 DeepSeek Harness plugins](https://github.com/PerryLink) maintained by [PerryLink](https://github.com/PerryLink). If this one helps you, the others likely will too:
 
 | Plugin | One-liner |
 |---|---|
