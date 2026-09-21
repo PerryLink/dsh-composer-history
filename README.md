@@ -3,6 +3,7 @@
 # ⌨️ dsh-composer-history
 - **1024 store channel**: `npm i -g dsh1024` once, then `dsh1024 plugin --profile web add dsh-composer-history` (counts toward the [deepseek1024.com](https://deepseek1024.com) install ranking).
 [![Gitee](https://img.shields.io/badge/Gitee-mirror-c71d23?logo=gitee)](https://gitee.com/perrylink/dsh-composer-history)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/PerryLink/dsh-composer-history/badge)](https://api.securityscorecards.dev/projects/github.com/PerryLink/dsh-composer-history)
 
 **Terminal-style input history for the DeepSeek Harness Web GUI composer.**
 
