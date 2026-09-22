@@ -29,7 +29,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.6-alpha.2` (verified 2026-09-18: dual typecheck rulers + 286 tests; client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0`). On this line `SessionListState.current` is gone — the current session is derived from the retention facts, so history injection / the snippet library keep working. |
+| Harness | DeepSeek Harness `dsh-v0.1.7-alpha.1` (verified 2026-09-22: dual typecheck rulers + 294 tests; client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0 \|\| >=0.1.7-0 <0.2.0`). On this line the settings seam is the profile entry's own live `Config` form — the removed `ctx.settings.register` / `SettingsProvider` family and the client `ctx.settingsScope` service are both gone, so every tunable now travels through `ctx.configForms`. On the 0.1.6+ lines `SessionListState.current` is gone — the current session is derived from the retention facts, so history injection / the snippet library keep working. |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Web GUI only (client plugin; browser-local storage; no network, no native code) |
 | Model | Any (no model requests — pure UI behavior) |
@@ -39,6 +39,7 @@ Interception anchors on the web composer's DOM: the contenteditable surface `div
 0.1.2-rc.1 (adapted 2026-09-04): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged. Verified 2026-09-06 against the dsh-v0.1.3-alpha.1 master checkout (full gate chain + profile install smoke).
 0.1.5-rc.1 (adapted 2026-09-10): dependency pins move to the published 0.1.5-rc.1 line; no seam change affects this plugin's behavior.
 0.1.5-rc.2 (adapted 2026-09-11): dependency pins move to the published 0.1.5-rc.2 line; no seam change affects this plugin's behavior.
+0.1.7-alpha.1 (adapted 2026-09-22): the settings seam is replaced on both halves. The host half no longer registers a `composer-history` namespace through the removed `ctx.settings.register(ns, schema, { base })` — on this line a plugin's durable settings surface IS its own live `Config`: every tunable is declared `.volatile()`, the profile entry id (`composer-history`, the bundle patch's row id) names the form, and `apply` claims the generated-form presentation (`ctx.settings.configure({ auto: true }, ctx.fiber)`, effect-owned so a reload re-registers cleanly). The browser half reads the same entry through `ctx.configForms.get('composer-history')` instead of the removed `ctx.settingsScope.bind({ namespace })`; the snapshot/subscribe shape is unchanged, so the wiring still reinstalls on every committed change. Editable surface is preserved, not widened: every field the old namespace exposed is volatile, and no new field became editable. An existing `settings.yaml` section named `composer-history` is migrated into the profile entry of the same id by the host itself.
 
 ## What you get
 
@@ -77,7 +78,7 @@ The npm package ships the built bundles; a source checkout must be built first (
 
 ## Configuration
 
-All tunables are Schemastery `Config` fields (changeable from cordis.yml and the settings document). An id-targeted override replaces the whole row — restate every key you need. Invalid enum values fail the whole dsh boot loudly.
+All tunables are Schemastery `Config` fields (changeable from cordis.yml and the entry's settings form; the profile patch is the persisted document). An id-targeted override replaces the whole row — restate every key you need. Invalid enum values fail the whole dsh boot loudly, and a settings-form edit is validated by the host before it persists.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -116,7 +117,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml and the
 | `/save` | command | Save the current draft as a named, tagged snippet |
 | `/load` | command | Insert a saved snippet at the caret |
 | `templates` | UI | Versioned JSON backup export/import of history, snippets, templates, and insights (explicit click only) |
-| `composer-history` | settings namespace | Carries the resolved config into the browser half |
+| `composer-history` | settings form | The profile entry's own live `Config` form — carries the resolved config (cordis.yml base + profile overrides) into the browser half |
 
 ## Keybindings
 

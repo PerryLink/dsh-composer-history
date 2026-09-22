@@ -28,7 +28,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.6-alpha.2`（2026-09-18 核验：双 typecheck 尺子 + 286 项测试；client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0`）。该线上 `SessionListState.current` 已删除——当前会话改由保留事实推导，因此历史注入/片段库恢复工作。 |
+| Harness | DeepSeek Harness `dsh-v0.1.7-alpha.1`（2026-09-22 核验：双 typecheck 尺子 + 294 项测试；client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0 \|\| >=0.1.7-0 <0.2.0`）。该线上设置接缝就是 profile 条目自身的活 `Config` 表单——已移除的 `ctx.settings.register` / `SettingsProvider` 家族与客户端 `ctx.settingsScope` 服务双双消失，因此每个可调项都改经 `ctx.configForms` 传递。0.1.6+ 线上 `SessionListState.current` 已删除——当前会话改由保留事实推导，因此历史注入/片段库继续工作。 |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | 仅 Web GUI（客户端插件；浏览器本地存储；无网络、无原生代码） |
 | Model | 任意（不发模型请求 —— 纯 UI 行为） |
@@ -38,6 +38,7 @@
 0.1.2-rc.1（2026-09-04 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——Session.append 仍无法盖章，门控行为不变。已于 2026-09-06 对照 dsh-v0.1.3-alpha.1 master checkout 核验（全部门禁链 + profile 试装冒烟）。
 0.1.5-rc.1（2026-09-10 已适配）：依赖钉号移至已发布的 0.1.5-rc.1 线；无接缝变更影响本插件行为。
 0.1.5-rc.2（2026-09-11 已适配）：依赖钉号移至已发布的 0.1.5-rc.2 线；无接缝变更影响本插件行为。
+0.1.7-alpha.1（2026-09-22 已适配）：设置接缝在两个半边都被替换。宿主半边不再通过已移除的 `ctx.settings.register(ns, schema, { base })` 注册 `composer-history` 命名空间——该线上插件的持久设置面就是它自己的活 `Config`：每个可调项声明为 `.volatile()`，profile 条目 id（`composer-history`，即 bundle patch 的行 id）就是表单名，`apply` 认领生成表单的呈现策略（`ctx.settings.configure({ auto: true }, ctx.fiber)`，由 effect 持有以便 reload 干净重注册）。浏览器半边改经 `ctx.configForms.get('composer-history')` 读取同一条目，取代已移除的 `ctx.settingsScope.bind({ namespace })`；快照/订阅形状未变，因此每次提交的变更仍会重装接线。可编辑面是**保留**而非新增：旧命名空间暴露过的字段全部 volatile，没有任何新字段变成可编辑。既有的 `settings.yaml` 中名为 `composer-history` 的小节由宿主自身迁移进同 id 的 profile 条目。
 
 ## What you get
 
@@ -75,7 +76,7 @@ npm 包自带构建产物；源码 checkout 须先构建（`pnpm run build`）�
 
 ## Configuration
 
-所有可调项都是 Schemastery `Config` 字段（可从 cordis.yml 与 settings 文档修改）。按 id 的覆盖会替换整行 —— 重新列出你需要的每个键。非法枚举值会响亮地中止整个 dsh 启动。
+所有可调项都是 Schemastery `Config` 字段（可从 cordis.yml 与该条目的设置表单修改；profile patch 即持久化文档）。按 id 的覆盖会替换整行 —— 重新列出你需要的每个键。非法枚举值会响亮地中止整个 dsh 启动，设置表单的编辑也会在持久化前由宿主拒绝非法值。
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -114,7 +115,7 @@ npm 包自带构建产物；源码 checkout 须先构建（`pnpm run build`）�
 | `/save` | command | 把当前草稿存为带名称与标签的片段 |
 | `/load` | command | 在光标处插入已保存的片段 |
 | `templates` | UI | 提示词模板以 JSON 文档导出/导入（仅显式点击触发） |
-| `composer-history` | settings namespace | 把解析后的配置带进浏览器半边 |
+| `composer-history` | settings form | 该 profile 条目自身的活 `Config` 表单——把解析后的配置（cordis.yml 基线与 profile 覆盖）带进浏览器半边 |
 
 ## Keybindings
 

@@ -28,7 +28,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.6-alpha.2` (verificado el 2026-09-18: doble typecheck + 286 pruebas; client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0`). En esta línea `SessionListState.current` ya no existe: la sesión actual se deriva de los hechos de retención, así que la inyección de historial y la biblioteca de fragmentos siguen funcionando. |
+| Harness | DeepSeek Harness `dsh-v0.1.7-alpha.1` (verificado el 2026-09-22: doble typecheck + 294 pruebas; client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0 \|\| >=0.1.7-0 <0.2.0`). En esta línea la costura de ajustes es el propio formulario de `Config` vivo de la entrada de perfil: la familia eliminada `ctx.settings.register` / `SettingsProvider` y el servicio de cliente `ctx.settingsScope` desaparecen, así que cada ajuste viaja por `ctx.configForms`. En las líneas 0.1.6+ `SessionListState.current` ya no existe: la sesión actual se deriva de los hechos de retención, así que la inyección de historial y la biblioteca de fragmentos siguen funcionando. |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Solo Web GUI (plugin de cliente; almacenamiento local del navegador; sin red, sin código nativo) |
 | Model | Cualquiera (sin peticiones al modelo — comportamiento puramente de UI) |
@@ -38,6 +38,7 @@ La intercepción se ancla en el DOM del compositor web: la superficie contentedi
 0.1.2-rc.1 (adaptado el 2026-09-04): el sobre de sesión conserva su campo ignorable solo para compatibilidad de lectura de logs almacenados - Session.append aún no puede estamparlo, por lo que el comportamiento de la puerta no cambia. Verificado el 2026-09-06 contra el checkout master de dsh-v0.1.3-alpha.1 (cadena completa de puertas + smoke de instalación de perfil).
 0.1.5-rc.1 (adaptado el 2026-09-10): los pines de dependencias pasan a la línea publicada 0.1.5-rc.1; ningún cambio de costura afecta el comportamiento de este plugin.
 0.1.5-rc.2 (adaptado el 2026-09-11): los pines de dependencias pasan a la línea publicada 0.1.5-rc.2; ningún cambio de costura afecta el comportamiento de este plugin.
+0.1.7-alpha.1 (adaptado el 2026-09-22): la costura de ajustes se reemplaza en ambas mitades. La mitad de host ya no registra un espacio de nombres `composer-history` mediante el eliminado `ctx.settings.register(ns, schema, { base })`: en esta línea la superficie de ajustes durable de un plugin ES su propio `Config` vivo. Cada ajuste se declara `.volatile()`, el id de la entrada de perfil (`composer-history`, el id de fila del bundle patch) nombra el formulario, y `apply` reclama la política de formulario generado (`ctx.settings.configure({ auto: true }, ctx.fiber)`, propiedad del effect para que una recarga se vuelva a registrar limpiamente). La mitad de navegador lee la misma entrada mediante `ctx.configForms.get('composer-history')` en lugar del eliminado `ctx.settingsScope.bind({ namespace })`; la forma de snapshot/suscripción no cambia, así que el cableado se reinstala en cada cambio confirmado. La superficie editable se conserva, no se amplía: todos los campos que exponía el antiguo espacio de nombres son volatile y ningún campo nuevo pasó a ser editable. Una sección existente de `settings.yaml` llamada `composer-history` la migra el propio host a la entrada de perfil del mismo id.
 
 ## What you get
 
@@ -75,7 +76,7 @@ El paquete npm incluye los bundles ya compilados; un checkout del código fuente
 
 ## Configuration
 
-Todos los ajustes son campos Schemastery `Config` (modificables desde cordis.yml y el documento de ajustes). Una sustitución dirigida por id reemplaza toda la fila — vuelve a indicar cada clave que necesites. Los valores de enum no válidos detienen todo el arranque de dsh de forma estrepitosa.
+Todos los ajustes son campos Schemastery `Config` (modificables desde cordis.yml y el formulario de ajustes de la entrada; el patch de perfil es el documento persistido). Una sustitución dirigida por id reemplaza toda la fila — vuelve a indicar cada clave que necesites. Los valores de enum no válidos detienen todo el arranque de dsh de forma estrepitosa, y una edición del formulario de ajustes la valida el host antes de persistirla.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -114,7 +115,7 @@ Todos los ajustes son campos Schemastery `Config` (modificables desde cordis.yml
 | `/save` | command | Guarda el borrador actual como un fragmento con nombre y etiquetas |
 | `/load` | command | Inserta un fragmento guardado en el cursor |
 | `templates` | UI | Exportar/importar plantillas de prompt como documento JSON (solo con un clic explícito) |
-| `composer-history` | settings namespace | Lleva la configuración resuelta a la mitad del navegador |
+| `composer-history` | settings form | El formulario de `Config` vivo de la propia entrada de perfil — lleva la configuración resuelta (base de cordis.yml + sustituciones del perfil) a la mitad del navegador |
 
 ## Keybindings
 
