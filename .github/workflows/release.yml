@@ -25,9 +25,11 @@ jobs:
       - run: pnpm run test:coverage
       - run: pnpm run check:readmes
       - run: pnpm run verify:pack
+      # OIDC only: `id-token: write` above lets pnpm/npm exchange a short-lived
+      # credential via trusted publishing. Supplying NODE_AUTH_TOKEN here would make
+      # npm take the token path instead, and with the token now rejected the run
+      # fails to authenticate without ever attempting the exchange.
       - run: pnpm publish --no-git-checks --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: GitHub release
         uses: softprops/action-gh-release@v2
         with:
