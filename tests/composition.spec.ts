@@ -2,20 +2,24 @@
  * Real Loader composition + built-artifact + export-contract suite (community
  * five-layer model, layer 4). An independent process mounts the vendored
  * Loader over a cordis.yml with the settings service row + the plugin row +
- * config, proving module unwrapping and config schema application. It also
- * carries the invalid-config regression and the function-plugin namespace
- * contract (no default export) against the built `lib/index.js`.
+ * config, proving module unwrapping, config schema application, and the
+ * `0.1.7` settings contract on the host half (the entry claims the
+ * generated-form presentation, and the Loader-resolved config reaches its
+ * fiber as the LIVE references the browser half reads). It also carries the
+ * invalid-config regression and the function-plugin namespace contract (no
+ * default export) against the built `lib/index.js`.
  * @module dsh-composer-history/tests/composition.spec
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import * as plugin from '../src/index.ts'
+import { SETTINGS_ENTRY_ID } from '../src/index.ts'
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const runner = join(repositoryRoot, 'scripts', 'loader-runner.mjs')
@@ -67,10 +71,20 @@ describe('function-plugin contract', () => {
     expect(unwrapped).toBe(plugin)
     expect(unwrapped.name).toBe('dsh-composer-history')
   })
+
+  it('names its settings form after the profile entry the bundle patch mounts', () => {
+    // A `0.1.7` form namespace IS the local id of its profile entry, and the
+    // browser half binds the same string through `ctx.configForms.get()`. The
+    // bundle patch is what fixes that id for a `dsh plugin add` install, so
+    // the two halves only agree while the row id matches this constant.
+    expect(SETTINGS_ENTRY_ID).toBe('composer-history')
+    const patch = readFileSync(join(repositoryRoot, 'cordis.patch.yml'), 'utf8')
+    expect(patch).toMatch(new RegExp(`^\\s*(?:-\\s*)?id:\\s*${SETTINGS_ENTRY_ID}\\s*$`, 'mu'))
+  })
 })
 
 describe('real Loader composition', () => {
-  it('registers the settings namespace and applies the config through the Loader', () => {
+  it('claims the generated settings form and honors the config through the Loader', () => {
     const configPath = join(temporaryRoot, 'valid.yml')
     writeFileSync(configPath, configFor(pathToFileURL(builtEntry).href, ['maxHistory: 123']))
     const evidence = run(process.execPath, [runner, configPath], repositoryRoot)

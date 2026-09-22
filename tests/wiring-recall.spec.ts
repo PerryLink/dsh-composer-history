@@ -106,7 +106,7 @@ function harness(list: ReturnType<typeof sessionsList>, chat: ReturnType<typeof 
       }
       return undefined
     },
-    settingsScope: { bind: () => scope },
+    configForms: { get: () => scope },
     conversation: {
       input: {
         for: () => ({

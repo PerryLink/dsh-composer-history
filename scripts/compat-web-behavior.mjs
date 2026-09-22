@@ -120,8 +120,11 @@ const fakeCtx = {
     if (name === 'uiConversation') return { binding: () => ({ target: () => chatTarget }) }
     return undefined
   },
-  settingsScope: {
-    bind: () => ({
+  // The settings domain's client service on the 0.1.7 contract (the removed
+  // `ctx.settingsScope` binder's successor): the host entry id resolves to the
+  // form whose snapshot carries the resolved composition config.
+  configForms: {
+    get: () => ({
       getSnapshot: () => ({ status: 'unavailable', value: undefined, writable: false, mode: 'memory' }),
       subscribe: () => () => {},
     }),

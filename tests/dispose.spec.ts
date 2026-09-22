@@ -10,7 +10,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apply } from '../src/client/index.ts'
 
-/** Settings-scope double: unavailable snapshot, no-op write surface. */
+/** Settings-form double: unavailable snapshot, no-op write surface. */
 function fakeScope() {
   return {
     getSnapshot: () => ({ status: 'unavailable', value: undefined, writable: false, mode: 'memory' }),
@@ -44,7 +44,7 @@ describe('wiring lifecycle (C1: fiber dispose)', () => {
         return () => wiringDispose?.()
       },
       get: (name: string): unknown => (name === 'sessions' ? sessions : undefined),
-      settingsScope: { bind: () => fakeScope() },
+      configForms: { get: () => fakeScope() },
     }
 
     apply(ctx as unknown as Parameters<typeof apply>[0])
