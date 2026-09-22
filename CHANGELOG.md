@@ -6,6 +6,8 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-09-22
+
 ### Fixed
 
 - History injection, the snippet library, template variables and the input-state reads work again on hosts where `SessionListState.current` was removed. The current session is now derived from the snapshot's retention facts (`byId[].retainedBy.mainView > 0`, the upstream `ui-session` pattern), with the legacy `current` field still winning where a host publishes it; all six read sites go through one helper, so the wiring can no longer silently degrade to "no current session" (which left the history queue empty, the snippet library unscoped and the draft restore inert).
