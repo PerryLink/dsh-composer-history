@@ -1,16 +1,27 @@
 /**
- * Plugin Config: the Schemastery schema every tunable lives in. The schema
- * is exported from both halves — the host Loader validates any cordis.yml
- * `config:` block against it at load time (invalid values fail the entry
- * loudly), the host half also registers it as the settings-namespace schema
- * (so the resolved composition `base` + user layer reaches the browser), and
- * the browser half resolves it again in apply() so defaults apply even
- * without either. Key-spec GRAMMAR (chord syntax) is validated at parse time
- * by keys.ts, not by the schema — a malformed chord fails the browser fiber
- * loudly at load.
+ * Plugin Config: the Schemastery schema every tunable lives in, in the two
+ * faces the `0.1.7` settings contract needs.
+ *
+ * `Config` is the Loader- and settings-form-facing schema: every field is
+ * declared `.volatile()`, so the host reads it as a stable live reference,
+ * projects it into the entry's settings form, and hot-applies an accepted
+ * edit without remounting the plugin. This is also the schema the Loader
+ * validates any cordis.yml `config:` block against at load time — invalid
+ * values fail the entry loudly before anything reaches a browser.
+ *
+ * `PlainConfig` is the same field set as ordinary values, and it is what the
+ * browser half resolves a wire section (or its own boot config) through: the
+ * `configForms` snapshot hands over plain JSON, and re-running the volatile
+ * schema on it would wrap every field in a live reference again.
+ *
+ * Both faces are built from one `FIELDS` definition, so a new tunable cannot
+ * reach one without reaching the other. Key-spec GRAMMAR (chord syntax) is
+ * validated at parse time by keys.ts, not by the schema — a malformed chord
+ * fails the browser fiber loudly at load.
  */
 
 import z from '@deepseek-ai/schemastery'
+import type { Volatile } from '@deepseek-ai/cordis'
 import type { RecallOptions } from './recall.ts'
 
 /** Config face; structurally the pure machine's {@link RecallOptions} plus the wiring tunables. */
@@ -57,8 +68,19 @@ export interface ComposerHistoryConfig extends RecallOptions {
   readonly enableCompactionHighlight: boolean
 }
 
-/** Defaults are the plugin behavior baseline; every key is changeable from cordis.yml and the settings document. */
-export const Config: z<ComposerHistoryConfig> = z.object({
+/**
+ * Live Config face: what the Loader hands the host half's `apply`, and the
+ * field set the settings form projects, edits and hot-applies. Every tunable
+ * is a stable reference (`.get()` reads it) rather than a plain value.
+ */
+export type ComposerHistoryLiveConfig = { readonly [K in keyof ComposerHistoryConfig]: Volatile<ComposerHistoryConfig[K]> }
+
+/**
+ * Defaults are the plugin behavior baseline; every key is changeable from
+ * cordis.yml and the entry's settings form. Defined once, as ordinary field
+ * schemas — the live face below is the volatile projection of this same map.
+ */
+const FIELDS = {
   recallWithDraft: z.union([z.const('save'), z.const('gate')]).default('save'),
   restoreOnEscape: z.boolean().default(true),
   edgeMode: z.union([z.const('logical'), z.const('visual')]).default('logical'),
@@ -84,16 +106,36 @@ export const Config: z<ComposerHistoryConfig> = z.object({
   enableInsights: z.boolean().default(true),
   insightMinUses: z.number().step(1).min(1).default(2),
   enableCompactionHighlight: z.boolean().default(true),
-})
+}
 
 /**
- * Resolve a config input through the schema: partial input gets the
+ * Plain projection: fills the defaults and rejects invalid values. The
+ * browser half resolves the settings-form section (and its own boot config)
+ * through this, and it is the shape every consumer of the options reads.
+ */
+export const PlainConfig: z<ComposerHistoryConfig> = z.object(FIELDS)
+
+/**
+ * Live projection: the Loader validates cordis.yml `config:` blocks against
+ * this schema, and the host's settings form projects exactly these fields —
+ * the entry's own id is the form namespace on the `0.1.7` contract.
+ *
+ * The dict is built by calling `.volatile()` on each field, so the runtime
+ * shape is exact while the static one (a `Record<string, …>` from
+ * `Object.fromEntries`) needs the boundary cast to the declared live face.
+ */
+export const Config: z<ComposerHistoryLiveConfig> = z.object(
+  Object.fromEntries(Object.entries(FIELDS).map(([field, schema]) => [field, schema.volatile()])),
+) as unknown as z<ComposerHistoryLiveConfig>
+
+/**
+ * Resolve a config input through the PLAIN schema: partial input gets the
  * defaults, invalid values throw at load time. The boundary cast is
  * deliberate — the schema's declared source type is the fully-populated
  * object, while runtime accepts partial input and fills the rest.
- * @param input - raw config (cordis.yml block, settings section, or absent in the browser).
+ * @param input - raw config (cordis.yml block, settings-form section, or absent in the browser).
  * @returns the validated, fully-defaulted options.
  */
 export function resolveConfig(input: unknown): ComposerHistoryConfig {
-  return Config(input as ComposerHistoryConfig)
+  return PlainConfig(input as ComposerHistoryConfig)
 }

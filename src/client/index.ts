@@ -14,9 +14,10 @@
  * target phase and only carries the edit from the bubble phase on.
  *
  * Effective options resolve from three layers: the boot config (none today),
- * the settings scope (the host namespace carrying the cordis.yml `base` plus
- * any user overrides), and the schema defaults. The scope arrives
- * asynchronously; the wiring reinstalls on every committed change.
+ * the host entry's live settings form through `ctx.configForms` (carrying the
+ * composition base — cordis.yml — plus the profile's override layer), and the
+ * schema defaults. The form arrives asynchronously; the wiring reinstalls on
+ * every committed change.
  * Sent messages are appended to a bounded browser-local history store so
  * recall survives reloads and reaches across sessions. Compaction
  * checkpoints (the harness's sliding-context summaries) join recall and
@@ -28,7 +29,7 @@ import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 // Type-only: activates the ctx.inputTriggers merge and names the class face for the service assertion.
 import type { InputTriggerService } from '@deepseek-ai/dsh-client-ui-input-trigger/client'
-// Type-only: activates the ctx.settingsScope merge (SettingsScopeBinder face).
+// Type-only: activates the ctx.configForms merge (the settings domain's client service).
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import { resolveConfig, type ComposerHistoryConfig } from './config.ts'
 import { createComposerHistory, type ComposerHistoryHandle, type ComposerHistoryHost } from './interceptor.ts'
@@ -61,10 +62,15 @@ export type { ComposerElement } from './composer-dom.ts'
 export const name = 'dsh-composer-history'
 
 /** Services the interception reads; activation waits on them. */
-export const inject = ['conversation', 'sessions', 'inputTriggers', 'settingsScope', 'uiConversation']
+export const inject = ['conversation', 'sessions', 'inputTriggers', 'configForms', 'uiConversation']
 
-/** Settings namespace the host half registers (lowercase kebab-case). */
-const NAMESPACE = 'composer-history'
+/**
+ * Profile entry id of the host half's settings form. On the `0.1.7` settings
+ * contract a form namespace is the local id of its profile entry, and
+ * `cordis.patch.yml` mounts this plugin as `composer-history`. Kept as a
+ * literal here because the client bundle must not value-import the host half.
+ */
+const SETTINGS_ENTRY_ID = 'composer-history'
 
 /** Structural face of the command popup shell (ctx.commandUi, read defensively without a dependency edge). */
 interface PopupSelectFace {
@@ -143,8 +149,9 @@ function summarizeImport(report: ImportReport): string {
  * Browser plugin body: resolve the effective options, wire the interception
  * host over the session/input/trigger services, keep the persisted history
  * store in sync with the current session's commits, and register the
- * window-capture listeners as one effect. The settings scope is observed;
- * every committed option change tears the wiring down and reinstalls it.
+ * window-capture listeners as one effect. The host entry's settings form is
+ * observed; every committed option change tears the wiring down and reinstalls
+ * it.
  * @param ctx - client root context.
  * @param config - partial config (browser boot passes none today); resolved
  *   against the schema so defaults apply and invalid values throw loudly.
@@ -154,13 +161,18 @@ export function apply(ctx: ClientContext, config: Partial<ComposerHistoryConfig>
   const storage = safeStorage(typeof localStorage === 'undefined' ? undefined : localStorage)
 
   ctx.effect(() => {
-    const scope = ctx.settingsScope.bind<ComposerHistoryConfig>({ namespace: NAMESPACE })
+    // `configForms` is the settings domain's client service (the removed
+    // `ctx.settingsScope` binder's documented successor): `get(entryId)`
+    // returns the host entry's live form, whose snapshot/subscribe shape is
+    // the same one the scope seam exposed.
+    const form = ctx.configForms.get<ComposerHistoryConfig>(SETTINGS_ENTRY_ID)
     let disposeWiring: (() => void) | undefined
 
     const install = (): void => {
-      const snapshot = scope.getSnapshot()
-      // The host namespace resolves base (cordis.yml) + user layer; before
-      // the first acceptance the boot config is the effective value.
+      const snapshot = form.getSnapshot()
+      // The host entry resolves its composition base (cordis.yml) plus the
+      // profile override layer; before the first acceptance the boot config is
+      // the effective value.
       const options = snapshot.status === 'ready' && snapshot.value !== undefined
         ? resolveConfig(snapshot.value)
         : fallback
@@ -180,9 +192,9 @@ export function apply(ctx: ClientContext, config: Partial<ComposerHistoryConfig>
     }
 
     install()
-    const disposeScope = scope.subscribe(install)
+    const disposeForm = form.subscribe(install)
     return () => {
-      disposeScope()
+      disposeForm()
       disposeWiring?.()
       disposeWiring = undefined
     }
