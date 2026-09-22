@@ -5,14 +5,64 @@
  * apply() with a minimal fake ctx to prove the wiring registers without
  * throwing, and drives one ArrowUp recall through the packed bundle against
  * the real host composer shape (the L3 counterpart of the CP-7 wiring
- * regression, which exercises src/ directly). Skipped when the bundle has not
- * been built yet (`pnpm run build`).
+ * regression, which exercises src/ directly).
+ *
+ * The artifact is built on demand and never skipped. `tests/composition.spec.ts`
+ * runs `pnpm run build` in its own `beforeAll` (the gate chain runs the tests
+ * before the build), and that build deletes `lib/` before rebuilding — so a
+ * plain `existsSync` at collection time raced it and silently skipped this
+ * whole suite inside a full run. The wait below rides that concurrent build
+ * out and only builds from scratch when nobody else is.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import { resolve } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 
 const BUNDLE_PATH = resolve(process.cwd(), 'lib/client.js')
+const REPOSITORY_ROOT = process.cwd()
+/** Handshake the emitted bundle must carry; a partial write is not a bundle. */
+const HANDSHAKE = '__ModuleLoader__.load'
+
+/**
+ * Read the built bundle, waiting out a concurrent build. `lib/client.js` is
+ * cleaned and rewritten by `pnpm run build`, so the file is absent (or
+ * half-written) for a moment; a complete artifact is one that carries the
+ * module-loader handshake.
+ * @returns the bundle text.
+ */
+async function bundleText(): Promise<string> {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    try {
+      const text = readFileSync(BUNDLE_PATH, 'utf8')
+      if (text.includes(HANDSHAKE)) return text
+    } catch {
+      // Not built yet (or mid-rewrite): keep waiting.
+    }
+    await new Promise(settle => setTimeout(settle, 250))
+  }
+  throw new Error(`bundle.smoke: ${BUNDLE_PATH} was never built to completion (run pnpm run build)`)
+}
+
+let bundle: string
+
+beforeAll(async () => {
+  try {
+    bundle = await bundleText()
+  } catch {
+    // Nobody is building it: build it here, then read it once more.
+    const build = spawnSync('pnpm', ['run', 'build'], {
+      cwd: REPOSITORY_ROOT,
+      encoding: 'utf8',
+      shell: process.platform === 'win32',
+      timeout: 180_000,
+    })
+    if (build.status !== 0) {
+      throw new Error(`pnpm run build failed (${String(build.status)})\nstdout:\n${build.stdout}\nstderr:\n${build.stderr}`)
+    }
+    bundle = await bundleText()
+  }
+}, 300_000)
 
 interface LoaderHandoff {
   id: string
@@ -24,7 +74,7 @@ function loadBundle(): Record<string, unknown> {
   const win = window as unknown as Record<string, unknown>
   let handoff: LoaderHandoff | undefined
   win.__ModuleLoader__ = { load: (entry: LoaderHandoff): void => { handoff = entry } }
-  const run = new Function('window', readFileSync(BUNDLE_PATH, 'utf8'))
+  const run = new Function('window', bundle)
   expect(() => run(window)).not.toThrow()
   expect(handoff?.id).toBe('dsh-composer-history')
   const strictRequire = (spec: string): never => {
@@ -76,7 +126,10 @@ function fakeServices() {
       if (name === 'uiConversation') return { binding: () => ({ target: () => chatTarget }) }
       return undefined
     },
-    settingsScope: { bind: () => scope },
+    // The settings domain's client service (the removed `settingsScope`
+    // binder's successor): the host entry id resolves to the form carrying the
+    // composition config plus the profile override layer.
+    configForms: { get: () => scope },
     conversation: {
       input: {
         for: () => ({
@@ -105,17 +158,15 @@ function composerElement(): HTMLElement {
 }
 
 describe('built client bundle', () => {
-  const skip = !existsSync(BUNDLE_PATH)
-
-  it.skipIf(skip)('registers the factory under the plugin id and exports the cordis surface', () => {
+  it('registers the factory under the plugin id and exports the cordis surface', () => {
     const module = loadBundle()
     expect(module.name).toBe('dsh-composer-history')
-    expect(module.inject).toEqual(['conversation', 'sessions', 'inputTriggers', 'settingsScope', 'uiConversation'])
+    expect(module.inject).toEqual(['conversation', 'sessions', 'inputTriggers', 'configForms', 'uiConversation'])
     expect(typeof module.apply).toBe('function')
     expect(typeof module.Config).toBe('function')
   })
 
-  it.skipIf(skip)('apply() installs the window-capture listeners without touching services', () => {
+  it('apply() installs the window-capture listeners without touching services', () => {
     const module = loadBundle() as { apply(ctx: unknown, config?: unknown): void }
     const { ctx } = fakeServices()
     expect(() => module.apply(ctx)).not.toThrow()
@@ -129,7 +180,7 @@ describe('built client bundle', () => {
     document.body.innerHTML = ''
   })
 
-  it.skipIf(skip)('recalls the newest user message from the Chat target through the packed bundle', () => {
+  it('recalls the newest user message from the Chat target through the packed bundle', () => {
     const module = loadBundle() as {
       apply(ctx: unknown, config?: unknown): void
       setComposerCaret(composer: Element, caret: number): void
