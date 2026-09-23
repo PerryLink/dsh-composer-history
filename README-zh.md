@@ -29,7 +29,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.7-alpha.1`（2026-09-22 核验：双 typecheck 尺子 + 294 项测试；client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0 \|\| >=0.1.7-0 <0.2.0`）。该线上设置接缝就是 profile 条目自身的活 `Config` 表单——已移除的 `ctx.settings.register` / `SettingsProvider` 家族与客户端 `ctx.settingsScope` 服务双双消失，因此每个可调项都改经 `ctx.configForms` 传递。0.1.6+ 线上 `SessionListState.current` 已删除——当前会话改由保留事实推导，因此历史注入/片段库继续工作。 |
+| Harness | DeepSeek Harness `dsh-v0.1.7-alpha.2`（2026-09-22 核验：双 typecheck 尺子 + 294 项测试；client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0 \|\| >=0.1.7-0 <0.2.0`）。该线上设置接缝就是 profile 条目自身的活 `Config` 表单——已移除的 `ctx.settings.register` / `SettingsProvider` 家族与客户端 `ctx.settingsScope` 服务双双消失，因此每个可调项都改经 `ctx.configForms` 传递。0.1.6+ 线上 `SessionListState.current` 已删除——当前会话改由保留事实推导，因此历史注入/片段库继续工作。 |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | 仅 Web GUI（客户端插件；浏览器本地存储；无网络、无原生代码） |
 | Model | 任意（不发模型请求 —— 纯 UI 行为） |

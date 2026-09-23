@@ -4,11 +4,11 @@ packages:
   - .
 allowBuilds:
   esbuild: true
-# The dev/test pins ride the 0.1.7-alpha.1 line. The self-referential rows are
+# The dev/test pins ride the 0.1.7-alpha.2 line. The self-referential rows are
 # load-bearing: pnpm matches a prerelease range only against its own
 # [major, minor, patch] tuple, so a transitive peer asking for
-# `^0.1.7-alpha.1` would otherwise resolve SEPARATELY from this package's own
-# `0.1.7-alpha.1` devDeps. That installs a second copy of the host type graph,
+# `^0.1.7-alpha.2` would otherwise resolve SEPARATELY from this package's own
+# `0.1.7-alpha.2` devDeps. That installs a second copy of the host type graph,
 # and this package's types then disagree with the host's (surfacing as
 # spurious `X incorrectly extends Y` errors). Mirroring each devDep pin keeps
 # exactly one copy of every host package.
@@ -23,12 +23,12 @@ overrides:
   '@deepseek-ai/cordis': 4.0.3
   '@deepseek-ai/cosmokit': 1.8.4
   '@deepseek-ai/schemastery': 3.18.3
-  '@deepseek-ai/dsh-api-remotes@^0.1.7-alpha.1': 0.1.7-alpha.1
-  '@deepseek-ai/dsh-attachment@^0.1.7-alpha.1': 0.1.7-alpha.1
-  '@deepseek-ai/dsh-client-ui-conversation@^0.1.7-alpha.1': 0.1.7-alpha.1
-  '@deepseek-ai/dsh-client-ui-input-trigger@^0.1.7-alpha.1': 0.1.7-alpha.1
-  '@deepseek-ai/dsh-client-ui-settings@^0.1.7-alpha.1': 0.1.7-alpha.1
-  '@deepseek-ai/dsh-settings@^0.1.7-alpha.1': 0.1.7-alpha.1
+  '@deepseek-ai/dsh-api-remotes@^0.1.7-alpha.2': 0.1.7-alpha.2
+  '@deepseek-ai/dsh-attachment@^0.1.7-alpha.2': 0.1.7-alpha.2
+  '@deepseek-ai/dsh-client-ui-conversation@^0.1.7-alpha.2': 0.1.7-alpha.2
+  '@deepseek-ai/dsh-client-ui-input-trigger@^0.1.7-alpha.2': 0.1.7-alpha.2
+  '@deepseek-ai/dsh-client-ui-settings@^0.1.7-alpha.2': 0.1.7-alpha.2
+  '@deepseek-ai/dsh-settings@^0.1.7-alpha.2': 0.1.7-alpha.2
 # Wildcard only, on purpose — the same single row every 0.1.7-line sibling
 # repo carries. The per-version rows this file used to list alongside it
 # (`@deepseek-ai/cordis@4.0.1`, `@deepseek-ai/cosmokit@1.8.2|1.8.3`,
