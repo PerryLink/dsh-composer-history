@@ -4,8 +4,7 @@ All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
-
+## [0.8.6] - 2026-09-24
 ### Changed
 
 - Move the `@deepseek-ai/dsh-*` host pins to the published `0.1.7-rc.1` line and re-verify this plugin against that host line.
