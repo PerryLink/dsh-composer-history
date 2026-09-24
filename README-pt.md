@@ -36,7 +36,7 @@ Este plugin faz parte da [família de plugins DSH](https://github.com/PerryLink)
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.7-rc.1` (verificado em 2026-09-24: typecheck duplo + 294 testes; client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0 \|\| >=0.1.7-0 <0.2.0`). Nesta linha a costura de configurações é o próprio formulário de `Config` vivo da entrada de perfil: a família removida `ctx.settings.register` / `SettingsProvider` e o serviço de cliente `ctx.settingsScope` desaparecem, então cada ajuste trafega por `ctx.configForms`. Nas linhas 0.1.6+ `SessionListState.current` foi removido: a sessão atual é derivada dos fatos de retenção, então a injeção de histórico e a biblioteca de trechos continuam funcionando. |
+| Harness | DeepSeek Harness `dsh-v0.1.7-rc.2` (verificado em 2026-09-25: typecheck duplo + 294 testes; client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0 \|\| >=0.1.7-0 <0.2.0`). Nesta linha a costura de configurações é o próprio formulário de `Config` vivo da entrada de perfil: a família removida `ctx.settings.register` / `SettingsProvider` e o serviço de cliente `ctx.settingsScope` desaparecem, então cada ajuste trafega por `ctx.configForms`. Nas linhas 0.1.6+ `SessionListState.current` foi removido: a sessão atual é derivada dos fatos de retenção, então a injeção de histórico e a biblioteca de trechos continuam funcionando. |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Somente Web GUI (plugin de cliente; armazenamento local do navegador; sem rede, sem código nativo) |
 | Model | Qualquer um (sem requisições ao modelo — comportamento puramente de UI) |
