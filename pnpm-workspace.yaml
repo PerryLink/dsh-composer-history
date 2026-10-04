@@ -20,15 +20,15 @@ allowBuilds:
 # arrives with schemastery 3.18.3, and a lockfile that already resolved the
 # older patch keeps resolving to it under the nominal ranges.
 overrides:
-  '@deepseek-ai/cordis': 4.0.3
-  '@deepseek-ai/cosmokit': 1.8.4
-  '@deepseek-ai/schemastery': 3.18.3
-  '@deepseek-ai/dsh-api-remotes@^0.1.7-rc.2': 0.1.7-rc.2
-  '@deepseek-ai/dsh-attachment@^0.1.7-rc.2': 0.1.7-rc.2
-  '@deepseek-ai/dsh-client-ui-conversation@^0.1.7-rc.2': 0.1.7-rc.2
-  '@deepseek-ai/dsh-client-ui-input-trigger@^0.1.7-rc.2': 0.1.7-rc.2
-  '@deepseek-ai/dsh-client-ui-settings@^0.1.7-rc.2': 0.1.7-rc.2
-  '@deepseek-ai/dsh-settings@^0.1.7-rc.2': 0.1.7-rc.2
+  '@deepseek-ai/cordis': 4.0.5-alpha.1
+  '@deepseek-ai/cosmokit': 1.8.6-alpha.1
+  '@deepseek-ai/schemastery': 3.18.5-alpha.1
+  '@deepseek-ai/dsh-api-remotes@^0.1.7-rc.2': 0.2.1-alpha.1
+  '@deepseek-ai/dsh-attachment@^0.1.7-rc.2': 0.2.1-alpha.1
+  '@deepseek-ai/dsh-client-ui-conversation@^0.1.7-rc.2': 0.2.1-alpha.1
+  '@deepseek-ai/dsh-client-ui-input-trigger@^0.1.7-rc.2': 0.2.1-alpha.1
+  '@deepseek-ai/dsh-client-ui-settings@^0.1.7-rc.2': 0.2.1-alpha.1
+  '@deepseek-ai/dsh-settings@^0.1.7-rc.2': 0.2.1-alpha.1
 # Wildcard only, on purpose — the same single row every 0.1.7-line sibling
 # repo carries. The per-version rows this file used to list alongside it
 # (`@deepseek-ai/cordis@4.0.1`, `@deepseek-ai/cosmokit@1.8.2|1.8.3`,
