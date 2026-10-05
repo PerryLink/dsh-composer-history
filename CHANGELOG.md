@@ -6,6 +6,10 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.9] - undefined
+
+undefined
+
 ## [0.8.8] - 2026-10-04
 
 
