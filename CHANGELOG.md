@@ -13,6 +13,10 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The browser half no longer fails to activate on dsh `0.2.1-alpha.1`: `apply` ignores the boot config, whose volatile references reach the browser as `{}` and failed `PlainConfig` validation (#10).
+
 ## [0.8.9] - 2026-10-04
 
 undefined
