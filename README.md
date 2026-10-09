@@ -38,6 +38,14 @@
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
 
 
+## What is dsh-composer-history?
+
+Terminal-style input history for the DeepSeek Harness Web GUI composer.
+
+Press ↑ like it's in a terminal — and keep your half-typed draft safe.
+
+![Terminal demo of dsh-composer-history: dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.png)
+
 ## Compatibility
 
 | Surface | Status |
@@ -70,8 +78,12 @@ Pure UI behavior: no session events, no agent-loop changes, no model requests. R
 ## Quick start
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-composer-history
+```
+
+```sh
 # 1. install the bundle into your profile
-dsh plugin --profile web add "github:PerryLink/dsh-composer-history#main"
+dsh plugin --profile web add github:PerryLink/dsh-composer-history
 
 # or from npm (published releases)
 dsh plugin --profile web add dsh-composer-history
@@ -84,7 +96,7 @@ dsh --profile web --dump-config | grep -A3 'id: composer-history'
 
 The npm package ships the built bundles; a source checkout must be built first (`pnpm run build`) — the client-package check refuses to boot against an unbuilt bundle.
 
-- **git channel** (latest `main`): `dsh plugin --profile web add "github:PerryLink/dsh-composer-history#main"`.
+- **git channel** (latest `main`): `dsh plugin --profile web add github:PerryLink/dsh-composer-history`.
 - **npm channel** (published releases): `dsh plugin --profile web add dsh-composer-history`.
 - **tarball channel**: `pnpm pack` in this repo, then `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`.
 - **uninstall**: `dsh plugin --profile web remove dsh-composer-history` (or remove the row from the profile patch).

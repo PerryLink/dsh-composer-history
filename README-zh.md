@@ -36,6 +36,14 @@
 这个插件是 [DSH 插件家族](https://github.com/PerryLink)的一员（40+ 个，全部 Apache-2.0）。如果你在用，**给个 star** —— 它不会解锁任何功能，但会让下一个人在搜索里更容易找到它。
 
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+## What is dsh-composer-history?
+
+DeepSeek Harness Web GUI 作曲器的终端式输入历史。
+
+像在终端里一样按 ↑ —— 你打到一半的草稿不会丢。
+
+![dsh-composer-history 终端演示：dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.png)
+
 ## Compatibility
 
 | Surface | Status |
@@ -67,8 +75,12 @@
 ## Quick start
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-composer-history
+```
+
+```sh
 # 1. install the bundle into your profile
-dsh plugin --profile web add "github:PerryLink/dsh-composer-history#main"
+dsh plugin --profile web add github:PerryLink/dsh-composer-history
 
 # or from npm (published releases)
 dsh plugin --profile web add dsh-composer-history
@@ -81,7 +93,7 @@ dsh --profile web --dump-config | grep -A3 'id: composer-history'
 
 npm 包自带构建产物；源码 checkout 须先构建（`pnpm run build`）—— 客户端包检查会拒绝未构建的 bundle 启动。
 
-- **git 渠道**（最新 `main`）：`dsh plugin --profile web add "github:PerryLink/dsh-composer-history#main"`。
+- **git 渠道**（最新 `main`）：`dsh plugin --profile web add github:PerryLink/dsh-composer-history`。
 - **npm 渠道**（已发布版本）：`dsh plugin --profile web add dsh-composer-history`。
 - **tarball 渠道**：在本仓库执行 `pnpm pack`，然后 `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`。
 - **卸载**：`dsh plugin --profile web remove dsh-composer-history`（或从 profile patch 中移除该行）。

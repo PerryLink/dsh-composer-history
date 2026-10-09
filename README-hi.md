@@ -36,6 +36,14 @@
 यह प्लगइन [DSH प्लगइन परिवार](https://github.com/PerryLink) का हिस्सा है (40+ प्लगइन, सभी Apache-2.0)। अगर यह उपयोगी लगे, तो **एक स्टार दें** — इससे कोई सुविधा अनलॉक नहीं होती, पर अगला व्यक्ति इसे खोज में आसानी से पा लेता है।
 
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+## What is dsh-composer-history?
+
+DeepSeek Harness Web GUI कंपोज़र के लिए टर्मिनल-शैली इनपुट इतिहास।
+
+↑ को टर्मिनल की तरह दबाएँ — और अपना आधा-लिखा ड्राफ़्ट सुरक्षित रखें।
+
+![dsh-composer-history का टर्मिनल डेमो: dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.png)
+
 ## Compatibility
 
 | Surface | Status |
@@ -67,8 +75,12 @@
 ## Quick start
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-composer-history
+```
+
+```sh
 # 1. install the bundle into your profile
-dsh plugin --profile web add "github:PerryLink/dsh-composer-history#main"
+dsh plugin --profile web add github:PerryLink/dsh-composer-history
 
 # or from npm (published releases)
 dsh plugin --profile web add dsh-composer-history
@@ -81,7 +93,7 @@ dsh --profile web --dump-config | grep -A3 'id: composer-history'
 
 npm पैकेज में पहले से बने हुए बंडल शामिल होते हैं; सोर्स चेकआउट को पहले बनाना होगा (`pnpm run build`) — क्लाइंट-पैकेज जाँच बिना बने बंडल के साथ बूट करने से मना कर देती है।
 
-- **git चैनल** (नवीनतम `main`): `dsh plugin --profile web add "github:PerryLink/dsh-composer-history#main"`।
+- **git चैनल** (नवीनतम `main`): `dsh plugin --profile web add github:PerryLink/dsh-composer-history`।
 - **npm चैनल** (प्रकाशित रिलीज़): `dsh plugin --profile web add dsh-composer-history`।
 - **tarball चैनल**: इस रेपो में `pnpm pack` चलाएँ, फिर `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`।
 - **अनइंस्टॉल**: `dsh plugin --profile web remove dsh-composer-history` (या प्रोफ़ाइल पैच से पंक्ति हटा दें)।

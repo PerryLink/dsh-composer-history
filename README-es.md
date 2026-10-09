@@ -36,6 +36,14 @@
 Este plugin forma parte de la [familia de plugins DSH](https://github.com/PerryLink) (más de 40, todos Apache-2.0). Si te resulta útil, **dale una estrella**: no desbloquea nada, pero ayuda a que la siguiente persona lo encuentre antes.
 
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+## What is dsh-composer-history?
+
+Historial de entrada estilo terminal para el compositor de la Web GUI de DeepSeek Harness.
+
+Pulsa ↑ como en una terminal — y conserva tu borrador a medio escribir.
+
+![Demostración de terminal de dsh-composer-history: dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.png)
+
 ## Compatibility
 
 | Surface | Status |
@@ -67,8 +75,12 @@ Comportamiento puramente de UI: sin eventos de sesión, sin cambios en el agent-
 ## Quick start
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-composer-history
+```
+
+```sh
 # 1. install the bundle into your profile
-dsh plugin --profile web add "github:PerryLink/dsh-composer-history#main"
+dsh plugin --profile web add github:PerryLink/dsh-composer-history
 
 # or from npm (published releases)
 dsh plugin --profile web add dsh-composer-history
@@ -81,7 +93,7 @@ dsh --profile web --dump-config | grep -A3 'id: composer-history'
 
 El paquete npm incluye los bundles ya compilados; un checkout del código fuente debe compilarse primero (`pnpm run build`) — la verificación del paquete de cliente se niega a arrancar con un bundle sin compilar.
 
-- **canal git** (último `main`): `dsh plugin --profile web add "github:PerryLink/dsh-composer-history#main"`.
+- **canal git** (último `main`): `dsh plugin --profile web add github:PerryLink/dsh-composer-history`.
 - **canal npm** (versiones publicadas): `dsh plugin --profile web add dsh-composer-history`.
 - **canal tarball**: ejecuta `pnpm pack` en este repositorio y luego `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`.
 - **desinstalar**: `dsh plugin --profile web remove dsh-composer-history` (o elimina la fila del patch del perfil).
