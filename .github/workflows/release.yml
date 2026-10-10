@@ -25,10 +25,17 @@ jobs:
       - run: pnpm run test:coverage
       - run: pnpm run check:readmes
       - run: pnpm run verify:pack
-      # OIDC only: `id-token: write` above lets pnpm/npm exchange a short-lived
-      # credential via trusted publishing. Supplying NODE_AUTH_TOKEN here would make
-      # npm take the token path instead, and with the token now rejected the run
-      # fails to authenticate without ever attempting the exchange.
+      # OIDC only: `id-token: write` above lets npm exchange a short-lived credential
+      # via trusted publishing. Supplying NODE_AUTH_TOKEN here would make npm take the
+      # token path instead, and with the token now rejected the run fails to
+      # authenticate without ever attempting the exchange.
+      #
+      # The npm that ships with Node 22 is 10.x, which cannot perform that exchange at
+      # all: it answers ENEEDAUTH without ever requesting an OIDC token. v0.8.12 failed
+      # exactly that way, one step after `pnpm publish` was replaced by `npm publish`.
+      # Trusted publishing landed in npm 11.5.1, so upgrade before publishing -- the
+      # sibling repos that publish reliably all do this first.
+      - run: npm install -g npm@^11.5.1
       - run: npm publish --access public --provenance
       - name: GitHub release
         uses: softprops/action-gh-release@v2
