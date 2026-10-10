@@ -46,6 +46,10 @@ Press ↑ like it's in a terminal — and keep your half-typed draft safe.
 
 ![Terminal demo of dsh-composer-history: dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.png)
 
+![Animated terminal demo of dsh-composer-history](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.gif)
+
+*The same run, animated.*
+
 ## Compatibility
 
 | Surface | Status |

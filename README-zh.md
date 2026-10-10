@@ -45,6 +45,10 @@ DeepSeek Harness Web GUI 作曲器的终端式输入历史。
 
 ![dsh-composer-history 终端演示：dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.png)
 
+![Animated terminal demo of dsh-composer-history](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.gif)
+
+*同一次运行，动图版。*
+
 ## Compatibility
 
 | Surface | Status |
