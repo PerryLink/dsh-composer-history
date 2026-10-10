@@ -29,7 +29,7 @@ jobs:
       # credential via trusted publishing. Supplying NODE_AUTH_TOKEN here would make
       # npm take the token path instead, and with the token now rejected the run
       # fails to authenticate without ever attempting the exchange.
-      - run: pnpm publish --no-git-checks --provenance
+      - run: npm publish --access public --provenance
       - name: GitHub release
         uses: softprops/action-gh-release@v2
         with:
