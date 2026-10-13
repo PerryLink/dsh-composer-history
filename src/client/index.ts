@@ -153,11 +153,12 @@ function summarizeImport(report: ImportReport): string {
  * observed; every committed option change tears the wiring down and reinstalls
  * it.
  * @param ctx - client root context.
- * @param config - partial config (browser boot passes none today); resolved
- *   against the schema so defaults apply and invalid values throw loudly.
+ * @param _config - ignored: browser boot passes the host entry's volatile
+ *   config, whose live references arrive as `{}`. The form snapshot carries the
+ *   real values; the defaults cover the window before it is ready.
  */
-export function apply(ctx: ClientContext, config: Partial<ComposerHistoryConfig> = {}): void {
-  const fallback = resolveConfig(config)
+export function apply(ctx: ClientContext, _config?: unknown): void {
+  const fallback = resolveConfig({})
   const storage = safeStorage(typeof localStorage === 'undefined' ? undefined : localStorage)
 
   ctx.effect(() => {

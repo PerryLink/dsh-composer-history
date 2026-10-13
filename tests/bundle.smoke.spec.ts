@@ -180,6 +180,13 @@ describe('built client bundle', () => {
     document.body.innerHTML = ''
   })
 
+  it('apply() ignores the volatile boot config the host passes to the browser', () => {
+    const module = loadBundle() as { apply(ctx: unknown, config?: unknown): void }
+    const { ctx } = fakeServices()
+    expect(() => module.apply(ctx, { recallWithDraft: {}, upKey: {} })).not.toThrow()
+    document.body.innerHTML = ''
+  })
+
   it('recalls the newest user message from the Chat target through the packed bundle', () => {
     const module = loadBundle() as {
       apply(ctx: unknown, config?: unknown): void
