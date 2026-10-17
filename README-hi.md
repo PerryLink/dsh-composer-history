@@ -43,7 +43,7 @@ DeepSeek Harness Web GUI कंपोज़र के लिए टर्मि�
 
 ↑ को टर्मिनल की तरह दबाएँ — और अपना आधा-लिखा ड्राफ़्ट सुरक्षित रखें।
 
-![dsh-composer-history का टर्मिनल डेमो: dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.png)
+![dsh-composer-history का टर्मिनल डेमो: dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-hero.png)
 
 ![Animated terminal demo of dsh-composer-history](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.gif)
 

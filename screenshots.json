@@ -1,5 +1,14 @@
-{
-  "screenshots": [
-    "docs/assets/dsh-composer-history-demo.png"
-  ]
-}
+[
+  {
+    "path": "docs/assets/dsh-composer-history-hero.png",
+    "kind": "hero",
+    "alt": "dsh-composer-history terminal output",
+    "caption": "Real dsh-composer-history test run; 296 tests passed."
+  },
+  {
+    "path": "docs/assets/dsh-composer-history-demo.gif",
+    "kind": "demo",
+    "alt": "Animated dsh-composer-history terminal session",
+    "caption": "The same run, assembled line by line."
+  }
+]

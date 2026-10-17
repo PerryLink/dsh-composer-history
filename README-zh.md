@@ -43,7 +43,7 @@ DeepSeek Harness Web GUI 作曲器的终端式输入历史。
 
 像在终端里一样按 ↑ —— 你打到一半的草稿不会丢。
 
-![dsh-composer-history 终端演示：dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.png)
+![dsh-composer-history 终端演示：dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-hero.png)
 
 ![Animated terminal demo of dsh-composer-history](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.gif)
 
