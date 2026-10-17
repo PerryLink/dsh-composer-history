@@ -156,8 +156,15 @@ function summarizeImport(report: ImportReport): string {
  * @param config - partial config (browser boot passes none today); resolved
  *   against the schema so defaults apply and invalid values throw loudly.
  */
+export function bootConfigOf(input: unknown): Partial<ComposerHistoryConfig> {
+  // The host passes a volatile config object on some 0.2.1 lines. Its `{ get, set }`
+  // shape is not a plain config and must not reach the plain schema (issue #10).
+  if (input !== null && typeof input === 'object' && typeof (input as { get?: unknown }).get === 'function') return {}
+  return (input ?? {}) as Partial<ComposerHistoryConfig>
+}
+
 export function apply(ctx: ClientContext, config: Partial<ComposerHistoryConfig> = {}): void {
-  const fallback = resolveConfig(config)
+  const fallback = resolveConfig(bootConfigOf(config))
   const storage = safeStorage(typeof localStorage === 'undefined' ? undefined : localStorage)
 
   ctx.effect(() => {

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.13] - 2026-10-17
+
+### Fixed
+
+- **Volatile boot config no longer kills the browser half (issue #10).** `apply(ctx, config)` fed the host's `{ get, set }` config object straight into the plain schema, so `recallWithDraft` failed the `save|gate` union and the whole capture wiring was skipped with only a console warning. `bootConfigOf()` now ignores a volatile config and falls back to schema defaults; the settings form still supplies live values after mount.
+- Compatibility: `engines.dsh` -> `>=0.2.1-0 <0.3.0`; devDependencies to `0.2.1-rc.2`; add `@deepseek-ai/dsh-working-directory`.
+
 All notable changes to this project are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
