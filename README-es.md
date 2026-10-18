@@ -67,7 +67,7 @@ Pulsa ↑ como en una terminal — y conserva tu borrador a medio escribir.
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-alpha.1` (verificado el 2026-09-25: doble typecheck + 294 pruebas; client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0 \|\| >=0.1.7-0 <0.2.0`). En esta línea la costura de ajustes es el propio formulario de `Config` vivo de la entrada de perfil: la familia eliminada `ctx.settings.register` / `SettingsProvider` y el servicio de cliente `ctx.settingsScope` desaparecen, así que cada ajuste viaja por `ctx.configForms`. En las líneas 0.1.6+ `SessionListState.current` ya no existe: la sesión actual se deriva de los hechos de retención, así que la inyección de historial y la biblioteca de fragmentos siguen funcionando. |
+| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2` (verificado 2026-10-18): `engines.dsh >=0.2.1-0 <0.3.0`; las rutas de compatibilidad P0 tienen pruebas de regresión. |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Solo Web GUI (plugin de cliente; almacenamiento local del navegador; sin red, sin código nativo) |
 | Model | Cualquiera (sin peticiones al modelo — comportamiento puramente de UI) |

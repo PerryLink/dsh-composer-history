@@ -68,7 +68,7 @@ Press ↑ like it's in a terminal — and keep your half-typed draft safe.
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-alpha.1` (verified 2026-09-25: dual typecheck rulers + 294 tests; client peers `>=0.1.2-rc.1 <0.2.0 \|\| >=0.1.5-alpha.1 <0.2.0 \|\| >=0.1.6-0 <0.2.0 \|\| >=0.1.7-0 <0.2.0`). On this line the settings seam is the profile entry's own live `Config` form — the removed `ctx.settings.register` / `SettingsProvider` family and the client `ctx.settingsScope` service are both gone, so every tunable now travels through `ctx.configForms`. On the 0.1.6+ lines `SessionListState.current` is gone — the current session is derived from the retention facts, so history injection / the snippet library keep working. |
+| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2` (verified 2026-10-18): `engines.dsh >=0.2.1-0 <0.3.0`; the P0 compatibility paths have regression tests. |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Platforms | Web GUI only (client plugin; browser-local storage; no network, no native code) |
 | Model | Any (no model requests — pure UI behavior) |
