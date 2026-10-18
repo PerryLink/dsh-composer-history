@@ -23,6 +23,11 @@
 
 [English](README.md) · [简体中文](README-zh.md) · [Español](README-es.md) · [Português](README-pt.md) · [हिन्दी](README-hi.md)
 
+```sh
+dsh plugin --profile <name> add dsh-composer-history
+```
+
+
 </div>
 
 ---
@@ -31,6 +36,15 @@
 **📖 Base de conocimiento del ecosistema** — datos medidos, no marketing: [guía de desarrollo · datos de selección · criterios de mantenimiento](https://perrylink.github.io/dsh-plugin-guide/).
 
 <!-- star-cta -->
+## Install & uninstall
+
+El paquete npm incluye los bundles ya compilados; un checkout del código fuente debe compilarse primero (`pnpm run build`) — la verificación del paquete de cliente se niega a arrancar con un bundle sin compilar.
+
+- **canal git** (último `main`): `dsh plugin --profile web add github:PerryLink/dsh-composer-history`.
+- **canal npm** (versiones publicadas): `dsh plugin --profile web add dsh-composer-history`.
+- **canal tarball**: ejecuta `pnpm pack` en este repositorio y luego `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`.
+- **desinstalar**: `dsh plugin --profile web remove dsh-composer-history` (o elimina la fila del patch del perfil).
+
 ## ⭐ 如果它帮到了你
 
 Este plugin forma parte de la [familia de plugins DSH](https://github.com/PerryLink) (más de 40, todos Apache-2.0). Si te resulta útil, **dale una estrella**: no desbloquea nada, pero ayuda a que la siguiente persona lo encuentre antes.
@@ -93,15 +107,6 @@ dsh plugin --profile web add dsh-composer-history
 # 2. restart and verify the row
 dsh --profile web --dump-config | grep -A3 'id: composer-history'
 ```
-
-## Install & uninstall
-
-El paquete npm incluye los bundles ya compilados; un checkout del código fuente debe compilarse primero (`pnpm run build`) — la verificación del paquete de cliente se niega a arrancar con un bundle sin compilar.
-
-- **canal git** (último `main`): `dsh plugin --profile web add github:PerryLink/dsh-composer-history`.
-- **canal npm** (versiones publicadas): `dsh plugin --profile web add dsh-composer-history`.
-- **canal tarball**: ejecuta `pnpm pack` en este repositorio y luego `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`.
-- **desinstalar**: `dsh plugin --profile web remove dsh-composer-history` (o elimina la fila del patch del perfil).
 
 ## Configuration
 

@@ -24,6 +24,11 @@
 
 [English](README.md) · [简体中文](README-zh.md) · [Español](README-es.md) · [Português](README-pt.md) · [हिन्दी](README-hi.md)
 
+```sh
+dsh plugin --profile <name> add dsh-composer-history
+```
+
+
 </div>
 
 ---
@@ -31,6 +36,15 @@
 **📖 Ecosystem knowledge base** — measured data, not marketing: [plugin development guide · plugin-selection data · maintenance criteria](https://perrylink.github.io/dsh-plugin-guide/).
 
 <!-- star-cta -->
+## Install & uninstall
+
+The npm package ships the built bundles; a source checkout must be built first (`pnpm run build`) — the client-package check refuses to boot against an unbuilt bundle.
+
+- **git channel** (latest `main`): `dsh plugin --profile web add github:PerryLink/dsh-composer-history`.
+- **npm channel** (published releases): `dsh plugin --profile web add dsh-composer-history`.
+- **tarball channel**: `pnpm pack` in this repo, then `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`.
+- **uninstall**: `dsh plugin --profile web remove dsh-composer-history` (or remove the row from the profile patch).
+
 ## ⭐ 如果它帮到了你
 
 这个插件是 [DSH 插件家族](https://github.com/PerryLink)的一员（40+ 个，全部 Apache-2.0）。如果你在用，**给个 star** —— 它不会解锁任何功能，但会让下一个人在搜索里更容易找到它。
@@ -95,15 +109,6 @@ dsh plugin --profile web add dsh-composer-history
 # 2. restart and verify the row
 dsh --profile web --dump-config | grep -A3 'id: composer-history'
 ```
-
-## Install & uninstall
-
-The npm package ships the built bundles; a source checkout must be built first (`pnpm run build`) — the client-package check refuses to boot against an unbuilt bundle.
-
-- **git channel** (latest `main`): `dsh plugin --profile web add github:PerryLink/dsh-composer-history`.
-- **npm channel** (published releases): `dsh plugin --profile web add dsh-composer-history`.
-- **tarball channel**: `pnpm pack` in this repo, then `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`.
-- **uninstall**: `dsh plugin --profile web remove dsh-composer-history` (or remove the row from the profile patch).
 
 ## Configuration
 

@@ -23,6 +23,11 @@
 
 [English](README.md) · [简体中文](README-zh.md) · [Español](README-es.md) · [Português](README-pt.md) · [हिन्दी](README-hi.md)
 
+```sh
+dsh plugin --profile <name> add dsh-composer-history
+```
+
+
 </div>
 
 ---
@@ -31,6 +36,15 @@
 **📖 生态实测知识库**（实测数据，不是营销）：[插件开发指南 · 选型实测数据 · 维护取舍判据](https://perrylink.github.io/dsh-plugin-guide/)。
 
 <!-- star-cta -->
+## Install & uninstall
+
+npm 包自带构建产物；源码 checkout 须先构建（`pnpm run build`）—— 客户端包检查会拒绝未构建的 bundle 启动。
+
+- **git 渠道**（最新 `main`）：`dsh plugin --profile web add github:PerryLink/dsh-composer-history`。
+- **npm 渠道**（已发布版本）：`dsh plugin --profile web add dsh-composer-history`。
+- **tarball 渠道**：在本仓库执行 `pnpm pack`，然后 `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`。
+- **卸载**：`dsh plugin --profile web remove dsh-composer-history`（或从 profile patch 中移除该行）。
+
 ## ⭐ 如果它帮到了你
 
 这个插件是 [DSH 插件家族](https://github.com/PerryLink)的一员（40+ 个，全部 Apache-2.0）。如果你在用，**给个 star** —— 它不会解锁任何功能，但会让下一个人在搜索里更容易找到它。
@@ -93,15 +107,6 @@ dsh plugin --profile web add dsh-composer-history
 # 2. restart and verify the row
 dsh --profile web --dump-config | grep -A3 'id: composer-history'
 ```
-
-## Install & uninstall
-
-npm 包自带构建产物；源码 checkout 须先构建（`pnpm run build`）—— 客户端包检查会拒绝未构建的 bundle 启动。
-
-- **git 渠道**（最新 `main`）：`dsh plugin --profile web add github:PerryLink/dsh-composer-history`。
-- **npm 渠道**（已发布版本）：`dsh plugin --profile web add dsh-composer-history`。
-- **tarball 渠道**：在本仓库执行 `pnpm pack`，然后 `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`。
-- **卸载**：`dsh plugin --profile web remove dsh-composer-history`（或从 profile patch 中移除该行）。
 
 ## Configuration
 
