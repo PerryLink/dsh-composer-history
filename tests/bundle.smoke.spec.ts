@@ -93,9 +93,13 @@ function fakeServices() {
   const setDraftCalls: string[] = []
   const actx = {}
   let activated = false
+  const userMessage = { kind: 'user', seq: 1, content: [{ type: 'text', text: 'hello' }] }
   const chatTarget = {
     getSnapshot: () => (activated
-      ? { legacy: { nodes: [{ kind: 'user', seq: 1, content: [{ type: 'text', text: 'hello' }] }] } }
+      ? {
+          legacy: { nodes: [userMessage] },
+          nodes: { values: () => [{ kind: 'user', anchorSeq: 1, data: userMessage }] },
+        }
       : undefined),
     subscribe: (): (() => void) => {
       activated = true
@@ -180,13 +184,13 @@ describe('built client bundle', () => {
     document.body.innerHTML = ''
   })
 
-  it('recalls the newest user message from the Chat target through the packed bundle', () => {
+  it('boots with field references and recalls raw Chat messages through the packed bundle', () => {
     const module = loadBundle() as {
       apply(ctx: unknown, config?: unknown): void
       setComposerCaret(composer: Element, caret: number): void
     }
     const { ctx, setDraftCalls } = fakeServices()
-    module.apply(ctx)
+    module.apply(ctx, { recallWithDraft: { get: () => 'save' }, maxHistory: { get: () => 500 } })
 
     const composer = composerElement()
     module.setComposerCaret(composer, 0)

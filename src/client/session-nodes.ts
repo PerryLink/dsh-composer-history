@@ -16,14 +16,15 @@
  * Session's selected view; the first `subscribe` on any other target
  * activates it synchronously (assembler `activateTarget` → `replaceView`),
  * so callers must subscribe before their first read. Every access to the
- * projection lives in this module, so a future upstream retirement of the
- * `legacy` slice is a one-module change (switch to `nodes.values()`).
+ * projection lives in this module. The keyed `nodes` store on 0.2.1-rc.2
+ * contains renderer nodes with payloads under `data`, so it must not replace
+ * the raw compatibility projection without an explicit conversion.
  */
 import type { ConversationNode } from './node-views.ts'
 
 /** Structural face of one Chat target snapshot (the fields this plugin reads). */
 interface ChatSnapshotFace {
-  /** Preferred shape on newer host lines: the node store itself. */
+  /** Fallback for hosts exposing raw conversation nodes through a store. */
   readonly nodes?: { values(): readonly ConversationNode[] }
   readonly legacy?: { readonly nodes?: readonly ConversationNode[] }
 }
@@ -47,15 +48,12 @@ export interface UiConversationFace {
   binding(id: string): { target(target: 'chat'): ChatTargetSource }
 }
 
-/** Whether the one-time legacy-shape warning has been emitted. */
-let warnedLegacyNodes = false
-
 /**
- * The finalized conversation nodes of one Chat target source. The newer
- * snapshot shape (`nodes`, a store exposing `values()`) wins when present;
- * otherwise the compatibility projection (`legacy.nodes`) is read. Strict
+ * The finalized conversation nodes of one Chat target source. Prefer the
+ * raw compatibility projection (`legacy.nodes`); the keyed store contains
+ * renderer nodes on DSH 0.2.1-rc.2 and cannot be read as raw messages. Strict
  * A-else-B: merging the two would duplicate every node and mix two orderings.
- * The legacy path warns once so the fallback stays visible.
+ * Use the store fallback only when the raw projection is absent.
  * @param source - the Chat target source.
  * @returns the finalized nodes in seq order; `[]` before activation or when
  *   neither shape carries nodes.
@@ -63,15 +61,11 @@ let warnedLegacyNodes = false
 export function chatNodes(source: ChatTargetSource): readonly ConversationNode[] {
   const snapshot = source.getSnapshot()
   if (snapshot === undefined) return []
+  const legacy = snapshot.legacy?.nodes
+  if (legacy !== undefined) return legacy
   const store = snapshot.nodes
   if (store !== undefined) return store.values()
-  const legacy = snapshot.legacy?.nodes
-  if (legacy === undefined) return []
-  if (!warnedLegacyNodes) {
-    warnedLegacyNodes = true
-    console.warn('dsh-composer-history: the conversation target exposes only the legacy `legacy.nodes` shape; the newer `nodes` store is absent on this host line')
-  }
-  return legacy
+  return []
 }
 
 /**
