@@ -36,14 +36,19 @@ function composerElement(): HTMLElement {
  * subscribe, exactly like the host's BoundConversation before activation.
  */
 function chatTarget(nodes: readonly ConversationNode[]) {
-  let snapshot: { legacy: { nodes: readonly ConversationNode[] } } | undefined
+  const snapshotOf = (messages: readonly ConversationNode[]) => ({
+    legacy: { nodes: messages },
+    // Real 0.2.1-rc.2 targets also publish renderer nodes without content.
+    nodes: { values: () => messages.map(node => ({ kind: node.kind, data: node })) },
+  })
+  let snapshot: ReturnType<typeof snapshotOf> | undefined
   let current = nodes
   const listeners = new Set<() => void>()
   return {
     source: {
       getSnapshot: () => snapshot,
       subscribe: (listener: () => void): (() => void) => {
-        snapshot = { legacy: { nodes: current } }
+        snapshot = snapshotOf(current)
         listeners.add(listener)
         return () => { listeners.delete(listener) }
       },
@@ -52,7 +57,7 @@ function chatTarget(nodes: readonly ConversationNode[]) {
     subscriberCount: () => listeners.size,
     publish: (next: readonly ConversationNode[]) => {
       current = next
-      snapshot = { legacy: { nodes: next } }
+      snapshot = snapshotOf(next)
       for (const listener of listeners) listener()
     },
   }
@@ -151,6 +156,19 @@ describe('Chat-target history wiring (CP-7)', () => {
     const event = pressArrowUp(composer)
     expect(event.defaultPrevented).toBe(true)
     expect(h.setDraft).toHaveBeenCalledWith('hello')
+  })
+
+  it('boots with field references and recalls raw messages from a dual-shape Chat target', () => {
+    const list = sessionsList({ current: 's1', ids: ['s1'] })
+    const chat = chatTarget([hello])
+    const h = harness(list, chat)
+    const bootConfig = { recallWithDraft: { get: () => 'save' }, maxHistory: { get: () => 500 } }
+    expect(() => apply(h.ctx as unknown as Parameters<typeof apply>[0],
+      bootConfig as unknown as Parameters<typeof apply>[1])).not.toThrow()
+    expect(loadEntries(localStorage, STORE_KEY)).toEqual(['hello'])
+    expect(pressArrowUp(composerElement()).defaultPrevented).toBe(true)
+    expect(h.setDraft).toHaveBeenCalledWith('hello')
+    h.dispose()
   })
 
   it('late mount: re-targets when the current Session arrives after install', () => {

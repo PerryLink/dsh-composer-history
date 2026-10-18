@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- Recognize per-field volatile references in the browser boot config on DSH `0.2.1-rc.2`, in addition to a top-level reference. This prevents `recallWithDraft` validation from failing before the live settings form is ready (issue #10); plain config overrides remain validated.
+- Prefer the Chat target's raw `legacy.nodes` projection when both raw messages and keyed renderer nodes are present. The keyed store carries payloads under `data`, so treating it as raw messages caused `node.content is not iterable` and prevented recall and persistence from initializing.
+
 ## [0.8.14] - 2026-10-18
 
 ### Changed
@@ -46,8 +53,6 @@ follow [Semantic Versioning](https://semver.org/).
 
 - Correct the release date in the previous section, which was stamped with the literal string `undefined` by the release stamper. No content or behaviour change; the version is bumped only because npm will not republish an existing version.
 
-
-## [Unreleased]
 
 ## [0.8.9] - 2026-10-04
 

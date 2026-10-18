@@ -32,16 +32,13 @@ function fakeSource(initial: { legacy: { nodes: readonly ConversationNode[] } } 
 }
 
 describe('chatNodes', () => {
-  it('reads the finalized nodes from the compatibility projection and warns exactly once', () => {
-    // The warning flag is module-global, so this first legacy read is where the
-    // once-only invariant is asserted: a second read must not warn again.
+  it('reads the finalized nodes from the expected compatibility projection without warnings', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     try {
       const { source } = fakeSource({ legacy: { nodes: [hello] } })
       expect(chatNodes(source)).toEqual([hello])
       expect(chatNodes(source)).toEqual([hello])
-      const legacyWarnings = warn.mock.calls.filter(([message]) => String(message).includes('legacy `legacy.nodes` shape'))
-      expect(legacyWarnings).toHaveLength(1)
+      expect(warn).not.toHaveBeenCalled()
     } finally {
       warn.mockRestore()
     }
@@ -57,11 +54,30 @@ describe('chatNodes', () => {
     expect(chatNodes({ getSnapshot: () => ({ legacy: {} }), subscribe: () => () => {} })).toEqual([])
   })
 
-  it('prefers the newer node store over the compatibility projection', () => {
-    // Strict A-else-B: the store wins outright, so a snapshot carrying both
-    // shapes never duplicates nodes or mixes two orderings.
+  it('prefers raw messages over renderer nodes when both shapes are published', () => {
+    // DSH 0.2.1-rc.2 puts payloads under rendererNode.data, so these nodes
+    // cannot be read as raw messages with a top-level content field.
+    const values = vi.fn(() => [N({ kind: 'user', anchorSeq: 1, data: hello })])
     const source = {
-      getSnapshot: () => ({ nodes: { values: () => [bye] }, legacy: { nodes: [hello] } }),
+      getSnapshot: () => ({ nodes: { values }, legacy: { nodes: [hello] } }),
+      subscribe: () => () => {},
+    }
+    expect(chatNodes(source)).toEqual([hello])
+    expect(values).not.toHaveBeenCalled()
+  })
+
+  it('keeps an empty raw projection authoritative over renderer nodes', () => {
+    const values = vi.fn(() => [bye])
+    expect(chatNodes({
+      getSnapshot: () => ({ nodes: { values }, legacy: { nodes: [] } }),
+      subscribe: () => () => {},
+    })).toEqual([])
+    expect(values).not.toHaveBeenCalled()
+  })
+
+  it('falls back to a raw node store when no compatibility projection is published', () => {
+    const source = {
+      getSnapshot: () => ({ nodes: { values: () => [bye] } }),
       subscribe: () => () => {},
     }
     expect(chatNodes(source)).toEqual([bye])

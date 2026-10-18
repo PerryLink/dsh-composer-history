@@ -153,13 +153,19 @@ function summarizeImport(report: ImportReport): string {
  * observed; every committed option change tears the wiring down and reinstalls
  * it.
  * @param ctx - client root context.
- * @param config - partial config (browser boot passes none today); resolved
- *   against the schema so defaults apply and invalid values throw loudly.
+ * @param config - plain partial config or host volatile references; live values
+ *   arrive through configForms, while references use schema defaults at boot.
  */
 export function bootConfigOf(input: unknown): Partial<ComposerHistoryConfig> {
-  // The host passes a volatile config object on some 0.2.1 lines. Its `{ get, set }`
-  // shape is not a plain config and must not reach the plain schema (issue #10).
-  if (input !== null && typeof input === 'object' && typeof (input as { get?: unknown }).get === 'function') return {}
+  if (input !== null && typeof input === 'object') {
+    const isReference = (value: unknown): boolean => value !== null
+      && typeof value === 'object'
+      && typeof (value as { get?: unknown }).get === 'function'
+    // DSH 0.2.1-rc.2 passes an object of field references, not just a single
+    // top-level reference. Neither shape can be parsed by the plain schema.
+    // The settings form still supplies the live plain values after mount.
+    if (isReference(input) || Object.values(input).some(isReference)) return {}
+  }
   return (input ?? {}) as Partial<ComposerHistoryConfig>
 }
 
