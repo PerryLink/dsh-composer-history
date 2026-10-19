@@ -302,7 +302,7 @@ pnpm run verify:pack   # pack-surface check
 
 - [@PerryLink](https://github.com/PerryLink) — 创建者与维护者：边缘优先的方向键召回、持久化历史、反向搜索、滑动上下文感知、片段库、提示词模板、复用洞察，以及 `dsh.bundle` / `dshWorkshop` manifest。
 
-## PerryLink DSH 插件家族
+## PerryLink DSH Plugin Family
 
 本项目是 [PerryLink](https://github.com/PerryLink) 维护的 DeepSeek Harness 插件家族成员。完整名单默认折叠，避免每个 README 的首屏被长表淹没；点击展开可查看每一行及其状态。
 
