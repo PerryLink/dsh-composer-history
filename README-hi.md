@@ -115,7 +115,19 @@ dsh --profile web --dump-config | grep -A3 'id: composer-history'
 
 #### विस्तृत उदाहरण
 
-- `/save`
+**कमांड**
+
+~~~sh
+/save ship-check --tag=release,ops
+~~~
+
+**आउटपुट**
+
+~~~text
+snippet saved: ship-check
+~~~
+
+*स्रोत `plugins/dsh-composer-history/README.md §Smart input layer (lines 199-205); code at src/client/index.ts:314-327`*
 
 #### संक्षिप्त उदाहरण
 

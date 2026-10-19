@@ -115,7 +115,19 @@ Son los puntos de entrada reales; instala y llama a uno.
 
 #### Ejemplo detallado
 
-- `/save`
+**Comando**
+
+~~~sh
+/save ship-check --tag=release,ops
+~~~
+
+**Salida**
+
+~~~text
+snippet saved: ship-check
+~~~
+
+*Observado en `plugins/dsh-composer-history/README.md §Smart input layer (lines 199-205); code at src/client/index.ts:314-327`*
 
 #### Ejemplos breves
 

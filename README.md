@@ -116,7 +116,19 @@ These are the plugin's real entry points; install once, then call one.
 
 #### Detailed example
 
-- `/save`
+**Command**
+
+~~~sh
+/save ship-check --tag=release,ops
+~~~
+
+**Output**
+
+~~~text
+snippet saved: ship-check
+~~~
+
+*Observed from `plugins/dsh-composer-history/README.md §Smart input layer (lines 199-205); code at src/client/index.ts:314-327`*
 
 #### Brief examples
 

@@ -115,7 +115,19 @@ dsh --profile web --dump-config | grep -A3 'id: composer-history'
 
 #### 详细示例
 
-- `/save`
+**命令**
+
+~~~sh
+/save ship-check --tag=release,ops
+~~~
+
+**输出**
+
+~~~text
+snippet saved: ship-check
+~~~
+
+*来源 `plugins/dsh-composer-history/README.md §Smart input layer (lines 199-205); code at src/client/index.ts:314-327`*
 
 #### 简短示例
 
