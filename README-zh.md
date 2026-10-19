@@ -57,9 +57,10 @@ DeepSeek Harness Web GUI 作曲器的终端式输入历史。
 
 像在终端里一样按 ↑ —— 你打到一半的草稿不会丢。
 
-![dsh-composer-history 终端演示：dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-hero.png)
+![dsh-composer-history 工作流图：安装 → 打开面板 → 操作。](docs/assets/dsh-composer-history-flow.svg)
 
-![Animated terminal demo of dsh-composer-history](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.gif)
+*工作流概览：安装 → 打开面板 → 操作。下面的示例使用实际命令面。*
+
 
 *同一次运行，动图版。*
 
@@ -107,6 +108,19 @@ dsh plugin --profile web add dsh-composer-history
 # 2. restart and verify the row
 dsh --profile web --dump-config | grep -A3 'id: composer-history'
 ```
+
+### 示例
+
+以下为插件真实入口；安装后调用一个即可。
+
+#### 详细示例
+
+- `/save`
+
+#### 简短示例
+
+- `/load`
+- `/compact`
 
 ## Configuration
 

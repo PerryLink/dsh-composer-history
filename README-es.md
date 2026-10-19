@@ -57,9 +57,10 @@ Historial de entrada estilo terminal para el compositor de la Web GUI de DeepSee
 
 Pulsa ↑ como en una terminal — y conserva tu borrador a medio escribir.
 
-![Demostración de terminal de dsh-composer-history: dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-hero.png)
+![Diagrama de flujo de dsh-composer-history: instalar → abrir panel → actuar.](docs/assets/dsh-composer-history-flow.svg)
 
-![Animated terminal demo of dsh-composer-history](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.gif)
+*Resumen del flujo: instalar → abrir panel → actuar. Los ejemplos siguientes usan la superficie de comandos real.*
+
 
 *La misma ejecución, animada.*
 
@@ -107,6 +108,19 @@ dsh plugin --profile web add dsh-composer-history
 # 2. restart and verify the row
 dsh --profile web --dump-config | grep -A3 'id: composer-history'
 ```
+
+### Ejemplos
+
+Son los puntos de entrada reales; instala y llama a uno.
+
+#### Ejemplo detallado
+
+- `/save`
+
+#### Ejemplos breves
+
+- `/load`
+- `/compact`
 
 ## Configuration
 

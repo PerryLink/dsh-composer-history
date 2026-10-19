@@ -57,9 +57,10 @@ DeepSeek Harness Web GUI कंपोज़र के लिए टर्मि�
 
 ↑ को टर्मिनल की तरह दबाएँ — और अपना आधा-लिखा ड्राफ़्ट सुरक्षित रखें।
 
-![dsh-composer-history का टर्मिनल डेमो: dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-hero.png)
+![dsh-composer-history कार्यप्रवाह आरेख: इंस्टॉल → पैनल खोलें → कार्य।](docs/assets/dsh-composer-history-flow.svg)
 
-![Animated terminal demo of dsh-composer-history](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.gif)
+*कार्यप्रवाह: इंस्टॉल → पैनल खोलें → कार्य। नीचे के उदाहरण वास्तविक कमांड सतह का उपयोग करते हैं।*
+
 
 *वही रन, एनिमेटेड।*
 
@@ -107,6 +108,19 @@ dsh plugin --profile web add dsh-composer-history
 # 2. restart and verify the row
 dsh --profile web --dump-config | grep -A3 'id: composer-history'
 ```
+
+### उदाहरण
+
+ये वास्तविक प्रवेश बिंदु हैं; इंस्टॉल के बाद एक चलाएँ।
+
+#### विस्तृत उदाहरण
+
+- `/save`
+
+#### संक्षिप्त उदाहरण
+
+- `/load`
+- `/compact`
 
 ## Configuration
 

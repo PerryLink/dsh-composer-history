@@ -58,11 +58,11 @@ Terminal-style input history for the DeepSeek Harness Web GUI composer.
 
 Press ↑ like it's in a terminal — and keep your half-typed draft safe.
 
-![Terminal demo of dsh-composer-history: dsh-composer-history — /save and /load, plus arrow recall and Ctrl+R search](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-hero.png)
+![Workflow diagram for dsh-composer-history: install → open panel → act.](docs/assets/dsh-composer-history-flow.svg)
 
-![Animated terminal demo of dsh-composer-history](https://raw.githubusercontent.com/PerryLink/dsh-composer-history/main/docs/assets/dsh-composer-history-demo.gif)
+*Workflow overview: install → open panel → act. The examples below use the real command surface.*
 
-*The same run, animated.*
+
 
 ## Compatibility
 
@@ -109,6 +109,19 @@ dsh plugin --profile web add dsh-composer-history
 # 2. restart and verify the row
 dsh --profile web --dump-config | grep -A3 'id: composer-history'
 ```
+
+### Examples
+
+These are the plugin's real entry points; install once, then call one.
+
+#### Detailed example
+
+- `/save`
+
+#### Brief examples
+
+- `/load`
+- `/compact`
 
 ## Configuration
 
