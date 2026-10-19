@@ -407,7 +407,9 @@ pnpm run verify:pack   # pack-surface check
 | **[dsh-session-pin](https://github.com/PerryLink/dsh-session-pin)** | 🚫 सेवानिवृत्त — रिपॉज़िटरी README देखें |
 | **[dsh-team-rooms](https://github.com/PerryLink/dsh-team-rooms)** | 🚫 सेवानिवृत्त — रिपॉज़िटरी README देखें |
 
-</details>## License
+</details>
+
+## License
 
 [Apache License 2.0](LICENSE) © 2026 dsh-composer-history contributors
 
