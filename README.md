@@ -302,6 +302,8 @@ pnpm run verify:pack   # pack-surface check
 
 ## Contributors
 
+- [@gengwg](https://github.com/gengwg) — volatile boot config handling (#11).
+- [@yujethrozheng-crypto](https://github.com/yujethrozheng-crypto) — composer history restoration on 0.2.1-rc.2 (#12); the rc.2 boot fix shipped in 0.8.15.
 - [@PerryLink](https://github.com/PerryLink) — creator and maintainer: edge-first arrow recall, persisted history, reverse search, sliding-context awareness, snippet library, prompt templates, reuse insights, and the `dsh.bundle` / `dshWorkshop` manifests.
 
 ## PerryLink DSH Plugin Family
