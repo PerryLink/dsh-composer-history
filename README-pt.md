@@ -129,6 +129,22 @@ snippet saved: ship-check
 
 *Observado em `plugins/dsh-composer-history/README.md §Smart input layer (lines 199-205); code at src/client/index.ts:314-327`*
 
+#### Ramo de falha
+
+**Entrada**
+
+~~~text
+/load nope
+~~~
+
+**Saída**
+
+~~~text
+no snippet named nope (open Ctrl+R search to browse snippets)
+~~~
+
+*Observado em `plugins/dsh-composer-history/src/client/index.ts:330-333; plugins/dsh-composer-history/src/client/notice.ts:62-65`*
+
 #### Exemplos breves
 
 - `/load`

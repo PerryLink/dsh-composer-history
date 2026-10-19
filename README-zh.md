@@ -129,6 +129,22 @@ snippet saved: ship-check
 
 *来源 `plugins/dsh-composer-history/README.md §Smart input layer (lines 199-205); code at src/client/index.ts:314-327`*
 
+#### 失败分支
+
+**输入**
+
+~~~text
+/load nope
+~~~
+
+**输出**
+
+~~~text
+no snippet named nope (open Ctrl+R search to browse snippets)
+~~~
+
+*来源 `plugins/dsh-composer-history/src/client/index.ts:330-333; plugins/dsh-composer-history/src/client/notice.ts:62-65`*
+
 #### 简短示例
 
 - `/load`

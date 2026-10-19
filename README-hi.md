@@ -129,6 +129,22 @@ snippet saved: ship-check
 
 *स्रोत `plugins/dsh-composer-history/README.md §Smart input layer (lines 199-205); code at src/client/index.ts:314-327`*
 
+#### विफलता शाखा
+
+**इनपुट**
+
+~~~text
+/load nope
+~~~
+
+**आउटपुट**
+
+~~~text
+no snippet named nope (open Ctrl+R search to browse snippets)
+~~~
+
+*स्रोत `plugins/dsh-composer-history/src/client/index.ts:330-333; plugins/dsh-composer-history/src/client/notice.ts:62-65`*
+
 #### संक्षिप्त उदाहरण
 
 - `/load`
