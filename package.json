@@ -142,7 +142,7 @@
     "@deepseek-ai/dsh-api-remotes": "0.2.1-rc.2",
     "@deepseek-ai/dsh-client-ui-conversation": "0.2.1-rc.2",
     "@deepseek-ai/dsh-client-ui-input-trigger": "0.2.1-rc.3",
-    "@deepseek-ai/dsh-client-ui-settings": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.1-rc.3",
     "@deepseek-ai/dsh-settings": "0.2.1-rc.2",
     "@deepseek-ai/schemastery": "^3.18.5-alpha.1",
     "@types/node": "^22.20.5",
