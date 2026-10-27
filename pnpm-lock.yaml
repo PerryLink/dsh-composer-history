@@ -38,8 +38,8 @@ importers:
         specifier: 0.2.1-rc.2
         version: 0.2.1-rc.2(@deepseek-ai/cordis@4.0.5-alpha.1)
       '@deepseek-ai/dsh-client-ui-input-trigger':
-        specifier: 0.2.1-rc.2
-        version: 0.2.1-rc.2(@deepseek-ai/cordis@4.0.5-alpha.1)
+        specifier: 0.2.1-rc.3
+        version: 0.2.1-rc.3(@deepseek-ai/cordis@4.0.5-alpha.1)
       '@deepseek-ai/dsh-client-ui-settings':
         specifier: 0.2.1-rc.2
         version: 0.2.1-rc.2(@deepseek-ai/cordis@4.0.5-alpha.1)
@@ -221,8 +221,8 @@ packages:
     peerDependencies:
       '@deepseek-ai/cordis': 4.0.5-alpha.1
 
-  '@deepseek-ai/dsh-client-ui-input-trigger@0.2.1-rc.2':
-    resolution: {integrity: sha512-FhSxRyoveLPZ92bLgom+5jvIgyaGJmwk52bgCTzBj9ssif1zIG9KlfKVHX/u8LkEzX4fAYpaDlzKBQkkTStDyw==}
+  '@deepseek-ai/dsh-client-ui-input-trigger@0.2.1-rc.3':
+    resolution: {integrity: sha512-l02TZXZj4xkiNVRcJJyfXGypug9LIQNyARhJoxSzNwEWF0TO0e/ke1egL+xU/jZkxxhkBCR6+F8MTgTufccHww==}
     peerDependencies:
       '@deepseek-ai/cordis': 4.0.5-alpha.1
 
@@ -1858,7 +1858,7 @@ snapshots:
       '@deepseek-ai/cordis': 4.0.5-alpha.1(@deepseek-ai/cordis-plugin-include@1.0.10)(@deepseek-ai/cordis-plugin-loader@1.0.6)
       '@deepseek-ai/schemastery': 3.18.5-alpha.1
 
-  '@deepseek-ai/dsh-client-ui-input-trigger@0.2.1-rc.2(@deepseek-ai/cordis@4.0.5-alpha.1)':
+  '@deepseek-ai/dsh-client-ui-input-trigger@0.2.1-rc.3(@deepseek-ai/cordis@4.0.5-alpha.1)':
     dependencies:
       '@deepseek-ai/cordis': 4.0.5-alpha.1(@deepseek-ai/cordis-plugin-include@1.0.10)(@deepseek-ai/cordis-plugin-loader@1.0.6)
 
