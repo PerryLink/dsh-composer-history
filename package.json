@@ -36,7 +36,9 @@
     "docs",
     "README*.md",
     "CHANGELOG.md",
-    "LICENSE"
+    "LICENSE",
+    "PRIVACY.md",
+    "icon.svg"
   ],
   "publishConfig": {
     "access": "public"
@@ -170,5 +172,6 @@
   "funding": {
     "type": "individual",
     "url": "https://github.com/sponsors/PerryLink"
-  }
+  },
+  "icon": "icon.svg"
 }
