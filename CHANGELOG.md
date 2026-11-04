@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Align with the DSH `0.2.2` host line: devDependencies move to `0.2.2-rc.1`; cordis `^4.1.0` / include `^1.1.0` / loader `^1.1.0`; schemastery `~3.19.0`; `engines.dsh` appends `>=0.2.2-0 <0.3.0`; `engines.node` becomes `^22.19.0 || >=24.9.0`.
+- Pin the workspace overrides to the version trio vendored by that host (`cordis` 4.1.0, `cosmokit` 1.9.0, `schemastery` 3.19.0). The stale 0.1.7-line overrides kept resolving `cordis@4.0.5-alpha.1`, which the 0.2.2 loader and settings packages no longer accept (`peerDependencies: ~4.1.0`), so the Loader composition mounted the entry without claiming its settings form.
+
+### Fixed
+
+- Read the live plugin config from `fiber.effectiveConfig` in the Loader composition runner. Cordis 4.1.0 moved the validated config there and now keeps `fiber.config` as the raw input retained for the next activation, so the settings-claim assertion no longer found the live `maxHistory` reference.
+
 ## [0.8.15] - 2026-10-18
 
 ### Fixed

@@ -15,20 +15,17 @@ allowBuilds:
 #
 # `cordis`, `cosmokit` and `schemastery` are BARE peer edges in the dependency
 # graph, so a range-qualified row never matches them — they need package-name
-# overrides. The floors are load-bearing: `Volatile` is exported only from
-# cordis 4.0.3+ (re-exported from cosmokit 1.8.4+), `Schema.prototype.volatile`
-# arrives with schemastery 3.18.3, and a lockfile that already resolved the
-# older patch keeps resolving to it under the nominal ranges.
+# overrides. The pins are load-bearing on the 0.2.2 line: they must match the
+# host checkout's vendored trio (`vendor/cordis` 4.1.0, `vendor/cosmokit`
+# 1.9.0, `vendor/schemastery` 3.19.0). A lockfile that already resolved the
+# older patch keeps resolving to it under the nominal ranges (`^4.1.0` /
+# `~3.19.0`), so the floors have to be written down explicitly. Mixing a
+# 4.0.x cordis with `dsh-settings@0.2.2` leaves the settings service
+# unresolved in the Loader composition, so the entry claims no form.
 overrides:
-  '@deepseek-ai/cordis': 4.0.5-alpha.1
-  '@deepseek-ai/cosmokit': 1.8.6-alpha.1
-  '@deepseek-ai/schemastery': 3.18.5-alpha.1
-  '@deepseek-ai/dsh-api-remotes@^0.1.7-rc.2': 0.2.1-alpha.1
-  '@deepseek-ai/dsh-attachment@^0.1.7-rc.2': 0.2.1-alpha.1
-  '@deepseek-ai/dsh-client-ui-conversation@^0.1.7-rc.2': 0.2.1-alpha.1
-  '@deepseek-ai/dsh-client-ui-input-trigger@^0.1.7-rc.2': 0.2.1-alpha.1
-  '@deepseek-ai/dsh-client-ui-settings@^0.1.7-rc.2': 0.2.1-alpha.1
-  '@deepseek-ai/dsh-settings@^0.1.7-rc.2': 0.2.1-alpha.1
+  '@deepseek-ai/cordis': 4.1.0
+  '@deepseek-ai/cosmokit': 1.9.0
+  '@deepseek-ai/schemastery': 3.19.0
 # Wildcard only, on purpose — the same single row every 0.1.7-line sibling
 # repo carries. The per-version rows this file used to list alongside it
 # (`@deepseek-ai/cordis@4.0.1`, `@deepseek-ai/cosmokit@1.8.2|1.8.3`,

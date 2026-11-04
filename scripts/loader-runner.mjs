@@ -63,16 +63,20 @@ try {
   await ctx.loader.await()
 
   // The host half claims the generated-form presentation for its own fiber,
-  // and that fiber's live Config is the form's field set: the composition
-  // config (cordis.yml) resolved into stable references the browser half
-  // reads through `ctx.configForms.get(entryId)`.
+  // and that fiber's effective (live) Config is the form's field set: the
+  // composition config (cordis.yml) resolved into stable references the
+  // browser half reads through `ctx.configForms.get(entryId)`.
   if (claims.length !== 1) {
     throw new Error(`Loader composition: expected exactly one settings presentation claim, got ${claims.length}`)
   }
   if (claims[0].presentation?.auto !== true) {
     throw new Error(`Loader composition: the generated-form policy must be auto:true, got ${JSON.stringify(claims[0].presentation)}`)
   }
-  const live = claims[0].owner?.config
+  // cordis 4.1.0 (the 0.2.2 host line) split the fiber's config in two:
+  // `fiber.config` is now the RAW plugin input retained for the next
+  // activation, and `fiber.effectiveConfig` is the object handed to the
+  // plugin, whose volatile fields stay live references.
+  const live = claims[0].owner?.effectiveConfig
   if (live === undefined) throw new Error('Loader composition: the presentation claim carries no plugin fiber')
   const maxHistory = live.maxHistory?.get?.()
   if (maxHistory === undefined) {
