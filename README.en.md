@@ -1,0 +1,555 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-flow-dark.svg">
+  <img src="docs/assets/dsh-composer-history-flow-light.svg" width="100%" alt="dsh-composer-history flow: keydown → interceptor → setDraft → localStorage → Enter; Ctrl+R covers history / snippets / templates / insights plus [compacted] summaries">
+</picture>
+
+# dsh-composer-history
+
+**Press ↑ like it's a terminal — and keep your half-typed draft intact.**
+
+Terminal-style input history for the DeepSeek Harness Web GUI composer: edge-first arrow recall, browser-local persistence, `Ctrl+R` reverse search, and snippet/template libraries — all landing in the ordinary draft only.
+
+[Install](#three-step-setup) · [Configuration](#configuration) · [FAQ](#faq) · [简体中文](README.md) · [English](README.en.md) · [Español](README.es.md) · [Português](README.pt.md) · [हिन्दी](README.hi.md)
+
+[![License](https://img.shields.io/badge/license-Apache--2.0-3366CC?style=flat-square&labelColor=2B3245)](LICENSE)
+[![DSH](https://img.shields.io/badge/DSH-%E2%89%A50.2.1%20%3C0.3.0-4B67B4?style=flat-square&labelColor=2B3245)](#compatibility)
+[![npm](https://img.shields.io/npm/v/dsh-composer-history?style=flat-square&labelColor=2B3245&color=CB3837)](https://www.npmjs.com/package/dsh-composer-history)
+[![CI](https://img.shields.io/github/actions/workflow/status/PerryLink/dsh-composer-history/ci.yml?branch=main&label=CI&style=flat-square&labelColor=2B3245)](https://github.com/PerryLink/dsh-composer-history/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24.9-339933?style=flat-square&labelColor=2B3245)](#compatibility)
+
+[![Stars](https://img.shields.io/github/stars/PerryLink/dsh-composer-history?style=flat-square&labelColor=2B3245)](https://github.com/PerryLink/dsh-composer-history/stargazers)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-composer-history?style=flat-square&labelColor=2B3245&color=CB3837)](https://www.npmjs.com/package/dsh-composer-history)
+[![dshfind](https://dshfind.com/api/badge/PerryLink/dsh-composer-history?metric=downloads)](https://dshfind.com/plugins/PerryLink/dsh-composer-history?ref=badge)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/PerryLink/dsh-composer-history/badge)](https://securityscorecards.dev/viewer/?uri=github.com/PerryLink/dsh-composer-history)
+[![DSH Market](https://img.shields.io/badge/DSH_Market-listed-4B67B4?style=flat-square&labelColor=2B3245)](https://dsh.market/)
+[![Gitee](https://img.shields.io/badge/Gitee-mirror-C71D23?style=flat-square&labelColor=2B3245&logo=gitee)](https://gitee.com/perrylink/dsh-composer-history)
+
+```sh
+dsh plugin --profile <name> add dsh-composer-history
+```
+
+</div>
+
+<sub>Community plugin, not affiliated with DeepSeek. Canonical repository: <https://github.com/PerryLink/dsh-composer-history> (Gitee is a mirror).</sub>
+
+## What it is
+
+It puts a terminal's input history into the DeepSeek Harness web composer: with the caret on the first line, ↑ recalls the last message you sent; anywhere else, ↑/↓ move the caret as usual and nothing steals the key.
+
+The first recall stashes `{draft, caret}`, and reaching the newest entry again (or pressing `Esc`) restores both exactly — your half-typed draft is never cleared. History lives in browser-local storage, so recall survives page reloads and spans sessions; `Ctrl+R` searches history, snippets, and templates together. When the harness auto-compacts the context, each checkpoint's summary joins recall and search as a `[compacted] …` entry, and a transient notice offers a one-click `/compact` fill.
+
+Pure UI behavior: no session events, no agent-loop changes, no model requests. Recalled text only enters the ordinary composer draft, and it reaches the model only if you press Enter.
+
+## Three-step setup
+
+1. **Install** (pick one channel):
+
+   ```sh
+   # git channel (latest main; equivalent to git+https://github.com/PerryLink/dsh-composer-history.git)
+   dsh plugin --profile web add github:PerryLink/dsh-composer-history
+   # npm channel (published releases)
+   dsh plugin --profile web add dsh-composer-history
+   # tarball channel: pnpm pack in this repo, then
+   dsh plugin --profile web add ./dsh-composer-history-<version>.tgz
+   ```
+
+   The npm package ships the built bundles; a source checkout must be built first (`pnpm run build`) — the client-package check refuses to boot against an unbuilt bundle.
+
+2. **Minimal config** (defaults are fine; the bundle patch inserts one row and the `Config` schema supplies the rest):
+
+   ```yaml
+   - insert:
+       - id: composer-history
+         name: dsh-composer-history
+   ```
+
+3. **Verify it mounts**:
+
+   ```sh
+   dsh --profile web --dump-config | grep -A3 'id: composer-history'
+   ```
+
+   The output should show `id: composer-history` and `name: dsh-composer-history`. After a restart, put the caret on the first line of the web composer and press ↑: the newest user message fills the draft.
+
+**Uninstall**: `dsh plugin --profile web remove dsh-composer-history` (or remove the row from the profile patch).
+
+<details>
+<summary>Install from the DSH Desktop market</summary>
+
+Every PerryLink plugin is listed in the built-in DSH Desktop market: **Market → Sources → Add source → paste** `https://perrylink-dsh-catalog.perrylink.workers.dev/catalog-source.json` **→ select**. Installation still requires the market's npm identity check and your confirmation.
+
+</details>
+
+## Core capabilities
+
+`dsh-composer-history` does one thing: it makes the composer remember what you sent, and hand it back untouched when you need it.
+
+1. **Edge-first arrow recall** — bare ↑/↓ move the caret first; history recall triggers only when the caret sits on the first/last line. The first recall stashes `{draft, caret}`, and reaching the newest entry again (or pressing `Esc`) restores both exactly — never cleared.
+2. **Persisted history** — every sent message is appended to a bounded browser-local store, so recall survives page reloads and reaches across sessions.
+3. **Reverse search** — `Ctrl+R` (configurable) opens a query overlay over merged history, snippets, and templates.
+4. **Smart input layer** — `/save`/`/load` snippets, prompt templates with `{{workspace}}`/`{{session}}`/`{{draft}}` variables, and browser-local reuse insights.
+5. **Sliding-context aware** — compaction summaries join recall and search as `[compacted] …` entries, and a transient notice announces each compaction with a one-click `/compact` fill.
+6. **Versioned JSON backup** — export/import all four libraries (history, snippets, templates, insights) as one schema-versioned document; download or copy on export, file pick or paste on import.
+
+Pure UI behavior: no session events, no agent-loop changes, no model requests. Recalled text only enters the ordinary composer draft; it reaches the model only if *you* press Enter.
+
+```text
+keydown ──interceptor──▶ setDraft ──▶ draft ──Enter──▶ model
+                            ▲                              │
+                            └──── localStorage ◀───────────┘
+                                  dsh.composer-history.v1 · snippets.v1
+                                  templates.v1 · insights.v1
+```
+
+### Commands & tools surface
+
+| Surface | Kind | Notes |
+|---|---|---|
+| `ArrowUp` | keybinding | Edge-first ↑/↓ recall — stashes `{draft, caret}`, restores both exactly on bottom-out or `Esc` |
+| `Ctrl+R` | keybinding | Reverse-search overlay over merged history, snippets, and templates |
+| `/save` | command | Save the current draft as a named, tagged snippet |
+| `/load` | command | Insert a saved snippet at the caret |
+| `templates` | UI | Versioned JSON backup export/import of history, snippets, templates, and insights (explicit click only) |
+| `composer-history` | settings form | The profile entry's own live `Config` form — carries the resolved config (cordis.yml base + profile overrides) into the browser half |
+
+### Keybindings
+
+| Key | State | Behavior |
+|---|---|---|
+| ↑ | IDLE, caret on first line | stash `{draft, caret}`, fill newest entry, caret to end (no history → pass) |
+| ↑ | BROWSING, caret on first line | older entry; hold at the oldest (intercept, no mutation) |
+| ↑ | caret not on first line | fully released (browser moves the caret) |
+| ↓ | IDLE | always released (plain caret movement) |
+| ↓ | BROWSING, caret on last line | newer entry; at newest → restore `savedDraft` + `savedCaret` → IDLE |
+| ↓ | caret not on last line | fully released |
+| Esc | BROWSING (`restoreOnEscape: true`) | restore `savedDraft` + `savedCaret` → IDLE, intercepted |
+| Esc | otherwise | released (menu/popup Escape semantics untouched) |
+| Ctrl+↑/↓ | `enableCtrlAlias: true` | same as bare arrows |
+| `searchKeys` chord | composer focused, `plain` phase, no menu/selection/IME | open reverse search; browsing ends, the shown text becomes the draft |
+| Shift/Alt/Meta+arrows, IME, selection | any | always released |
+
+`upKey`/`downKey`/`escapeKey`/`searchKeys` rename the keys above; the modifier policy (and the search chord's exact-modifier match) is unchanged. Inside the search overlay: ↑/↓ move the match selection (the selected row scrolls into view), Enter fills, Esc cancels, a click picks, a press outside cancels; matched substrings are highlighted in every row.
+
+### Examples
+
+These are the plugin's real entry points; install once, then call one.
+
+**Detailed example** — command `/save`, input:
+
+```sh
+/save ship-check --tag=release,ops
+```
+
+Output:
+
+```text
+snippet saved: ship-check
+```
+
+*Observed from `plugins/dsh-composer-history/README.md §Smart input layer (lines 199-205); code at src/client/index.ts:314-327`*
+
+**Failure branch** — input:
+
+```text
+/load nope
+```
+
+Output:
+
+```text
+no snippet named nope (open Ctrl+R search to browse snippets)
+```
+
+*Observed from `plugins/dsh-composer-history/src/client/index.ts:330-333; plugins/dsh-composer-history/src/client/notice.ts:62-65`*
+
+**Brief examples**: `/load` · `/compact`
+
+## Reverse search
+
+- **Open**: the `searchKeys` chord while the composer is focused and the input is `plain` (a `Ctrl+R` here also stops the browser's page reload — the key is consumed only inside the composer).
+- **Filter**: substring match over the merged history (current session + persisted + workspace entries); case sensitivity per `searchCaseSensitive`; matched substrings are highlighted in each row.
+- **Pick**: Enter fills the draft and moves the caret to the end — the same single `setDraft` write path as ordinary recall. Recalled text reaches the model only if you press Enter afterwards.
+- **Cancel**: Esc or a press outside the panel; the draft is untouched.
+
+## Smart input layer
+
+On top of the terminal-style history, three browser-local libraries turn the composer into a reusable input surface. Everything below lives in `localStorage` (keys `dsh.composer-history.snippets.v1`, `.templates.v1`, `.insights.v1`), never touches the network, and every switch is a `Config` field.
+
+**Snippets (cross-session command library)**
+
+```text
+/save ship-check --tag=release,ops
+check the build, run the smoke suite, tag the release        ← the rest of the draft is the snippet
+/save ship-check                                             → "snippet saved: ship-check"
+/load ship-check                                             → the snippet fills the composer
+Ctrl+R → search panel lists snippets (green badge = name) alongside history
+```
+
+- `/save <name>` consumes the Enter, stores the draft (minus the command line) under a kebab-case name with optional tags, and clears the composer. Nothing to save → an error notice, the command never sends.
+- `/load <name>` inserts the snippet at the caret (whole-draft replace, caret to end) and counts the use.
+- Scope: snippets saved with a workspace cwd are workspace-scoped; snippets saved without one are global. `maxSnippets` bounds the library; same-name saves replace.
+- The plugin never sends: every fill lands in the ordinary draft and your Enter stays yours.
+
+**Prompt templates with variables**
+
+Templates are stored prompt texts with `{{variable}}` placeholders. The search panel lists them with a purple badge; picking one fills the variables from the live session and inserts the result. Built-in variables: `{{workspace}}` (the session's cwd), `{{session}}` (the session id), `{{draft}}` (the current draft). A template referencing an unknown variable fails loudly with the missing list — a half-filled prompt is worse than an error.
+
+The whole library — history, snippets, templates, and insights — exports to and imports from a single versioned JSON document through the panel's **Export JSON / Import file** actions; see **Backup export & import** below. An explicit user action; the plugin never writes files on its own.
+
+**Reuse insights**
+
+Every newly committed user message (and every snippet load) lands one browser-local usage record keyed by exact text. While you type, a small hint under the composer reports `used M× in N sessions` once the draft matches a prompt used in at least `insightMinUses` (default 2) sessions. Toggle with `enableInsights`; the statistics contain only the deduped texts and counters.
+
+**Compaction summary highlight**
+
+`Ctrl+R` marks `[compacted] …` summaries with an amber badge (history stays unbadged), snippets green, templates purple — the panel's provenance is visible at a glance. Toggle with `enableCompactionHighlight`.
+
+## Backup export & import
+
+All four browser-local libraries export to and import from one versioned JSON document. The panel's **Export JSON / Copy JSON / Import file / Paste JSON** actions run entirely in the browser: download or copy to clipboard on export, file pick or pasted text on import — nothing is uploaded and no host RPC or network call is involved.
+
+**Document shape**
+
+```json
+{
+  "schemaVersion": 1,
+  "exportedAt": 1735689600000,
+  "data": {
+    "history": ["…"],
+    "snippets": [{ "name": "…", "text": "…", "tags": [], "scope": "global", "createdAt": 0, "updatedAt": 0, "useCount": 0, "lastUsedAt": 0 }],
+    "templates": [{ "name": "…", "text": "…", "description": "", "updatedAt": 0 }],
+    "insights": [{ "text": "…", "sessions": [], "uses": 0, "lastUsedAt": 0 }]
+  }
+}
+```
+
+**Merge & conflict strategy**
+
+- History entries are plain strings and deduplicate by exact text; a duplicate or blank entry is skipped, never overwritten.
+- Snippets and templates key on `name`; insights key on exact `text`. On a same-key conflict the **newest timestamp wins** (`updatedAt` for snippets/templates, `lastUsedAt` for insights); an older or equal-timestamp import is skipped, and new keys are appended.
+- The import respects `maxPersisted` and `maxSnippets`; templates and insights cap at their fixed protocol limits (`500` each).
+- The result notice reports how many records were written and how many were skipped (older/duplicate).
+
+**Schema versioning**
+
+`schemaVersion` starts at `1`. Imports run a stepwise migration (one version at a time) so future formats can upgrade old documents in place. A document whose `schemaVersion` is **newer** than the one this build understands is rejected with an error — it is never silently dropped or partially merged; a version too old to migrate is rejected the same way.
+
+## Sliding context
+
+The harness core gives every dsh session a sliding context window, the same workflow Claude Code and Codex ship: when a conversation approaches the model's context limit (or the provider reports an overflow), the harness **auto-compacts** — older turns are summarized behind a `compaction` checkpoint marker that stays visible in the transcript, the model keeps only the summary plus the recent tail, and the session continues. `/compact` triggers the same compaction on demand, and the marker renders as an expandable "Context compacted" row.
+
+`dsh-composer-history` plugs the composer into that workflow so the window slide never costs you your typing history:
+
+- **Recall survives compaction** — shadowed turns stay in the finalized conversation the Chat view publishes, so ↑ still walks every message you sent before and after a checkpoint.
+- **Summaries join the history** — each checkpoint's summary text enters ↑ recall and `Ctrl+R` search as a `[compacted] …` entry (toggle: `includeCompactionSummaries`), so context the model no longer sees verbatim stays one keystroke away.
+- **Compaction notice** — when a checkpoint lands while the page is open, a transient snackbar announces it (the Claude Code "Auto-compacting conversation…" moment) with the summary snippet and a one-click **Fill `/compact`** action (`showCompactionNotice`, `compactCommandText`); the fill lands in the ordinary draft, and only your Enter sends it.
+- **Search counts** — the `Ctrl+R` panel now shows a live `N entries` / `N matches` status line, and long entries are clamped to two lines.
+
+> Compaction itself (thresholds, summary model, `/compact`) is owned by the harness core's compaction plugins — this plugin only observes the checkpoint markers the Chat view's conversation projection already publishes (`uiConversation.binding(id).target('chat').legacy.nodes`), so it works without any agent-loop or model-request changes.
+
+## Configuration
+
+All tunables are Schemastery `Config` fields (changeable from cordis.yml and the entry's settings form; the profile patch is the persisted document). An id-targeted override replaces the whole row — restate every key you need. Invalid enum values fail the whole dsh boot loudly, and a settings-form edit is validated by the host before it persists.
+
+Most-used keys:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `recallWithDraft` | `'save'` | Recall mode (`save` / `gate`): `save` stashes a non-empty draft before recall; `gate` recalls only an empty draft (Claude/Codex-style gating) |
+| `restoreOnEscape` | `true` | Restore the stashed draft when `Esc` ends browsing |
+| `edgeMode` | `'logical'` | Edge detection mode (`logical` / `visual`): by `\n` lines or by measured wrapped lines |
+| `maxHistory` | `500` | Maximum recalled entries (newest kept); `0` = unlimited |
+| `historyScope` | `'session'` | History scope (`session` / `workspace`): `workspace` prepends other listed sessions' user messages before the current session's |
+| `enableSearch` | `true` | Enable the `Ctrl+R` reverse-search overlay |
+| `maxSnippets` | `200` | Maximum stored snippets; `0` = unlimited |
+
+<details>
+<summary>Full configuration table (25 keys)</summary>
+
+| Key | Default | Meaning |
+|---|---|---|
+| `recallWithDraft` | `'save'` | Recall mode (`save` / `gate`): `save` stashes a non-empty draft before recall; `gate` recalls only an empty draft (Claude/Codex-style gating) |
+| `restoreOnEscape` | `true` | Restore the stashed draft when `Esc` ends browsing |
+| `edgeMode` | `'logical'` | Edge detection mode (`logical` / `visual`): by `\n` lines or by measured wrapped lines |
+| `enableCtrlAlias` | `true` | Let Ctrl+↑/↓ behave like the bare arrows |
+| `restoreCaret` | `true` | Also restore the stashed caret on bottom-out / `Esc` |
+| `upKey` | `'ArrowUp'` | `KeyboardEvent.key` that recalls upward; `''` disables |
+| `downKey` | `'ArrowDown'` | `KeyboardEvent.key` that walks newer / restores; `''` disables |
+| `escapeKey` | `'Escape'` | `KeyboardEvent.key` that escapes browsing; `''` disables |
+| `maxHistory` | `500` | Maximum recalled entries (newest kept); `0` = unlimited |
+| `includeKinds` | `['user']` | Conversation node kinds admitted into the history (add `'steering'` to include steer messages) |
+| `historyScope` | `'session'` | History scope (`session` / `workspace`): `workspace` prepends other listed sessions' user messages before the current session's |
+| `persistHistory` | `true` | Append sent messages to the browser-local store |
+| `maxPersisted` | `200` | Maximum persisted entries; `0` = unlimited |
+| `enableSearch` | `true` | Enable the `Ctrl+R` reverse-search overlay |
+| `searchKeys` | `['Ctrl+R']` | Chord specs opening the search (modifiers `Ctrl`/`Alt`/`Meta`/`Shift` + a key name); a malformed spec fails the browser fiber loudly |
+| `searchCaseSensitive` | `false` | Whether search matching distinguishes letter case |
+| `includeCompactionSummaries` | `true` | Admit `[compacted] …` checkpoint summaries into recall and search |
+| `showCompactionNotice` | `true` | Show a transient notice when a compaction checkpoint lands |
+| `compactCommandText` | `'/compact'` | Slash command the notice's "Compact now" action fills into the composer; `''` hides the action |
+| `enableSnippets` | `true` | Enable the snippet library (`/save`, `/load`, search-panel picking) |
+| `maxSnippets` | `200` | Maximum stored snippets; `0` = unlimited |
+| `enableTemplates` | `true` | Enable the prompt-template library (variables fill at insertion) |
+| `enableInsights` | `true` | Enable the reuse-insight hint (local usage statistics) |
+| `insightMinUses` | `2` | Minimum uses before the reuse hint shows |
+| `enableCompactionHighlight` | `true` | Badge `[compacted] …` summaries distinctly in the search panel |
+
+</details>
+
+Example override in your profile patch:
+
+```yaml
+- insert:
+    - id: composer-history
+      name: dsh-composer-history
+      config:
+        recallWithDraft: gate
+        maxHistory: 1000
+        historyScope: workspace
+```
+
+## FAQ
+
+<details>
+<summary>Where does the data actually live? Can it be uploaded?</summary>
+
+Four browser-local `localStorage` keys: `dsh.composer-history.v1` (sent-message history), `dsh.composer-history.snippets.v1` (snippet texts + tags + use counters), `dsh.composer-history.templates.v1` (template texts), and `dsh.composer-history.insights.v1` (deduped prompt texts + per-session use counters). All bounded, same-origin only, never uploaded; corrupt payloads reset silently. The only way content leaves the browser is the explicit backup export you click (download or clipboard).
+
+</details>
+
+<details>
+<summary>What happens when the host changes its composer DOM? Silent breakage?</summary>
+
+Yes — that is Known limitation #1. Interception anchors on host-private DOM: the contenteditable `div[data-composer-input]` inside `[data-input-scroll]` (plus the legacy textarea composer on lines up to 0.1.1-rc.2). This is not a published API (upstream proposal C3 records that plugins can only guess host DOM), so a future host DOM change can break interception silently. The compat workflow's jsdom smoke re-asserts that face against the packed bundle, keeping the regression out of releases.
+
+</details>
+
+<details>
+<summary>Does it fight other plugins over keys or slots?</summary>
+
+No. It intercepts only in the `plain` input phase while the composer is focused; the slash menu, command popups, IME composition, text selections, and modifier combos always pass through, and `Enter` is never intercepted. `Ctrl+R` is consumed only inside the composer, never as a global shortcut. It provides no service key, registers no HTTP route, mutates no globals, and emits no session events. The point-by-point argument is in "Interoperability with other DSH plugins".
+
+</details>
+
+<details>
+<summary>How big is the performance overhead?</summary>
+
+Pure front-end DOM/JS: no network, no model calls, and an ordinary recall is one `setDraft`. The default `edgeMode: 'logical'` keys off `\n` with zero measurement; `visual` mode measures real wraps through a hidden mirror — an O(lines·log n) binary search per edge check, memoized per draft and width.
+
+</details>
+
+<details>
+<summary>Can a recalled entry be sent by accident?</summary>
+
+No. Recall, snippet loads, template fills, and the `/compact` fill all go through the ordinary `setDraft`; `Enter` is never intercepted and no path sends for you. Recalled text leaves the browser only after you press Enter.
+
+</details>
+
+## Security boundaries
+
+- **UI-only, never enforcement.** The plugin edits the composer draft only; the sandbox, approval, and session systems remain the enforcement authorities, and no command or tool is ever claimed or bypassed.
+- **No content leaves the browser.** History, snippets, templates, and insights live in `localStorage`; nothing is uploaded, and no model request or network call is made. The versioned backup only writes a local download or the clipboard on an explicit click.
+- **Fail loud.** Invalid enum values fail the whole dsh boot; a malformed search chord fails the browser fiber — misconfiguration never silently degrades.
+- **Bounded everything.** `maxHistory`, `maxPersisted`, and `maxSnippets` cap retained entries; corrupt or foreign payloads reset silently.
+- **Zero side effects on pass-through.** The plugin intercepts only in the `plain` input phase and yields to the slash menu, command popups, IME composition, text selections, and modifier combos.
+
+## Permissions & data
+
+- **Permissions**: the plugin declares `browser:local-storage` in its workshop manifest — nothing else. No network, no subprocesses, no session events.
+- **Data**: four browser-local `localStorage` keys (history, snippets, templates, insights); the rules are in FAQ #1 above — all bounded, same-origin only, never uploaded, and corrupt payloads reset silently.
+- **Model-visible ⟺ you press Enter**: recalled text, snippet loads, template fills, and the `/compact` fill all land in the ordinary composer draft. Nothing reaches the model until you press Enter.
+
+## Known limitations
+
+- **Composer DOM face.** Interception anchors on host-private DOM: the contenteditable `div[data-composer-input]` inside `[data-input-scroll]` (harness 0.1.2-alpha.5 / 0.1.2-rc.1 and later); the legacy textarea composer inside `[data-input-scroll]` (lines up to 0.1.1-rc.2) stays matched. This shape is not a published API (upstream proposal C3 records that plugins can only guess host DOM), so a future host DOM change can break interception silently — the compat workflow's jsdom smoke re-asserts the face against the packed bundle.
+- **Logical vs visual lines.** Default `logical` keys off `\n` (a long auto-wrapped message counts as one line); `visual` measures real wraps via a hidden mirror that copies the contenteditable surface's computed box (O(lines·log n) binary search per edge check, memoized per draft/width). Mirror measurement needs a real layout engine — the pure span math is unit-tested instead, and measured spans on the Lexical composer stay best-effort (logical remains the default).
+- **Persisted history is per-browser.** The store lives in one origin's `localStorage`; it never syncs between browsers or machines. Corrupt payloads reset silently.
+- **Undo stack includes recall transactions.** Every fill/restore is one `setDraft` transaction in the input machine's undo log; Ctrl+Z steps back through recalls. The precision fix needs the upstream edit-range exposure.
+- Recalling a `/xxx` entry then Enter follows the normal command claim/adjudication path (expected, and Enter is never intercepted).
+- Menus/popups and non-`plain` phases always win; a committed send and session switches both reset to IDLE.
+- Reference chips (U+FFFC placeholders) ride along with recalled/restored draft text.
+- `historyScope: 'workspace'` reads the Chat targets of other listed sessions; a session whose Chat view has not been activated in this page contributes nothing yet.
+- The search overlay is plain DOM (no React dependency); it renders all matches up to the `maxHistory` bound.
+- **Compaction awareness is observational.** Checkpoints landed before install (or before a session switch) never trigger a notice; a checkpoint whose summary event fell outside the loaded window contributes no `[compacted] …` entry (`summary: null`).
+- The notice's "Compact now" action only *fills* the configured command text into the draft — sending remains the user's Enter.
+- **Snippets, templates, and insights are browser-local.** Names are kebab-case (1..64 chars); tags cap at 8 × 32 chars. Template variables resolve from the live session; `{{draft}}` is the draft at pick time.
+
+## Interoperability with other DSH plugins
+
+The browser half rides only published client packages (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) and the cordis `Context`, so there is nothing to contend for at the plugin level:
+
+- **No session events, no agent-loop changes.** The plugin only observes the Chat view's published conversation projection (`uiConversation.binding(id).target('chat').legacy.nodes`); it appends no session events and makes no model requests.
+- **No service keys.** The host half has an empty `inject` array and provides no service key, so no service-key collision is possible.
+- **No HTTP routes.** It registers no `webServer` prefix.
+- **No global mutation.** It does not patch prototypes, rewrite `process.env`, or replace the global fetch dispatcher.
+- **Self-owned settings surface.** Since 0.1.7-alpha.1 it no longer registers a `composer-history` namespace; it uses its own live `Config` entry (the profile row id names the form) and reads or writes no other plugin's settings section.
+- **Minimal interception.** It intercepts only in the `plain` input phase while the composer is focused; menus/popups, IME, selections, and modifier combos always win; `Enter` is never intercepted.
+
+The one coupling point is host-private DOM (`div[data-composer-input]`), recorded in Known limitation #1; the compat workflow's jsdom smoke re-asserts that face against the packed bundle, keeping such drift out of releases.
+
+## Compatibility
+
+| Surface | Status |
+|---|---|
+| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2` (verified 2026-10-18): `engines.dsh >=0.2.1-0 <0.3.0`; the P0 compatibility paths have regression tests. |
+| Node | `^22.19.0 \|\| >=24.9.0` |
+| Platforms | Web GUI only (client plugin; browser-local storage; no network, no native code) |
+| Model | Any (no model requests — pure UI behavior) |
+
+The browser half rides the published client packages (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) and the cordis `Context`; it no longer depends on the removed `dsh-client-runtime` package, so the client surface also lines up with `0.1.2-rc.1` hosts.
+
+Interception anchors on the web composer's DOM: the contenteditable surface `div[data-composer-input]` inside `[data-input-scroll]` (the Lexical composer shipped since 0.1.2-alpha.5 / 0.1.2-rc.1), with the legacy textarea composer inside `[data-input-scroll]` (harness lines up to 0.1.1-rc.2) still matched; textareas elsewhere pass through. The compat workflow's jsdom web-behavior smoke asserts this identity/text/caret face against the packed bundle.
+
+0.1.2-rc.1 (adapted 2026-09-04): the session envelope keeps its ignorable field for stored-log read compatibility only — `Session.append` still cannot stamp it, so audit-gate behavior is unchanged. Verified 2026-09-06 against the `dsh-v0.1.7-alpha.1` master checkout (full gate chain + profile install smoke).
+
+0.1.5-rc.1 (adapted 2026-09-10): dependency pins move to the published `0.1.5-rc.1` line; no seam change affects this plugin's behavior.
+
+0.1.5-rc.2 (adapted 2026-09-11): dependency pins move to the published `0.1.5-rc.2` line; no seam change affects this plugin's behavior.
+
+0.1.7-alpha.1 (adapted 2026-09-22): the settings seam is replaced on both halves. The host half no longer registers a `composer-history` namespace through the removed `ctx.settings.register(ns, schema, { base })` — on this line a plugin's durable settings surface IS its own live `Config`: every tunable is declared `.volatile()`, the profile entry id (`composer-history`, the bundle patch's row id) names the form, and `apply` claims the generated-form presentation (`ctx.settings.configure({ auto: true }, ctx.fiber)`, effect-owned so a reload re-registers cleanly). The browser half reads the same entry through `ctx.configForms.get('composer-history')` instead of the removed `ctx.settingsScope.bind({ namespace })`; the snapshot/subscribe shape is unchanged, so the wiring still reinstalls on every committed change. Editable surface is preserved, not widened: every field the old namespace exposed is volatile, and no new field became editable. An existing `settings.yaml` section named `composer-history` is migrated into the profile entry of the same id by the host itself.
+
+## Ecosystem & quality
+
+- [Gitee mirror](https://gitee.com/perrylink/dsh-composer-history) (sync mirror; GitHub is canonical)
+- [dshfind plugin page](https://dshfind.com/plugins/PerryLink/dsh-composer-history) (installs and ranking)
+- [OpenSSF Scorecard report](https://securityscorecards.dev/viewer/?uri=github.com/PerryLink/dsh-composer-history) (driven by [.github/workflows/scorecard.yml](.github/workflows/scorecard.yml))
+- [dsh-plugin-doctor verification report](https://github.com/PerryLink/dsh-plugin-doctor#verified-徽章) (this repo's [.github/workflows/plugin-doctor.yml](.github/workflows/plugin-doctor.yml) runs the static R+K criteria on every push/PR)
+- [DSH Market](https://dsh.market/) (listed)
+- **1024 store channel**: `npm i -g dsh1024` once, then `dsh1024 plugin --profile web add dsh-composer-history` (counts toward the [deepseek1024.com](https://deepseek1024.com) install ranking)
+- [Ecosystem knowledge base](https://perrylink.github.io/dsh-plugin-guide/) — measured data, not marketing: plugin development guide · plugin-selection data · maintenance criteria
+
+## Development
+
+```sh
+pnpm install           # node ^22.19 || >=24.9
+pnpm run build         # tsc build + tsdown bundle (lib/)
+pnpm run typecheck     # tsc --noEmit (src + tests)
+pnpm test              # vitest run
+pnpm run test:watch    # vitest watch
+pnpm run test:coverage # vitest run --coverage
+pnpm run check:readmes # five-language README consistency gate
+pnpm run verify:pack   # pack-surface check
+```
+
+The README images are generated programmatically by [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Python + Pillow) and are safe to re-run: `python scripts/gen-readme-assets.py` writes the two vector files `docs/assets/dsh-composer-history-flow-{light,dark}.svg` (never rasterized; command tokens only, shared by all five languages).
+
+Topics: `deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
+
+## Family & thanks
+
+This project is part of the DeepSeek Harness plugin family from [PerryLink](https://github.com/PerryLink) (all Apache-2.0). If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+
+- [@gengwg](https://github.com/gengwg) — volatile boot config handling (#11).
+- [@yujethrozheng-crypto](https://github.com/yujethrozheng-crypto) — composer history restoration on 0.2.1-rc.2 (#12); the rc.2 boot fix shipped in 0.8.15.
+- [@PerryLink](https://github.com/PerryLink) — creator and maintainer: edge-first arrow recall, persisted history, reverse search, sliding-context awareness, snippet library, prompt templates, reuse insights, and the `dsh.bundle` / `dshWorkshop` manifests.
+
+<details>
+<summary>Expand all plugins</summary>
+
+| Plugin | Status |
+|---|---|
+| **[dsh-aqua-input-check](https://github.com/PerryLink/dsh-aqua-input-check)** |  |
+| **[dsh-archive-check](https://github.com/PerryLink/dsh-archive-check)** |  |
+| **[dsh-auto-review](https://github.com/PerryLink/dsh-auto-review)** |  |
+| **[dsh-autotier](https://github.com/PerryLink/dsh-autotier)** | 🧊 FROZEN — see the repo README |
+| **[dsh-bid-ca-precheck](https://github.com/PerryLink/dsh-bid-ca-precheck)** |  |
+| **[dsh-bid-qual-check](https://github.com/PerryLink/dsh-bid-qual-check)** |  |
+| **[dsh-cert-mcp](https://github.com/PerryLink/dsh-cert-mcp)** | 🧊 FROZEN — see the repo README |
+| **[dsh-checkpoint-rewind](https://github.com/PerryLink/dsh-checkpoint-rewind)** |  |
+| **[dsh-click](https://github.com/PerryLink/dsh-click)** |  |
+| **[dsh-composer-history](https://github.com/PerryLink/dsh-composer-history)** |  |
+| **[dsh-contract-stance](https://github.com/PerryLink/dsh-contract-stance)** |  |
+| **[dsh-customs-doc-check](https://github.com/PerryLink/dsh-customs-doc-check)** |  |
+| **[dsh-data-quality](https://github.com/PerryLink/dsh-data-quality)** | 🧊 FROZEN — see the repo README |
+| **[dsh-demurrage-ledger](https://github.com/PerryLink/dsh-demurrage-ledger)** |  |
+| **[dsh-doublecheck](https://github.com/PerryLink/dsh-doublecheck)** |  |
+| **[dsh-drill-script-check](https://github.com/PerryLink/dsh-drill-script-check)** |  |
+| **[dsh-eia-guide-check](https://github.com/PerryLink/dsh-eia-guide-check)** |  |
+| **[dsh-emergency-plan](https://github.com/PerryLink/dsh-emergency-plan)** |  |
+| **[dsh-essay-rubric-check](https://github.com/PerryLink/dsh-essay-rubric-check)** |  |
+| **[dsh-evidence-check](https://github.com/PerryLink/dsh-evidence-check)** |  |
+| **[dsh-export-ctl-check](https://github.com/PerryLink/dsh-export-ctl-check)** |  |
+| **[dsh-fast](https://github.com/PerryLink/dsh-fast)** |  |
+| **[dsh-fmea-table-check](https://github.com/PerryLink/dsh-fmea-table-check)** |  |
+| **[dsh-forecast-penalty](https://github.com/PerryLink/dsh-forecast-penalty)** |  |
+| **[dsh-fund-research](https://github.com/PerryLink/dsh-fund-research)** |  |
+| **[dsh-github](https://github.com/PerryLink/dsh-github)** |  |
+| **[dsh-gongwen-flow-check](https://github.com/PerryLink/dsh-gongwen-flow-check)** |  |
+| **[dsh-gongwen-word-check](https://github.com/PerryLink/dsh-gongwen-word-check)** |  |
+| **[dsh-guard-plan-qc](https://github.com/PerryLink/dsh-guard-plan-qc)** |  |
+| **[dsh-hazchem-check](https://github.com/PerryLink/dsh-hazchem-check)** |  |
+| **[dsh-hazplan-check](https://github.com/PerryLink/dsh-hazplan-check)** |  |
+| **[dsh-hidden-risk-map](https://github.com/PerryLink/dsh-hidden-risk-map)** |  |
+| **[dsh-hs-classify](https://github.com/PerryLink/dsh-hs-classify)** |  |
+| **[dsh-icd-rule-check](https://github.com/PerryLink/dsh-icd-rule-check)** |  |
+| **[dsh-industry-research](https://github.com/PerryLink/dsh-industry-research)** |  |
+| **[dsh-lawcite-adapter](https://github.com/PerryLink/dsh-lawcite-adapter)** |  |
+| **[dsh-laya](https://github.com/PerryLink/dsh-laya)** |  |
+| **[dsh-lc-doc-check](https://github.com/PerryLink/dsh-lc-doc-check)** |  |
+| **[dsh-learning-gap-check](https://github.com/PerryLink/dsh-learning-gap-check)** |  |
+| **[dsh-library](https://github.com/PerryLink/dsh-library)** |  |
+| **[dsh-local-ai](https://github.com/PerryLink/dsh-local-ai)** |  |
+| **[dsh-lsp-actions](https://github.com/PerryLink/dsh-lsp-actions)** |  |
+| **[dsh-mask](https://github.com/PerryLink/dsh-mask)** |  |
+| **[dsh-mcp-panel](https://github.com/PerryLink/dsh-mcp-panel)** |  |
+| **[dsh-medrec-qc](https://github.com/PerryLink/dsh-medrec-qc)** |  |
+| **[dsh-memento](https://github.com/PerryLink/dsh-memento)** | 🧊 FROZEN — see the repo README |
+| **[dsh-nsfc-form-check](https://github.com/PerryLink/dsh-nsfc-form-check)** |  |
+| **[dsh-nurse-record-check](https://github.com/PerryLink/dsh-nurse-record-check)** |  |
+| **[dsh-observe](https://github.com/PerryLink/dsh-observe)** |  |
+| **[dsh-origin-rvc-check](https://github.com/PerryLink/dsh-origin-rvc-check)** |  |
+| **[dsh-ota-review-check](https://github.com/PerryLink/dsh-ota-review-check)** |  |
+| **[dsh-output-styles](https://github.com/PerryLink/dsh-output-styles)** |  |
+| **[dsh-paper-doc-adapter](https://github.com/PerryLink/dsh-paper-doc-adapter)** |  |
+| **[dsh-permission-rules](https://github.com/PerryLink/dsh-permission-rules)** |  |
+| **[dsh-permit-report-check](https://github.com/PerryLink/dsh-permit-report-check)** |  |
+| **[dsh-pipeline-check](https://github.com/PerryLink/dsh-pipeline-check)** |  |
+| **[dsh-pleading-draft](https://github.com/PerryLink/dsh-pleading-draft)** |  |
+| **[dsh-plugin-doctor](https://github.com/PerryLink/dsh-plugin-doctor)** | 🚫 RETIRED (repo archived) |
+| **[dsh-plugin-guide](https://github.com/PerryLink/dsh-plugin-guide)** |  |
+| **[dsh-plugin-kit](https://github.com/PerryLink/dsh-plugin-kit)** | 🚫 RETIRED (repo archived) |
+| **[dsh-plugin-upgrade](https://github.com/PerryLink/dsh-plugin-upgrade)** | 🚫 RETIRED (repo archived) |
+| **[dsh-policy-brief-draft](https://github.com/PerryLink/dsh-policy-brief-draft)** |  |
+| **[dsh-power-loss-split](https://github.com/PerryLink/dsh-power-loss-split)** |  |
+| **[dsh-power-ticket-check](https://github.com/PerryLink/dsh-power-ticket-check)** |  |
+| **[dsh-ppap-check](https://github.com/PerryLink/dsh-ppap-check)** |  |
+| **[dsh-protest-deadline](https://github.com/PerryLink/dsh-protest-deadline)** |  |
+| **[dsh-railway-window](https://github.com/PerryLink/dsh-railway-window)** |  |
+| **[dsh-repair-order-qc](https://github.com/PerryLink/dsh-repair-order-qc)** |  |
+| **[dsh-research-report](https://github.com/PerryLink/dsh-research-report)** |  |
+| **[dsh-review-reply-check](https://github.com/PerryLink/dsh-review-reply-check)** |  |
+| **[dsh-rulefile-check](https://github.com/PerryLink/dsh-rulefile-check)** |  |
+| **[dsh-safety-brief-check](https://github.com/PerryLink/dsh-safety-brief-check)** |  |
+| **[dsh-score](https://github.com/PerryLink/dsh-score)** | 🧊 FROZEN — see the repo README |
+| **[dsh-session-sync](https://github.com/PerryLink/dsh-session-sync)** |  |
+| **[dsh-site-log-check](https://github.com/PerryLink/dsh-site-log-check)** |  |
+| **[dsh-skill-pack-security](https://github.com/PerryLink/dsh-skill-pack-security)** |  |
+| **[dsh-soe-decision-check](https://github.com/PerryLink/dsh-soe-decision-check)** |  |
+| **[dsh-soilwater-check](https://github.com/PerryLink/dsh-soilwater-check)** |  |
+| **[dsh-sop-sync-check](https://github.com/PerryLink/dsh-sop-sync-check)** |  |
+| **[dsh-spc-gbt-adapter](https://github.com/PerryLink/dsh-spc-gbt-adapter)** |  |
+| **[dsh-talk](https://github.com/PerryLink/dsh-talk)** |  |
+| **[dsh-tender-extract](https://github.com/PerryLink/dsh-tender-extract)** |  |
+| **[dsh-tender-matrix](https://github.com/PerryLink/dsh-tender-matrix)** |  |
+| **[dsh-test-drive](https://github.com/PerryLink/dsh-test-drive)** |  |
+| **[dsh-ticktick](https://github.com/PerryLink/dsh-ticktick)** | 🚫 RETIRED (repo archived) |
+| **[dsh-translate](https://github.com/PerryLink/dsh-translate)** |  |
+| **[dsh-warranty-calc](https://github.com/PerryLink/dsh-warranty-calc)** |  |
+| **[dsh-budget](https://github.com/PerryLink/dsh-budget)** | 🧊 FROZEN — see the repo README |
+| **[dsh-claude-move](https://github.com/PerryLink/dsh-claude-move)** | 🧊 FROZEN — see the repo README |
+| **[dsh-defend](https://github.com/PerryLink/dsh-defend)** | 🧊 FROZEN — see the repo README |
+| **[dsh-draw](https://github.com/PerryLink/dsh-draw)** | 🧊 FROZEN — see the repo README |
+| **[dsh-reach](https://github.com/PerryLink/dsh-reach)** | 🧊 FROZEN — see the repo README |
+| **[dsh-background-agents](https://github.com/PerryLink/dsh-background-agents)** | 🚫 RETIRED (repo archived) |
+| **[dsh-session-pin](https://github.com/PerryLink/dsh-session-pin)** | 🚫 RETIRED (repo archived) |
+| **[dsh-team-rooms](https://github.com/PerryLink/dsh-team-rooms)** | 🚫 RETIRED (repo archived) |
+
+</details>
+
+## License
+
+[LICENSE](LICENSE) (Apache License 2.0) © 2026 dsh-composer-history contributors
+
+<p align="center"><sub>Apache-2.0 · Community plugin, not affiliated with DeepSeek.</sub></p>

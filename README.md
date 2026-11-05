@@ -1,262 +1,216 @@
 <div align="center">
 
-# ⌨️ dsh-composer-history
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-flow-dark.svg">
+  <img src="docs/assets/dsh-composer-history-flow-light.svg" width="100%" alt="dsh-composer-history 流程：keydown → interceptor → setDraft → localStorage → Enter；Ctrl+R 覆盖 history / snippets / templates / insights 与 [compacted] 摘要">
+</picture>
 
-> Release stamp: `0.8.8` (2026-10-04).
-- **1024 store channel**: `npm i -g dsh1024` once, then `dsh1024 plugin --profile web add dsh-composer-history` (counts toward the [deepseek1024.com](https://deepseek1024.com) install ranking).
-[![Gitee](https://img.shields.io/badge/Gitee-mirror-c71d23?logo=gitee)](https://gitee.com/perrylink/dsh-composer-history)
+# dsh-composer-history
+
+**像终端一样按 ↑ 找回历史——你打到一半的草稿一个字都不会丢。**
+
+DeepSeek Harness Web GUI 作曲器的输入历史层：边缘优先的方向键召回、浏览器本地持久化、`Ctrl+R` 反向搜索、片段与模板库，全部只落在普通草稿里。
+
+[安装](#三步上手) · [配置](#配置) · [FAQ](#faq) · [简体中文](README.md) · [English](README.en.md) · [Español](README.es.md) · [Português](README.pt.md) · [हिन्दी](README.hi.md)
+
+[![License](https://img.shields.io/badge/license-Apache--2.0-3366CC?style=flat-square&labelColor=2B3245)](LICENSE)
+[![DSH](https://img.shields.io/badge/DSH-%E2%89%A50.2.1%20%3C0.3.0-4B67B4?style=flat-square&labelColor=2B3245)](#兼容性)
+[![npm](https://img.shields.io/npm/v/dsh-composer-history?style=flat-square&labelColor=2B3245&color=CB3837)](https://www.npmjs.com/package/dsh-composer-history)
+[![CI](https://img.shields.io/github/actions/workflow/status/PerryLink/dsh-composer-history/ci.yml?branch=main&label=CI&style=flat-square&labelColor=2B3245)](https://github.com/PerryLink/dsh-composer-history/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24.9-339933?style=flat-square&labelColor=2B3245)](#兼容性)
+
+[![Stars](https://img.shields.io/github/stars/PerryLink/dsh-composer-history?style=flat-square&labelColor=2B3245)](https://github.com/PerryLink/dsh-composer-history/stargazers)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-composer-history?style=flat-square&labelColor=2B3245&color=CB3837)](https://www.npmjs.com/package/dsh-composer-history)
 [![dshfind](https://dshfind.com/api/badge/PerryLink/dsh-composer-history?metric=downloads)](https://dshfind.com/plugins/PerryLink/dsh-composer-history?ref=badge)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/PerryLink/dsh-composer-history/badge)](https://api.securityscorecards.dev/projects/github.com/PerryLink/dsh-composer-history)
-
-**Terminal-style input history for the DeepSeek Harness Web GUI composer.**
-
-*Press ↑ like it's in a terminal — and keep your half-typed draft safe.*
-
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![DSH plugin](https://img.shields.io/badge/dsh--plugin-✅-green)](https://github.com/topics/dsh-plugin)
-[![dsh-doctor](https://raw.githubusercontent.com/PerryLink/dsh-plugin-doctor/main/badges/PerryLink__dsh-composer-history.svg)](https://github.com/PerryLink/dsh-plugin-doctor#verified-徽章)
-[![DSH Market](https://raw.githubusercontent.com/2BingLing/dsh-market/master/assets/readme/badge-top-rated.svg)](https://dsh.market/)
-[![Node](https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-brightgreen.svg)](#)
-[![CI](https://img.shields.io/github/actions/workflow/status/PerryLink/dsh-composer-history/ci.yml?branch=main&label=CI)](https://github.com/PerryLink/dsh-composer-history/actions)
-[![Version](https://img.shields.io/github/v/tag/PerryLink/dsh-composer-history?label=version)](https://github.com/PerryLink/dsh-composer-history/releases)
-[![npm version](https://img.shields.io/npm/v/dsh-composer-history)](https://www.npmjs.com/package/dsh-composer-history)
-[![npm downloads](https://img.shields.io/npm/dm/dsh-composer-history)](https://www.npmjs.com/package/dsh-composer-history)
-
-[English](README.md) · [简体中文](README-zh.md) · [Español](README-es.md) · [Português](README-pt.md) · [हिन्दी](README-hi.md)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/PerryLink/dsh-composer-history/badge)](https://securityscorecards.dev/viewer/?uri=github.com/PerryLink/dsh-composer-history)
+[![DSH Market](https://img.shields.io/badge/DSH_Market-listed-4B67B4?style=flat-square&labelColor=2B3245)](https://dsh.market/)
+[![Gitee](https://img.shields.io/badge/Gitee-mirror-C71D23?style=flat-square&labelColor=2B3245&logo=gitee)](https://gitee.com/perrylink/dsh-composer-history)
 
 ```sh
 dsh plugin --profile <name> add dsh-composer-history
 ```
 
-
 </div>
 
----
+<sub>社区插件，与 DeepSeek 官方无关。唯一仓库：<https://github.com/PerryLink/dsh-composer-history>（Gitee 为镜像）。</sub>
 
-**📖 Ecosystem knowledge base** — measured data, not marketing: [plugin development guide · plugin-selection data · maintenance criteria](https://perrylink.github.io/dsh-plugin-guide/).
+## 它是什么
 
-<!-- star-cta -->
-## Install & uninstall
+它把终端的输入历史搬进 DeepSeek Harness 的 Web 作曲器：光标在首行时按 ↑ 召回上一条你发过的消息，光标不在首行时 ↑/↓ 照常移动光标，绝不抢键。
 
-The npm package ships the built bundles; a source checkout must be built first (`pnpm run build`) — the client-package check refuses to boot against an unbuilt bundle.
+第一次召回会暂存 `{draft, caret}`，回到底部或按 `Esc` 时两者精确还原——你打到一半的草稿不会被清空。历史存在浏览器本地，刷新页面、切换会话都还在；`Ctrl+R` 打开反向搜索，历史、片段、模板一起搜。harness 自动压缩上下文时，检查点摘要以 `[compacted] …` 条目加入召回与搜索，并弹出一条可一键填入 `/compact` 的短暂通知。
 
-- **git channel** (latest `main`): `dsh plugin --profile web add github:PerryLink/dsh-composer-history`.
-- **npm channel** (published releases): `dsh plugin --profile web add dsh-composer-history`.
-- **tarball channel**: `pnpm pack` in this repo, then `dsh plugin --profile web add ./dsh-composer-history-<version>.tgz`.
-- **uninstall**: `dsh plugin --profile web remove dsh-composer-history` (or remove the row from the profile patch).
+纯 UI 行为：不产生会话事件、不改 agent-loop、不发模型请求。召回的文本只进入普通作曲器草稿；只有你按下 Enter，它才会到模型。
 
-## ⭐ 如果它帮到了你
+## 三步上手
 
-这个插件是 [DSH 插件家族](https://github.com/PerryLink)的一员（95 个，全部 Apache-2.0）。如果你在用，**给个 star** —— 它不会解锁任何功能，但会让下一个人在搜索里更容易找到它。
+1. **安装**（三选一）：
 
-*English:* part of a 95 plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+   ```sh
+   # git 通道（最新 main；等价于 git+https://github.com/PerryLink/dsh-composer-history.git）
+   dsh plugin --profile web add github:PerryLink/dsh-composer-history
+   # npm 通道（已发布版本）
+   dsh plugin --profile web add dsh-composer-history
+   # tarball 通道：本仓库 pnpm pack 后
+   dsh plugin --profile web add ./dsh-composer-history-<version>.tgz
+   ```
 
+   npm 包自带构建产物；源码 checkout 须先 `pnpm run build`——客户端包检查会拒绝未构建的 bundle 启动。
 
-## What is dsh-composer-history?
+2. **最小配置**（默认即可用；bundle patch 只插入一行，其余取 `Config` 默认值）：
 
-Terminal-style input history for the DeepSeek Harness Web GUI composer.
+   ```yaml
+   - insert:
+       - id: composer-history
+         name: dsh-composer-history
+   ```
 
-Press ↑ like it's in a terminal — and keep your half-typed draft safe.
+3. **验证已生效**：
 
-![Workflow diagram for dsh-composer-history: install → open panel → act.](docs/assets/dsh-composer-history-flow.svg)
+   ```sh
+   dsh --profile web --dump-config | grep -A3 'id: composer-history'
+   ```
 
-*Workflow overview: install → open panel → act. The examples below use the real command surface.*
+   输出里应能看到 `id: composer-history` 与 `name: dsh-composer-history`。重启后在 Web GUI 把光标放到作曲器首行按 ↑，最新一条用户消息会填入草稿。
 
+**卸载**：`dsh plugin --profile web remove dsh-composer-history`（或从 profile patch 删掉该行）。
 
+<details>
+<summary>从 DSH Desktop 市场安装</summary>
 
-## Compatibility
+所有 PerryLink 插件均可在 DSH Desktop 内置市场中浏览：**市场 → 来源 → 添加来源 → 粘贴** `https://perrylink-dsh-catalog.perrylink.workers.dev/catalog-source.json` **→ 选中**。安装仍需通过市场的 npm 身份校验与你的确认。
 
-| Surface | Status |
-|---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-rc.2` (verified 2026-10-18): `engines.dsh >=0.2.1-0 <0.3.0`; the P0 compatibility paths have regression tests. |
-| Node | `^22.19.0 \|\| >=24.0.0` |
-| Platforms | Web GUI only (client plugin; browser-local storage; no network, no native code) |
-| Model | Any (no model requests — pure UI behavior) |
+</details>
 
-The browser half rides the published client packages (`dsh-client-ui-conversation`, `dsh-client-ui-input-trigger`, `dsh-client-ui-settings`) and the cordis `Context`; it no longer depends on the removed `dsh-client-runtime` package, so the client surface also lines up with `0.1.2-rc.1` hosts.
-Interception anchors on the web composer's DOM: the contenteditable surface `div[data-composer-input]` inside `[data-input-scroll]` (the Lexical composer shipped since 0.1.2-alpha.5 / 0.1.2-rc.1), with the legacy textarea composer inside `[data-input-scroll]` (harness lines up to 0.1.1-rc.2) still matched; textareas elsewhere pass through. The compat workflow's jsdom web-behavior smoke asserts this identity/text/caret face against the packed bundle.
-0.1.2-rc.1 (adapted 2026-09-04): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged. Verified 2026-09-06 against the dsh-v0.1.7-alpha.1 master checkout (full gate chain + profile install smoke).
-0.1.5-rc.1 (adapted 2026-09-10): dependency pins move to the published 0.1.5-rc.1 line; no seam change affects this plugin's behavior.
-0.1.5-rc.2 (adapted 2026-09-11): dependency pins move to the published 0.1.5-rc.2 line; no seam change affects this plugin's behavior.
-0.1.7-alpha.1 (adapted 2026-10-04): the settings seam is replaced on both halves. The host half no longer registers a `composer-history` namespace through the removed `ctx.settings.register(ns, schema, { base })` — on this line a plugin's durable settings surface IS its own live `Config`: every tunable is declared `.volatile()`, the profile entry id (`composer-history`, the bundle patch's row id) names the form, and `apply` claims the generated-form presentation (`ctx.settings.configure({ auto: true }, ctx.fiber)`, effect-owned so a reload re-registers cleanly). The browser half reads the same entry through `ctx.configForms.get('composer-history')` instead of the removed `ctx.settingsScope.bind({ namespace })`; the snapshot/subscribe shape is unchanged, so the wiring still reinstalls on every committed change. Editable surface is preserved, not widened: every field the old namespace exposed is volatile, and no new field became editable. An existing `settings.yaml` section named `composer-history` is migrated into the profile entry of the same id by the host itself.
+## 核心能力
 
-## What you get
+`dsh-composer-history` 只做一件事：让作曲器记住你发过什么，并在你需要时原样还回来。
 
-`dsh-composer-history` puts a terminal's input history into the DeepSeek Harness Web GUI composer:
+1. **边缘优先的方向键召回**——裸 ↑/↓ 先移动光标；只有当光标位于首行/末行时才触发历史召回。首次召回暂存 `{draft, caret}`，回到最新一条（或按 `Esc`）时两者精确还原——从不被清空。
+2. **持久化历史**——每条已发送消息追加到有界的浏览器本地存储，所以召回能活过页面刷新，并跨会话可用。
+3. **反向搜索**——`Ctrl+R`（可配置）在合并的历史、片段与模板上打开查询覆盖层。
+4. **智能输入层**——`/save`/`/load` 片段、带 `{{workspace}}`/`{{session}}`/`{{draft}}` 变量的提示词模板，以及浏览器本地的复用洞察。
+5. **感知滑动上下文**——压缩摘要以 `[compacted] …` 条目加入召回与搜索，每次压缩弹出带一键 `/compact` 填入的短暂通知。
+6. **版本化 JSON 备份**——历史、片段、模板、洞察四个库导出/导入为一份带 schema 版本的文档；导出可下载或复制，导入可选文件或粘贴。
 
-1. **Edge-first arrow recall** — bare ↑/↓ move the caret first; history recall triggers only when the caret sits on the first/last line. The first recall stashes `{draft, caret}`, and reaching the newest entry again (or pressing `Esc`) restores both exactly — never cleared.
-2. **Persisted history** — every sent message is appended to a bounded browser-local store, so recall survives page reloads and reaches across sessions.
-3. **Reverse search** — `Ctrl+R` (configurable) opens a query overlay over merged history, snippets, and templates.
-4. **Smart input layer** — `/save`/`/load` snippets, prompt templates with `{{workspace}}`/`{{session}}`/`{{draft}}` variables, and browser-local reuse insights.
-5. **Sliding-context aware** — compaction summaries join recall and search as `[compacted] …` entries, and a transient notice announces each compaction with a one-click `/compact` fill.
-6. **Versioned JSON backup** — export/import all four libraries (history, snippets, templates, insights) as one schema-versioned document; download or copy on export, file pick or paste on import.
+纯 UI 行为：不产生会话事件、不改 agent-loop、不发模型请求。召回的文本只进入普通作曲器草稿；只有*你*按下 Enter 才会到模型。
 
-Pure UI behavior: no session events, no agent-loop changes, no model requests. Recalled text only enters the ordinary composer draft; it reaches the model only if *you* press Enter.
-
-## Quick start
-
-```sh
-dsh plugin --profile web add github:PerryLink/dsh-composer-history
+```text
+keydown ──interceptor──▶ setDraft ──▶ draft ──Enter──▶ model
+                            ▲                              │
+                            └──── localStorage ◀───────────┘
+                                  dsh.composer-history.v1 · snippets.v1
+                                  templates.v1 · insights.v1
 ```
 
+### 命令与工具面
+
+| 表面 | 类型 | 说明 |
+|---|---|---|
+| `ArrowUp` | keybinding | 边缘优先的 ↑/↓ 召回——暂存 `{draft, caret}`，回到底部或按 `Esc` 时两者精确还原 |
+| `Ctrl+R` | keybinding | 在合并的历史、片段与模板上打开反向搜索覆盖层 |
+| `/save` | command | 把当前草稿存为带名称与标签的片段 |
+| `/load` | command | 在光标处插入已保存的片段 |
+| `templates` | UI | 历史、片段、模板、洞察四个库的版本化 JSON 备份导出/导入（仅显式点击触发） |
+| `composer-history` | settings form | 该 profile 条目自身的活 `Config` 表单——把解析后的配置（cordis.yml 基线与 profile 覆盖）带进浏览器半边 |
+
+### 按键行为
+
+| 按键 | 状态 | 行为 |
+|---|---|---|
+| ↑ | IDLE，光标在首行 | 暂存 `{draft, caret}`，填入最新条目，光标到末尾（无历史 → 放行） |
+| ↑ | BROWSING，光标在首行 | 走向更早条目；在最旧一条按住不动（拦截，无任何变更） |
+| ↑ | 光标不在首行 | 完全放行（浏览器移动光标） |
+| ↓ | IDLE | 始终放行（普通光标移动） |
+| ↓ | BROWSING，光标在末行 | 走向更新条目；到最新一条 → 还原 `savedDraft` + `savedCaret` → IDLE |
+| ↓ | 光标不在末行 | 完全放行 |
+| Esc | BROWSING（`restoreOnEscape: true`） | 还原 `savedDraft` + `savedCaret` → IDLE，拦截 |
+| Esc | 其他情况 | 放行（菜单/弹窗的 Escape 语义不受影响） |
+| Ctrl+↑/↓ | `enableCtrlAlias: true` | 与裸方向键一致 |
+| `searchKeys` chord | 作曲器聚焦、`plain` 阶段、无菜单/选区/IME | 打开反向搜索；浏览结束，当前显示的文本成为草稿 |
+| Shift/Alt/Meta+方向键、IME、选区 | 任意 | 始终放行 |
+
+`upKey`/`downKey`/`escapeKey`/`searchKeys` 可以重命名上表按键；修饰键策略（以及搜索组合键的精确修饰键匹配）不变。搜索覆盖层内：↑/↓ 移动匹配选择（选中行自动滚入可见区域）、Enter 填充、Esc 取消、点击选中、点击面板外取消；匹配到的子串在每行中高亮显示。
+
+### 示例
+
+以下为插件真实入口；安装后调用一个即可。
+
+**详细示例**——命令 `/save`，输入：
+
 ```sh
-# 1. install the bundle into your profile
-dsh plugin --profile web add github:PerryLink/dsh-composer-history
-
-# or from npm (published releases)
-dsh plugin --profile web add dsh-composer-history
-
-# 2. restart and verify the row
-dsh --profile web --dump-config | grep -A3 'id: composer-history'
-```
-
-### Examples
-
-These are the plugin's real entry points; install once, then call one.
-
-#### Detailed example
-
-**Command**
-
-~~~sh
 /save ship-check --tag=release,ops
-~~~
+```
 
-**Output**
+输出：
 
-~~~text
+```text
 snippet saved: ship-check
-~~~
+```
 
 *Observed from `plugins/dsh-composer-history/README.md §Smart input layer (lines 199-205); code at src/client/index.ts:314-327`*
 
-#### Failure branch
+**失败分支**——输入：
 
-**Input**
-
-~~~text
+```text
 /load nope
-~~~
+```
 
-**Output**
+输出：
 
-~~~text
+```text
 no snippet named nope (open Ctrl+R search to browse snippets)
-~~~
+```
 
 *Observed from `plugins/dsh-composer-history/src/client/index.ts:330-333; plugins/dsh-composer-history/src/client/notice.ts:62-65`*
 
-#### Brief examples
+**简短示例**：`/load` · `/compact`
 
-- `/load`
-- `/compact`
+## 反向搜索
 
-## Configuration
+- **打开**：作曲器聚焦且输入处于 `plain` 阶段时按下 `searchKeys` 组合键（此时 `Ctrl+R` 也会拦截浏览器的页面刷新——按键只在作曲器内被消费）。
+- **过滤**：对合并历史（当前会话 + 持久化 + 工作区条目）做子串匹配；是否区分大小写由 `searchCaseSensitive` 决定；匹配到的子串在每行中高亮。
+- **选中**：Enter 填充草稿并把光标移到末尾——与普通召回同一条 `setDraft` 写路径。召回文本只有在你随后按 Enter 时才会到达模型。
+- **取消**：Esc 或点击面板外；草稿不被触碰。
 
-All tunables are Schemastery `Config` fields (changeable from cordis.yml and the entry's settings form; the profile patch is the persisted document). An id-targeted override replaces the whole row — restate every key you need. Invalid enum values fail the whole dsh boot loudly, and a settings-form edit is validated by the host before it persists.
+## 智能输入层
 
-| Key | Default | Meaning |
-|---|---|---|
-| `recallWithDraft` | `'save'` | Recall mode (`save` / `gate`): `save` stashes a non-empty draft before recall; `gate` recalls only an empty draft (Claude/Codex-style gating) |
-| `restoreOnEscape` | `true` | Restore the stashed draft when `Esc` ends browsing |
-| `edgeMode` | `'logical'` | Edge detection mode (`logical` / `visual`): by `\n` lines or by measured wrapped lines |
-| `enableCtrlAlias` | `true` | Let Ctrl+↑/↓ behave like the bare arrows |
-| `restoreCaret` | `true` | Also restore the stashed caret on bottom-out / `Esc` |
-| `upKey` | `'ArrowUp'` | `KeyboardEvent.key` that recalls upward; `''` disables |
-| `downKey` | `'ArrowDown'` | `KeyboardEvent.key` that walks newer / restores; `''` disables |
-| `escapeKey` | `'Escape'` | `KeyboardEvent.key` that escapes browsing; `''` disables |
-| `maxHistory` | `500` | Maximum recalled entries (newest kept); `0` = unlimited |
-| `includeKinds` | `['user']` | Conversation node kinds admitted into the history (add `'steering'` to include steer messages) |
-| `historyScope` | `'session'` | History scope (`session` / `workspace`): `workspace` prepends other listed sessions' user messages before the current session's |
-| `persistHistory` | `true` | Append sent messages to the browser-local store |
-| `maxPersisted` | `200` | Maximum persisted entries; `0` = unlimited |
-| `enableSearch` | `true` | Enable the `Ctrl+R` reverse-search overlay |
-| `searchKeys` | `['Ctrl+R']` | Chord specs opening the search (modifiers `Ctrl`/`Alt`/`Meta`/`Shift` + a key name); a malformed spec fails the browser fiber loudly |
-| `searchCaseSensitive` | `false` | Whether search matching distinguishes letter case |
-| `includeCompactionSummaries` | `true` | Admit `[compacted] …` checkpoint summaries into recall and search |
-| `showCompactionNotice` | `true` | Show a transient notice when a compaction checkpoint lands |
-| `compactCommandText` | `'/compact'` | Slash command the notice's "Compact now" action fills into the composer; `''` hides the action |
-| `enableSnippets` | `true` | Enable the snippet library (`/save`, `/load`, search-panel picking) |
-| `maxSnippets` | `200` | Maximum stored snippets; `0` = unlimited |
-| `enableTemplates` | `true` | Enable the prompt-template library (variables fill at insertion) |
-| `enableInsights` | `true` | Enable the reuse-insight hint (local usage statistics) |
-| `insightMinUses` | `2` | Minimum uses before the reuse hint shows |
-| `enableCompactionHighlight` | `true` | Badge `[compacted] …` summaries distinctly in the search panel |
+在终端式历史之上，三套浏览器本地库把作曲器变成可复用的输入面。下面的所有内容都存于 `localStorage`（键 `dsh.composer-history.snippets.v1`、`.templates.v1`、`.insights.v1`），绝不触碰网络，每个开关都是 `Config` 字段。
 
-## Tools & surfaces
-
-| Surface | Kind | Notes |
-|---|---|---|
-| `ArrowUp` | keybinding | Edge-first ↑/↓ recall — stashes `{draft, caret}`, restores both exactly on bottom-out or `Esc` |
-| `Ctrl+R` | keybinding | Reverse-search overlay over merged history, snippets, and templates |
-| `/save` | command | Save the current draft as a named, tagged snippet |
-| `/load` | command | Insert a saved snippet at the caret |
-| `templates` | UI | Versioned JSON backup export/import of history, snippets, templates, and insights (explicit click only) |
-| `composer-history` | settings form | The profile entry's own live `Config` form — carries the resolved config (cordis.yml base + profile overrides) into the browser half |
-
-## Keybindings
-
-| Key | State | Behavior |
-|---|---|---|
-| ↑ | IDLE, caret on first line | stash `{draft, caret}`, fill newest entry, caret to end (no history → pass) |
-| ↑ | BROWSING, caret on first line | older entry; hold at the oldest (intercept, no mutation) |
-| ↑ | caret not on first line | fully released (browser moves the caret) |
-| ↓ | IDLE | always released (plain caret movement) |
-| ↓ | BROWSING, caret on last line | newer entry; at newest → restore `savedDraft` + `savedCaret` → IDLE |
-| ↓ | caret not on last line | fully released |
-| Esc | BROWSING (`restoreOnEscape: true`) | restore `savedDraft` + `savedCaret` → IDLE, intercepted |
-| Esc | otherwise | released (menu/popup Escape semantics untouched) |
-| Ctrl+↑/↓ | `enableCtrlAlias: true` | same as bare arrows |
-| `searchKeys` chord | composer focused, `plain` phase, no menu/selection/IME | open reverse search; browsing ends, the shown text becomes the draft |
-| Shift/Alt/Meta+arrows, IME, selection | any | always released |
-
-`upKey`/`downKey`/`escapeKey`/`searchKeys` rename the keys above; the modifier policy (and the search chord's exact-modifier match) is unchanged. Inside the search overlay: ↑/↓ move the match selection (the selected row scrolls into view), Enter fills, Esc cancels, a click picks, a press outside cancels; matched substrings are highlighted in every row.
-
-## Reverse search
-
-- **Open**: the `searchKeys` chord while the composer is focused and the input is `plain` (a `Ctrl+R` here also stops the browser's page reload — the key is consumed only inside the composer).
-- **Filter**: substring match over the merged history (current session + persisted + workspace entries); case sensitivity per `searchCaseSensitive`; matched substrings are highlighted in each row.
-- **Pick**: Enter fills the draft and moves the caret to the end — the same single `setDraft` write path as ordinary recall. Recalled text reaches the model only if you press Enter afterwards.
-- **Cancel**: Esc or a press outside the panel; the draft is untouched.
-
-## Smart input layer
-
-On top of the terminal-style history, three browser-local libraries turn the composer into a reusable input surface. Everything below lives in `localStorage` (keys `dsh.composer-history.snippets.v1`, `.templates.v1`, `.insights.v1`), never touches the network, and every switch is a `Config` field.
-
-**Snippets (cross-session command library)**
+**片段（跨会话命令库）**
 
 ```text
 /save ship-check --tag=release,ops
-check the build, run the smoke suite, tag the release        ← the rest of the draft is the snippet
+check the build, run the smoke suite, tag the release        ← 草稿其余部分就是片段
 /save ship-check                                             → "snippet saved: ship-check"
-/load ship-check                                             → the snippet fills the composer
-Ctrl+R → search panel lists snippets (green badge = name) alongside history
+/load ship-check                                             → 片段填入作曲器
+Ctrl+R → 搜索面板在历史旁列出片段（绿色徽标 = 名称）
 ```
 
-- `/save <name>` consumes the Enter, stores the draft (minus the command line) under a kebab-case name with optional tags, and clears the composer. Nothing to save → an error notice, the command never sends.
-- `/load <name>` inserts the snippet at the caret (whole-draft replace, caret to end) and counts the use.
-- Scope: snippets saved with a workspace cwd are workspace-scoped; snippets saved without one are global. `maxSnippets` bounds the library; same-name saves replace.
-- The plugin never sends: every fill lands in the ordinary draft and your Enter stays yours.
+- `/save <名字>` 消费这次 Enter，把草稿（去掉命令那一行）以 kebab-case 名称（可带标签）存下，并清空作曲器。没有可保存的内容 → 弹出错误通知，命令绝不发送。
+- `/load <名字>` 在光标处插入片段（整段替换、光标到末尾）并计一次使用。
+- 作用域：带工作区 cwd 保存的片段是工作区作用域；不带的是全局。`maxSnippets` 限定库大小；同名保存会替换。
+- 插件从不发送：每次填入都落在普通草稿里，Enter 永远属于你。
 
-**Prompt templates with variables**
+**带变量的提示词模板**
 
-Templates are stored prompt texts with `{{variable}}` placeholders. The search panel lists them with a purple badge; picking one fills the variables from the live session and inserts the result. Built-in variables: `{{workspace}}` (the session's cwd), `{{session}}` (the session id), `{{draft}}` (the current draft). A template referencing an unknown variable fails loudly with the missing list — a half-filled prompt is worse than an error.
+模板是带 `{{variable}}` 占位符的存储提示词文本。搜索面板以紫色徽标列出；选中一条会从实时会话填充变量并插入结果。内置变量：`{{workspace}}`（会话的 cwd）、`{{session}}`（会话 id）、`{{draft}}`（当前草稿）。引用未知变量的模板会响亮失败并列出缺失项——半填充的提示词比报错更糟。
 
-The whole library — history, snippets, templates, and insights — exports to and imports from a single versioned JSON document through the panel's **Export JSON / Import file** actions; see **Backup export & import** below. An explicit user action; the plugin never writes files on its own.
+整个库——历史、片段、模板与洞察——通过面板的 **Export JSON / Import file** 动作导出/导入为一份版本化 JSON 文档，详见下面的「备份导出与导入」。这是显式的用户操作；插件从不自行写文件。
 
-**Reuse insights**
+**复用洞察**
 
-Every newly committed user message (and every snippet load) lands one browser-local usage record keyed by exact text. While you type, a small hint under the composer reports `used M× in N sessions · 在 N 个会话里用过 M 次` once the draft matches a prompt used in at least `insightMinUses` (default 2) sessions. Toggle with `enableInsights`; the statistics contain only the deduped texts and counters.
+每条新提交的用户消息（以及每次片段加载）都会以精确文本为键写入一条浏览器本地使用记录。当你输入时，一旦草稿匹配到至少在 `insightMinUses`（默认 2）个会话里用过的提示词，作曲器下方的小提示就会显示 `used M× in N sessions · 在 N 个会话里用过 M 次`。用 `enableInsights` 开关；统计只包含去重后的文本与计数器。
 
-**Compaction summary highlight**
+**压缩摘要高亮**
 
-`Ctrl+R` marks `[compacted] …` summaries with an amber badge (history stays unbadged), snippets green, templates purple — the panel's provenance is visible at a glance. Toggle with `enableCompactionHighlight`.
+`Ctrl+R` 给 `[compacted] …` 摘要加琥珀色徽标（历史不加徽标），片段绿色、模板紫色——面板的来源一眼可见。用 `enableCompactionHighlight` 开关。
 
-## Backup export & import
+## 备份导出与导入
 
-All four browser-local libraries export to and import from one versioned JSON document. The panel's **Export JSON / Copy JSON / Import file / Paste JSON** actions run entirely in the browser: download or copy to clipboard on export, file pick or pasted text on import — nothing is uploaded and no host RPC or network call is involved.
+四个浏览器本地库统一导出/导入为一份带版本号的 JSON 文档。面板的 **Export JSON / Copy JSON / Import file / Paste JSON** 操作完全在浏览器内完成：导出时下载或复制到剪贴板，导入时选文件或粘贴文本——不会上传任何内容，不涉及宿主 RPC 或网络调用。
 
-**Document shape**
+**文档结构**
 
 ```json
 {
@@ -271,104 +225,244 @@ All four browser-local libraries export to and import from one versioned JSON do
 }
 ```
 
-**Merge & conflict strategy**
+**合并与冲突策略**
 
-- History entries are plain strings and deduplicate by exact text; a duplicate or blank entry is skipped, never overwritten.
-- Snippets and templates key on `name`; insights key on exact `text`. On a same-key conflict the **newest timestamp wins** (`updatedAt` for snippets/templates, `lastUsedAt` for insights); an older or equal-timestamp import is skipped, and new keys are appended.
-- The import respects `maxPersisted` and `maxSnippets`; templates and insights cap at their fixed protocol limits (`500` each).
-- The result notice reports how many records were written and how many were skipped (older/duplicate).
+- 历史条目是纯字符串，按精确文本去重；重复或空白条目被跳过，绝不覆盖。
+- 片段与模板按 `name` 为键；洞察按精确 `text` 为键。同键冲突时**最新时间戳胜出**（片段/模板看 `updatedAt`，洞察看 `lastUsedAt`）；更旧或等时间戳的导入被跳过，新键追加。
+- 导入遵守 `maxPersisted` 与 `maxSnippets`；模板与洞察止于固定协议上限（各 `500`）。
+- 结果通知会报告写入多少条、跳过多少条（更旧/重复）。
 
-**Schema versioning**
+**模式版本**
 
-`schemaVersion` starts at `1`. Imports run a stepwise migration (one version at a time) so future formats can upgrade old documents in place. A document whose `schemaVersion` is **newer** than the one this build understands is rejected with an error — it is never silently dropped or partially merged; a version too old to migrate is rejected the same way.
+`schemaVersion` 从 `1` 开始。导入按版本逐步迁移（一次一个版本），未来格式可就地升级旧文档。`schemaVersion` **高于**当前构建理解的文档以错误拒绝——绝不静默丢弃或部分合并；过旧无法迁移的版本同样拒绝。
 
-## Sliding context
+## 滑动上下文
 
-The harness core gives every dsh session a sliding context window, the same workflow Claude Code and Codex ship: when a conversation approaches the model's context limit (or the provider reports an overflow), the harness **auto-compacts** — older turns are summarized behind a `compaction` checkpoint marker that stays visible in the transcript, the model keeps only the summary plus the recent tail, and the session continues. `/compact` triggers the same compaction on demand, and the marker renders as an expandable "Context compacted" row.
+harness 核心给每个 dsh 会话提供滑动上下文窗口——与 Claude Code 和 Codex 同款的工作流：当会话接近模型的上下文上限（或提供方回报溢出）时，harness 会**自动压缩**——更早的轮次被总结为留在会话记录中的 `compaction` 检查点标记，模型只保留摘要加上最近的尾部，会话继续；`/compact` 可随时手动触发同样的压缩，标记在记录中渲染为可展开的「上下文已压缩」行。
 
-`dsh-composer-history` plugs the composer into that workflow so the window slide never costs you your typing history:
+`dsh-composer-history` 把作曲器接入这个工作流，让上下文窗口滑动时你的输入历史一条不丢：
 
-- **Recall survives compaction** — shadowed turns stay in the finalized conversation the Chat view publishes, so ↑ still walks every message you sent before and after a checkpoint.
-- **Summaries join the history** — each checkpoint's summary text enters ↑ recall and `Ctrl+R` search as a `[compacted] …` entry (toggle: `includeCompactionSummaries`), so context the model no longer sees verbatim stays one keystroke away.
-- **Compaction notice** — when a checkpoint lands while the page is open, a transient snackbar announces it (the Claude Code "Auto-compacting conversation…" moment) with the summary snippet and a one-click **Fill `/compact`** action (`showCompactionNotice`, `compactCommandText`); the fill lands in the ordinary draft, and only your Enter sends it.
-- **Search counts** — the `Ctrl+R` panel now shows a live `N entries` / `N matches` status line, and long entries are clamped to two lines.
+- **召回跨压缩留存**——被遮蔽的轮次仍留在 Chat 视图发布的已结算会话里，↑ 依旧能走过检查点前后你发送过的每一条消息。
+- **摘要加入历史**——每个检查点的摘要文本以 `[compacted] …` 条目进入 ↑ 召回和 `Ctrl+R` 搜索（开关：`includeCompactionSummaries`），模型不再逐字看到的上下文仍然一键可达。
+- **压缩通知**——页面打开期间有检查点落地时，底部弹出短暂通知（Claude Code 的「自动压缩会话…」时刻），附摘要片段和一键**填入 `/compact`** 按钮（`showCompactionNotice`、`compactCommandText`）；填入只进普通草稿，只有你按 Enter 才发送。
+- **搜索计数**——`Ctrl+R` 面板新增实时的 `N entries` / `N matches` 状态行，长条目限两行显示。
 
-> Compaction itself (thresholds, summary model, `/compact`) is owned by the harness core's compaction plugins — this plugin only observes the checkpoint markers the Chat view's conversation projection already publishes (`uiConversation.binding(id).target('chat').legacy.nodes`), so it works without any agent-loop or model-request changes.
+> 压缩本身（阈值、摘要模型、`/compact`）由 harness 核心的 compaction 插件负责——本插件只观察 Chat 视图的会话投影（`uiConversation.binding(id).target('chat').legacy.nodes`）已经发布的检查点标记，因此不需要任何 agent-loop 或模型请求改动。
 
-## Permissions & data
+## 配置
 
-- **Permissions**: the plugin declares `browser:local-storage` in its workshop manifest — nothing else. No network, no subprocesses, no session events.
-- **Data**: four browser-local `localStorage` keys — `dsh.composer-history.v1` (sent-message history), `dsh.composer-history.snippets.v1` (snippet texts + tags + use counters), `dsh.composer-history.templates.v1` (template texts), and `dsh.composer-history.insights.v1` (deduped prompt texts + per-session use counters). All bounded, same-origin only, never uploaded; corrupt payloads reset silently.
-- **Model-visible ⟺ you press Enter**: recalled text, snippet loads, template fills, and the `/compact` fill all land in the ordinary composer draft. Nothing reaches the model until you press Enter.
+所有可调项都是 Schemastery `Config` 字段（可从 cordis.yml 与该条目的设置表单修改；profile patch 即持久化文档）。按 id 的覆盖会替换整行——重新列出你需要的每个键。非法枚举值会响亮地中止整个 dsh 启动，设置表单的编辑也会在持久化前由宿主拒绝非法值。
 
-## Security boundaries
+最常用的键：
 
-- **UI-only, never enforcement.** The plugin edits the composer draft only; the sandbox, approval, and session systems remain the enforcement authorities, and no command or tool is ever claimed or bypassed.
-- **No content leaves the browser** except an explicit export. History, snippets, templates, and insights live in `localStorage`; nothing is uploaded, and no model request or network call is made. The versioned backup export only writes a local download or the clipboard on an explicit click.
-- **Fail loud.** Invalid enum values fail the whole dsh boot; a malformed search chord fails the browser fiber — misconfiguration never silently degrades.
-- **Bounded everything.** `maxHistory`, `maxPersisted`, and `maxSnippets` cap retained entries; corrupt or foreign payloads reset silently.
-- **Zero side effects on pass-through.** The plugin intercepts only in the `plain` input phase and yields to the slash menu, command popups, IME composition, text selections, and modifier combos.
+| 键 | 默认值 | 含义 |
+|---|---|---|
+| `recallWithDraft` | `'save'` | 召回模式（`save` / `gate`）：`save` 在召回前暂存非空草稿；`gate` 仅空草稿才召回（Claude/Codex 式门控） |
+| `restoreOnEscape` | `true` | `Esc` 结束浏览时还原暂存的草稿 |
+| `edgeMode` | `'logical'` | 边缘判定模式（`logical` / `visual`）：按 `\n` 行，或按测量出的折行 |
+| `maxHistory` | `500` | 召回条目上限（保留最新）；`0` = 不限 |
+| `historyScope` | `'session'` | 历史范围（`session` / `workspace`）：`workspace` 把其他已列表会话的用户消息排在当前会话之前 |
+| `enableSearch` | `true` | 启用 `Ctrl+R` 反向搜索覆盖层 |
+| `maxSnippets` | `200` | 最大存储片段数；`0` = 不限 |
 
-## Known limitations
+<details>
+<summary>完整配置表（25 个键）</summary>
 
-- **Composer DOM face.** Interception anchors on host-private DOM: the contenteditable `div[data-composer-input]` inside `[data-input-scroll]` (harness 0.1.2-alpha.5 / 0.1.2-rc.1 and later); the legacy textarea composer inside `[data-input-scroll]` (lines up to 0.1.1-rc.2) stays matched. This shape is not a published API (upstream proposal C3 records that plugins can only guess host DOM), so a future host DOM change can break interception silently — the compat workflow's jsdom smoke re-asserts the face against the packed bundle.
-- **Logical vs visual lines.** Default `logical` keys off `\n` (a long auto-wrapped message counts as one line); `visual` measures real wraps via a hidden mirror that copies the contenteditable surface's computed box (O(lines·log n) binary search per edge check, memoized per draft/width). Mirror measurement needs a real layout engine — the pure span math is unit-tested instead, and measured spans on the Lexical composer stay best-effort (logical remains the default).
-- **Persisted history is per-browser.** The store lives in one origin's `localStorage`; it never syncs between browsers or machines. Corrupt payloads reset silently.
-- **Undo stack includes recall transactions.** Every fill/restore is one `setDraft` transaction in the input machine's undo log; Ctrl+Z steps back through recalls. The precision fix needs the upstream edit-range exposure.
-- Recalling a `/xxx` entry then Enter follows the normal command claim/adjudication path (expected, and Enter is never intercepted).
-- Menus/popups and non-`plain` phases always win; a committed send and session switches both reset to IDLE.
-- Reference chips (U+FFFC placeholders) ride along with recalled/restored draft text.
-- `historyScope: 'workspace'` reads the Chat targets of other listed sessions; a session whose Chat view has not been activated in this page contributes nothing yet.
-- The search overlay is plain DOM (no React dependency); it renders all matches up to the `maxHistory` bound.
-- **Compaction awareness is observational.** Checkpoints landed before install (or before a session switch) never trigger a notice; a checkpoint whose summary event fell outside the loaded window contributes no `[compacted] …` entry (`summary: null`).
-- The notice's "Compact now" action only *fills* the configured command text into the draft — sending remains the user's Enter.
-- **Snippets, templates, and insights are browser-local.** Names are kebab-case (1..64 chars); tags cap at 8 × 32 chars. Template variables resolve from the live session; `{{draft}}` is the draft at pick time.
+| 键 | 默认值 | 含义 |
+|---|---|---|
+| `recallWithDraft` | `'save'` | 召回模式（`save` / `gate`）：`save` 在召回前暂存非空草稿；`gate` 仅空草稿才召回（Claude/Codex 式门控） |
+| `restoreOnEscape` | `true` | `Esc` 结束浏览时还原暂存的草稿 |
+| `edgeMode` | `'logical'` | 边缘判定模式（`logical` / `visual`）：按 `\n` 行，或按测量出的折行 |
+| `enableCtrlAlias` | `true` | 让 Ctrl+↑/↓ 与裸方向键行为一致 |
+| `restoreCaret` | `true` | 回到底部 / `Esc` 时同时还原暂存的光标 |
+| `upKey` | `'ArrowUp'` | 向上召回的 `KeyboardEvent.key`；`''` 表示禁用 |
+| `downKey` | `'ArrowDown'` | 走向更新 / 还原的 `KeyboardEvent.key`；`''` 表示禁用 |
+| `escapeKey` | `'Escape'` | 退出浏览的 `KeyboardEvent.key`；`''` 表示禁用 |
+| `maxHistory` | `500` | 召回条目上限（保留最新）；`0` = 不限 |
+| `includeKinds` | `['user']` | 允许进入历史的会话节点 kind（加入 `'steering'` 以包含 steer 消息） |
+| `historyScope` | `'session'` | 历史范围（`session` / `workspace`）：`workspace` 把其他已列表会话的用户消息排在当前会话之前 |
+| `persistHistory` | `true` | 把已发送消息追加到浏览器本地存储 |
+| `maxPersisted` | `200` | 持久化条目上限；`0` = 不限 |
+| `enableSearch` | `true` | 启用 `Ctrl+R` 反向搜索覆盖层 |
+| `searchKeys` | `['Ctrl+R']` | 打开搜索的组合键规格（修饰键 `Ctrl`/`Alt`/`Meta`/`Shift` + 键名）；非法规格会使浏览器 fiber 响亮失败 |
+| `searchCaseSensitive` | `false` | 搜索匹配是否区分字母大小写 |
+| `includeCompactionSummaries` | `true` | 把 `[compacted] …` 检查点摘要纳入召回与搜索 |
+| `showCompactionNotice` | `true` | 压缩检查点落地时显示短暂通知 |
+| `compactCommandText` | `'/compact'` | 通知中「Compact now」按钮填入作曲器的斜杠命令；`''` 隐藏该按钮 |
+| `enableSnippets` | `true` | 启用片段库（`/save`、`/load`、搜索面板选取） |
+| `maxSnippets` | `200` | 最大存储片段数；`0` = 不限 |
+| `enableTemplates` | `true` | 启用提示词模板库（插入时填充变量） |
+| `enableInsights` | `true` | 启用复用洞察提示（本地使用统计） |
+| `insightMinUses` | `2` | 复用提示显示前的最少使用次数 |
+| `enableCompactionHighlight` | `true` | 在搜索面板中给 `[compacted] …` 摘要加醒目徽标 |
 
-## Development
+</details>
+
+profile patch 覆盖示例：
+
+```yaml
+- insert:
+    - id: composer-history
+      name: dsh-composer-history
+      config:
+        recallWithDraft: gate
+        maxHistory: 1000
+        historyScope: workspace
+```
+
+## FAQ
+
+<details>
+<summary>数据到底存在哪？会被上传吗？</summary>
+
+四份浏览器本地 `localStorage` 键：`dsh.composer-history.v1`（已发送消息历史）、`dsh.composer-history.snippets.v1`（片段文本 + 标签 + 使用计数）、`dsh.composer-history.templates.v1`（模板文本）、`dsh.composer-history.insights.v1`（去重提示词文本 + 每会话使用计数）。全部有界、仅同源可读、绝不上传；损坏载荷静默重置。唯一出浏览器的路径是你显式点击的备份导出（下载文件或复制到剪贴板）。
+
+</details>
+
+<details>
+<summary>宿主换掉作曲器 DOM 会怎样？会静默失效吗？</summary>
+
+会——这正是「已知限制」第一条。拦截锚定的是宿主私有 DOM：`[data-input-scroll]` 内的 contenteditable `div[data-composer-input]`（顺带兼容 0.1.1-rc.2 及以前的 textarea 作曲器）。这不是公开 API（上游提案 C3 记载插件只能猜测宿主 DOM），所以未来宿主 DOM 变化可能让拦截静默失效。compat 工作流的 jsdom 冒烟针对打包产物重新断言这个面，把回归挡在发布前。
+
+</details>
+
+<details>
+<summary>会和其他插件抢键、抢槽位吗？</summary>
+
+不会。插件只在 `plain` 输入阶段、作曲器聚焦时拦截；斜杠菜单、命令弹窗、IME 组合、文本选区与修饰键组合一律放行，`Enter` 从不拦截。`Ctrl+R` 只在作曲器内被消费，不是全局快捷键。它不提供任何服务键、不注册 HTTP 路由、不改全局对象，也不产生会话事件。逐条论证见「与其他 DSH 插件的互操作性」。
+
+</details>
+
+<details>
+<summary>性能开销多大？</summary>
+
+纯前端 DOM/JS：无网络、无模型调用，日常召回只是一次 `setDraft`。默认 `edgeMode: 'logical'` 按 `\n` 判边，零测量；`visual` 模式用隐藏 mirror 测量真实折行，每次边缘检查做 O(行数·log n) 的二分，并按草稿与宽度 memoize。
+
+</details>
+
+<details>
+<summary>按 ↑ 召回之后会不会误发消息？</summary>
+
+不会。召回、片段加载、模板填充与 `/compact` 填入都只走普通 `setDraft`；`Enter` 从不被拦截，也没有任何路径会替你发送。召回的历史文本只有在你按下 Enter 后才会离开浏览器。
+
+</details>
+
+## 安全边界
+
+- **仅 UI，从不执行强制。** 插件只编辑作曲器草稿；沙箱、审批与会话系统仍是执行权威，绝不接管或绕过任何命令或工具。
+- **内容不出浏览器。** 历史、片段、模板与洞察都活在 `localStorage` 里；什么都不上传，也不发模型请求或网络调用。版本化备份只在显式点击时写入本地下载或剪贴板。
+- **响亮失败。** 非法枚举值中止整个 dsh 启动；非法搜索组合键使浏览器 fiber 失败——错误配置绝不静默降级。
+- **处处有界。** `maxHistory`、`maxPersisted`、`maxSnippets` 限定保留条目；损坏或外来的载荷静默重置。
+- **放行路径零副作用。** 插件仅在 `plain` 输入阶段拦截，对斜杠菜单、命令弹窗、IME 组合、文本选区与修饰键组合一律放行。
+
+## 权限与数据
+
+- **权限**：插件在其 workshop manifest 中声明 `browser:local-storage`——仅此而已。无网络、无子进程、无会话事件。
+- **数据**：四个浏览器本地 `localStorage` 键（历史、片段、模板、洞察），规则见上方 FAQ 第一条；全部有界、仅同源可读、绝不上传，损坏载荷静默重置。
+- **模型可见 ⟺ 你按 Enter**：召回文本、片段加载、模板填充、`/compact` 填入都只进普通作曲器草稿。在你按下 Enter 之前，任何内容都不会到达模型。
+
+## 已知限制
+
+- **作曲器 DOM 面。** 拦截锚定宿主私有 DOM：`[data-input-scroll]` 内的 contenteditable `div[data-composer-input]`（0.1.2-alpha.5 / 0.1.2-rc.1 及以后的宿主）；`[data-input-scroll]` 内的旧式 textarea 作曲器（0.1.1-rc.2 及以前）保持匹配。该形状并非公开 API（上游提案 C3 记载插件只能猜测宿主 DOM），未来宿主 DOM 变化可能让拦截静默失效——compat 工作流的 jsdom 冒烟针对打包产物重新断言该面。
+- **逻辑行 vs 视觉行。** 默认 `logical` 按 `\n` 判定（一条自动折行的长消息算一行）；`visual` 通过复制 contenteditable 表面计算盒的隐藏 mirror（每次边缘检查 O(行数·log n) 二分，按草稿/宽度 memoize）测量真实折行。mirror 测量需要真实布局引擎——纯 span 数学已单测覆盖；Lexical 作曲器上测得的 span 保持尽力而为（默认仍为 `logical`）。
+- **持久化历史按浏览器隔离。** 存储位于某一 origin 的 `localStorage`，不在浏览器或机器间同步。损坏载荷静默重置。
+- **撤销栈包含召回事务。** 每次填充/还原都是输入机撤销日志里的一条 `setDraft` 事务；Ctrl+Z 会一步步退回召回。精确化需要上游暴露 edit-range。
+- 召回 `/xxx` 条目后按 Enter 走正常的命令 claim/adjudication 路径（符合预期，且 Enter 从不被拦截）。
+- 菜单/弹窗与非 `plain` 阶段永远优先；提交发送与会话切换都会重置为 IDLE。
+- 引用 chip（U+FFFC 占位符）随召回/还原的草稿文本一起保留。
+- `historyScope: 'workspace'` 读取其他已列表会话的 Chat 目标；本页面尚未激活过 Chat 视图的会话暂时没有贡献。
+- 搜索覆盖层是纯 DOM（无 React 依赖）；最多渲染 `maxHistory` 条匹配。
+- **压缩感知是观察性的。** 安装前（或会话切换前）已落地的检查点绝不触发通知；摘要事件落在已加载窗口之外的检查点不产生 `[compacted] …` 条目（`summary: null`）。
+- 通知的「Compact now」按钮只把配置的命令文本*填入*草稿——发送仍由你的 Enter 决定。
+- **片段、模板与洞察是浏览器本地的。** 名称用 kebab-case（1..64 字符）；标签上限 8 × 32 字符。模板变量从实时会话解析；`{{draft}}` 是选取时刻的草稿。
+
+## 与其他 DSH 插件的互操作性
+
+浏览器半只吃已发布的客户端包（`dsh-client-ui-conversation`、`dsh-client-ui-input-trigger`、`dsh-client-ui-settings`）与 cordis `Context`，因此在插件层面没有可争抢的资源：
+
+- **无会话事件、无 agent-loop 改动。** 插件只观察 Chat 视图已发布的会话投影（`uiConversation.binding(id).target('chat').legacy.nodes`），不 append 会话事件，也不发模型请求。
+- **无服务键。** host 半的 `inject` 为空数组、不 `provide` 任何服务键，因此不存在服务键冲突。
+- **无 HTTP 路由。** 不注册任何 `webServer` 前缀。
+- **无全局改写。** 不改原型、不改写 `process.env`、不替换全局 fetch dispatcher。
+- **设置面自持。** 自 0.1.7-alpha.1 起不再注册 `composer-history` 命名空间，改用自己的活 `Config` 条目（profile 行 id 即表单名）；不读写其他插件的设置小节。
+- **拦截最小化。** 只在 `plain` 输入阶段、作曲器聚焦时拦截；菜单/弹窗、IME、选区与修饰键组合永远优先；`Enter` 从不被拦截。
+
+唯一的耦合点是宿主私有 DOM（`div[data-composer-input]`），已记录在「已知限制」第一条；compat 工作流用 jsdom 冒烟针对打包产物重新断言该面，把这类漂移挡在发布前。
+
+## 兼容性
+
+| 维度 | 状态 |
+|---|---|
+| 宿主 | DeepSeek Harness `dsh-v0.2.1-rc.2`（2026-10-18 验证）：`engines.dsh >=0.2.1-0 <0.3.0`；P0 兼容路径已有回归测试。 |
+| Node | `^22.19.0 \|\| >=24.9.0` |
+| 平台 | 仅 Web GUI（客户端插件；浏览器本地存储；无网络、无原生代码） |
+| 模型 | 任意（不发模型请求——纯 UI 行为） |
+
+浏览器半边基于已发布的客户端包（`dsh-client-ui-conversation`、`dsh-client-ui-input-trigger`、`dsh-client-ui-settings`）与 cordis `Context`；它不再依赖已移除的 `dsh-client-runtime` 包，因此客户端接口面同样对齐 `0.1.2-rc.1` 宿主。
+
+拦截锚定 Web 作曲器的 DOM：`[data-input-scroll]` 内的 contenteditable 表面 `div[data-composer-input]`（自 0.1.2-alpha.5 / 0.1.2-rc.1 起随附的 Lexical 作曲器），同时保留对 `[data-input-scroll]` 内旧式 textarea 作曲器（0.1.1-rc.2 及以前宿主线）的匹配；其余 textarea 一律穿过。compat 工作流的 jsdom web 行为冒烟针对打包产物断言该身份/文本/光标面。
+
+0.1.2-rc.1（2026-09-04 已适配）：会话信封保留 ignorable 字段但仅用于存量日志读取兼容——`Session.append` 仍无法盖章，门控行为不变。已于 2026-09-06 对照 `dsh-v0.1.7-alpha.1` master checkout 核验（全部门禁链 + profile 试装冒烟）。
+
+0.1.5-rc.1（2026-09-10 已适配）：依赖钉号移至已发布的 `0.1.5-rc.1` 线；无接缝变更影响本插件行为。
+
+0.1.5-rc.2（2026-09-11 已适配）：依赖钉号移至已发布的 `0.1.5-rc.2` 线；无接缝变更影响本插件行为。
+
+0.1.7-alpha.1（2026-09-22 已适配）：设置接缝在两个半边都被替换。宿主半边不再通过已移除的 `ctx.settings.register(ns, schema, { base })` 注册 `composer-history` 命名空间——该线上插件的持久设置面就是它自己的活 `Config`：每个可调项声明为 `.volatile()`，profile 条目 id（`composer-history`，即 bundle patch 的行 id）就是表单名，`apply` 认领生成表单的呈现策略（`ctx.settings.configure({ auto: true }, ctx.fiber)`，由 effect 持有以便 reload 干净重注册）。浏览器半边改经 `ctx.configForms.get('composer-history')` 读取同一条目，取代已移除的 `ctx.settingsScope.bind({ namespace })`；快照/订阅形状未变，因此每次提交的变更仍会重装接线。可编辑面是**保留**而非新增：旧命名空间暴露过的字段全部 volatile，没有任何新字段变成可编辑。既有的 `settings.yaml` 中名为 `composer-history` 的小节由宿主自身迁移进同 id 的 profile 条目。
+
+## 生态与质量
+
+- [Gitee 镜像](https://gitee.com/perrylink/dsh-composer-history)（同步镜像，以 GitHub 为准）
+- [dshfind 插件页](https://dshfind.com/plugins/PerryLink/dsh-composer-history)（安装量与排名）
+- [OpenSSF Scorecard 报告](https://securityscorecards.dev/viewer/?uri=github.com/PerryLink/dsh-composer-history)（由 [.github/workflows/scorecard.yml](.github/workflows/scorecard.yml) 驱动）
+- [dsh-plugin-doctor 验证报告](https://github.com/PerryLink/dsh-plugin-doctor#verified-徽章)（本仓 [.github/workflows/plugin-doctor.yml](.github/workflows/plugin-doctor.yml) 在每次 push/PR 上跑静态 R+K 判据）
+- [DSH Market](https://dsh.market/)（已上架）
+- **1024 商店渠道**：先 `npm i -g dsh1024`，再 `dsh1024 plugin --profile web add dsh-composer-history`（计入 [deepseek1024.com](https://deepseek1024.com) 安装排行）
+- [生态实测知识库](https://perrylink.github.io/dsh-plugin-guide/)：插件开发指南 · 选型实测数据 · 维护取舍判据
+
+## 开发
 
 ```sh
-pnpm install           # node ^22.19 || >=24
+pnpm install           # node ^22.19 || >=24.9
 pnpm run build         # tsc build + tsdown bundle (lib/)
 pnpm run typecheck     # tsc --noEmit (src + tests)
 pnpm test              # vitest run
 pnpm run test:watch    # vitest watch
 pnpm run test:coverage # vitest run --coverage
-pnpm run check:readmes # README consistency gate
-pnpm run verify:pack   # pack-surface check
+pnpm run check:readmes # 五语 README 一致性门禁
+pnpm run verify:pack   # 发布文件齐全 + 被 package.json files[] 覆盖
 ```
 
-## Topics
+配图由 [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) 程序化生成（Python + Pillow），可重复执行：`python scripts/gen-readme-assets.py` 写出 `docs/assets/dsh-composer-history-flow-{light,dark}.svg` 两份矢量图（不做栅格化；图内只有命令 token，五语共用）。
 
-`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
+Topics：`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 
-## Contributors
+## 家族与致谢
 
-- [@gengwg](https://github.com/gengwg) — volatile boot config handling (#11).
-- [@yujethrozheng-crypto](https://github.com/yujethrozheng-crypto) — composer history restoration on 0.2.1-rc.2 (#12); the rc.2 boot fix shipped in 0.8.15.
-- [@PerryLink](https://github.com/PerryLink) — creator and maintainer: edge-first arrow recall, persisted history, reverse search, sliding-context awareness, snippet library, prompt templates, reuse insights, and the `dsh.bundle` / `dshWorkshop` manifests.
+本项目是 [PerryLink](https://github.com/PerryLink) 维护的 DeepSeek Harness 插件家族成员（全部 Apache-2.0）。如果这个插件帮到了你，**给个 star**——它不解锁任何功能，但会让下一个人更容易找到它。
 
-## PerryLink DSH Plugin Family
-
-This project is part of the DeepSeek Harness plugin family from [PerryLink](https://github.com/PerryLink). The roster stays collapsed below so every README keeps a short first screen; expand it to see every row and its status.
+- [@gengwg](https://github.com/gengwg) —— volatile 启动配置处理（#11）。
+- [@yujethrozheng-crypto](https://github.com/yujethrozheng-crypto) —— 0.2.1-rc.2 上的作曲器历史还原（#12）；rc.2 启动修复随 0.8.15 发布。
+- [@PerryLink](https://github.com/PerryLink) —— 创建者与维护者：边缘优先的方向键召回、持久化历史、反向搜索、滑动上下文感知、片段库、提示词模板、复用洞察，以及 `dsh.bundle` / `dshWorkshop` manifest。
 
 <details>
-<summary>Expand all plugins</summary>
+<summary>展开全部插件</summary>
 
-| Plugin | Status |
+| 插件 | 状态 |
 |---|---|
 | **[dsh-aqua-input-check](https://github.com/PerryLink/dsh-aqua-input-check)** |  |
 | **[dsh-archive-check](https://github.com/PerryLink/dsh-archive-check)** |  |
 | **[dsh-auto-review](https://github.com/PerryLink/dsh-auto-review)** |  |
-| **[dsh-autotier](https://github.com/PerryLink/dsh-autotier)** | 🧊 FROZEN — see the repo README |
+| **[dsh-autotier](https://github.com/PerryLink/dsh-autotier)** | 🧊 已冻结 — 见仓库 README |
 | **[dsh-bid-ca-precheck](https://github.com/PerryLink/dsh-bid-ca-precheck)** |  |
 | **[dsh-bid-qual-check](https://github.com/PerryLink/dsh-bid-qual-check)** |  |
-| **[dsh-cert-mcp](https://github.com/PerryLink/dsh-cert-mcp)** | 🧊 FROZEN — see the repo README |
+| **[dsh-cert-mcp](https://github.com/PerryLink/dsh-cert-mcp)** | 🧊 已冻结 — 见仓库 README |
 | **[dsh-checkpoint-rewind](https://github.com/PerryLink/dsh-checkpoint-rewind)** |  |
 | **[dsh-click](https://github.com/PerryLink/dsh-click)** |  |
 | **[dsh-composer-history](https://github.com/PerryLink/dsh-composer-history)** |  |
 | **[dsh-contract-stance](https://github.com/PerryLink/dsh-contract-stance)** |  |
 | **[dsh-customs-doc-check](https://github.com/PerryLink/dsh-customs-doc-check)** |  |
-| **[dsh-data-quality](https://github.com/PerryLink/dsh-data-quality)** |  |
+| **[dsh-data-quality](https://github.com/PerryLink/dsh-data-quality)** | 🧊 已冻结 — 见仓库 README |
 | **[dsh-demurrage-ledger](https://github.com/PerryLink/dsh-demurrage-ledger)** |  |
 | **[dsh-doublecheck](https://github.com/PerryLink/dsh-doublecheck)** |  |
 | **[dsh-drill-script-check](https://github.com/PerryLink/dsh-drill-script-check)** |  |
@@ -401,7 +495,7 @@ This project is part of the DeepSeek Harness plugin family from [PerryLink](http
 | **[dsh-mask](https://github.com/PerryLink/dsh-mask)** |  |
 | **[dsh-mcp-panel](https://github.com/PerryLink/dsh-mcp-panel)** |  |
 | **[dsh-medrec-qc](https://github.com/PerryLink/dsh-medrec-qc)** |  |
-| **[dsh-memento](https://github.com/PerryLink/dsh-memento)** |  |
+| **[dsh-memento](https://github.com/PerryLink/dsh-memento)** | 🧊 已冻结 — 见仓库 README |
 | **[dsh-nsfc-form-check](https://github.com/PerryLink/dsh-nsfc-form-check)** |  |
 | **[dsh-nurse-record-check](https://github.com/PerryLink/dsh-nurse-record-check)** |  |
 | **[dsh-observe](https://github.com/PerryLink/dsh-observe)** |  |
@@ -413,10 +507,10 @@ This project is part of the DeepSeek Harness plugin family from [PerryLink](http
 | **[dsh-permit-report-check](https://github.com/PerryLink/dsh-permit-report-check)** |  |
 | **[dsh-pipeline-check](https://github.com/PerryLink/dsh-pipeline-check)** |  |
 | **[dsh-pleading-draft](https://github.com/PerryLink/dsh-pleading-draft)** |  |
-| **[dsh-plugin-doctor](https://github.com/PerryLink/dsh-plugin-doctor)** |  |
+| **[dsh-plugin-doctor](https://github.com/PerryLink/dsh-plugin-doctor)** | 🚫 已退役（仓库已归档） |
 | **[dsh-plugin-guide](https://github.com/PerryLink/dsh-plugin-guide)** |  |
-| **[dsh-plugin-kit](https://github.com/PerryLink/dsh-plugin-kit)** |  |
-| **[dsh-plugin-upgrade](https://github.com/PerryLink/dsh-plugin-upgrade)** |  |
+| **[dsh-plugin-kit](https://github.com/PerryLink/dsh-plugin-kit)** | 🚫 已退役（仓库已归档） |
+| **[dsh-plugin-upgrade](https://github.com/PerryLink/dsh-plugin-upgrade)** | 🚫 已退役（仓库已归档） |
 | **[dsh-policy-brief-draft](https://github.com/PerryLink/dsh-policy-brief-draft)** |  |
 | **[dsh-power-loss-split](https://github.com/PerryLink/dsh-power-loss-split)** |  |
 | **[dsh-power-ticket-check](https://github.com/PerryLink/dsh-power-ticket-check)** |  |
@@ -428,7 +522,7 @@ This project is part of the DeepSeek Harness plugin family from [PerryLink](http
 | **[dsh-review-reply-check](https://github.com/PerryLink/dsh-review-reply-check)** |  |
 | **[dsh-rulefile-check](https://github.com/PerryLink/dsh-rulefile-check)** |  |
 | **[dsh-safety-brief-check](https://github.com/PerryLink/dsh-safety-brief-check)** |  |
-| **[dsh-score](https://github.com/PerryLink/dsh-score)** |  |
+| **[dsh-score](https://github.com/PerryLink/dsh-score)** | 🧊 已冻结 — 见仓库 README |
 | **[dsh-session-sync](https://github.com/PerryLink/dsh-session-sync)** |  |
 | **[dsh-site-log-check](https://github.com/PerryLink/dsh-site-log-check)** |  |
 | **[dsh-skill-pack-security](https://github.com/PerryLink/dsh-skill-pack-security)** |  |
@@ -440,20 +534,22 @@ This project is part of the DeepSeek Harness plugin family from [PerryLink](http
 | **[dsh-tender-extract](https://github.com/PerryLink/dsh-tender-extract)** |  |
 | **[dsh-tender-matrix](https://github.com/PerryLink/dsh-tender-matrix)** |  |
 | **[dsh-test-drive](https://github.com/PerryLink/dsh-test-drive)** |  |
-| **[dsh-ticktick](https://github.com/PerryLink/dsh-ticktick)** |  |
+| **[dsh-ticktick](https://github.com/PerryLink/dsh-ticktick)** | 🚫 已退役（仓库已归档） |
 | **[dsh-translate](https://github.com/PerryLink/dsh-translate)** |  |
 | **[dsh-warranty-calc](https://github.com/PerryLink/dsh-warranty-calc)** |  |
-| **[dsh-budget](https://github.com/PerryLink/dsh-budget)** | 🧊 FROZEN — see the repo README |
-| **[dsh-claude-move](https://github.com/PerryLink/dsh-claude-move)** | 🧊 FROZEN — see the repo README |
-| **[dsh-defend](https://github.com/PerryLink/dsh-defend)** | 🧊 FROZEN — see the repo README |
-| **[dsh-draw](https://github.com/PerryLink/dsh-draw)** | 🧊 FROZEN — see the repo README |
-| **[dsh-reach](https://github.com/PerryLink/dsh-reach)** | 🧊 FROZEN — see the repo README |
-| **[dsh-background-agents](https://github.com/PerryLink/dsh-background-agents)** | 🚫 RETIRED — see the repo README |
-| **[dsh-session-pin](https://github.com/PerryLink/dsh-session-pin)** | 🚫 RETIRED — see the repo README |
-| **[dsh-team-rooms](https://github.com/PerryLink/dsh-team-rooms)** | 🚫 RETIRED — see the repo README |
+| **[dsh-budget](https://github.com/PerryLink/dsh-budget)** | 🧊 已冻结 — 见仓库 README |
+| **[dsh-claude-move](https://github.com/PerryLink/dsh-claude-move)** | 🧊 已冻结 — 见仓库 README |
+| **[dsh-defend](https://github.com/PerryLink/dsh-defend)** | 🧊 已冻结 — 见仓库 README |
+| **[dsh-draw](https://github.com/PerryLink/dsh-draw)** | 🧊 已冻结 — 见仓库 README |
+| **[dsh-reach](https://github.com/PerryLink/dsh-reach)** | 🧊 已冻结 — 见仓库 README |
+| **[dsh-background-agents](https://github.com/PerryLink/dsh-background-agents)** | 🚫 已退役（仓库已归档） |
+| **[dsh-session-pin](https://github.com/PerryLink/dsh-session-pin)** | 🚫 已退役（仓库已归档） |
+| **[dsh-team-rooms](https://github.com/PerryLink/dsh-team-rooms)** | 🚫 已退役（仓库已归档） |
 
 </details>
 
 ## License
 
-[Apache License 2.0](LICENSE) © 2026 dsh-composer-history contributors
+[LICENSE](LICENSE)（Apache License 2.0）© 2026 dsh-composer-history contributors
+
+<p align="center"><sub>Apache-2.0 · 社区插件，与 DeepSeek 无关。</sub></p>
