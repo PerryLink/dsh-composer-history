@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-flow-dark.svg">
-  <img src="docs/assets/dsh-composer-history-flow-light.svg" width="100%" alt="dsh-composer-history flow: keydown → interceptor → setDraft → localStorage → Enter; Ctrl+R covers history / snippets / templates / insights plus [compacted] summaries">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-hero-en-dark.webp">
+  <img src="docs/assets/dsh-composer-history-hero-en-light.webp" width="100%" alt="dsh-composer-history banner: pressing ↑ on the composer's first line recalls history; the right side shows the history stack (session / persisted / workspace / [compacted]), the stashed {draft, caret} ticket and the Ctrl+R search overlay">
 </picture>
 
 # dsh-composer-history
@@ -41,6 +41,15 @@ It puts a terminal's input history into the DeepSeek Harness web composer: with 
 The first recall stashes `{draft, caret}`, and reaching the newest entry again (or pressing `Esc`) restores both exactly — your half-typed draft is never cleared. History lives in browser-local storage, so recall survives page reloads and spans sessions; `Ctrl+R` searches history, snippets, and templates together. When the harness auto-compacts the context, each checkpoint's summary joins recall and search as a `[compacted] …` entry, and a transient notice offers a one-click `/compact` fill.
 
 Pure UI behavior: no session events, no agent-loop changes, no model requests. Recalled text only enters the ordinary composer draft, and it reaches the model only if you press Enter.
+
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-flow-v5-dark.svg">
+  <img src="docs/assets/dsh-composer-history-flow-v5-light.svg" width="100%" alt="DraftRecall state machine: IDLE ⇄ BROWSING behind the shared phase=plain gate; ↑ on the first line stashes {draft, caret} and fills the newest entry, ↓ at the last line or Esc restores; Ctrl+R is a parallel search lane that bypasses both states; every effect goes through setDraft, and everything lives in four localStorage keys">
+</picture>
+
+</div>
 
 ## Three-step setup
 
@@ -433,7 +442,7 @@ pnpm run check:readmes # five-language README consistency gate
 pnpm run verify:pack   # pack-surface check
 ```
 
-The README images are generated programmatically by [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Python + Pillow) and are safe to re-run: `python scripts/gen-readme-assets.py` writes the two vector files `docs/assets/dsh-composer-history-flow-{light,dark}.svg` (never rasterized; command tokens only, shared by all five languages).
+The README images are generated programmatically by [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Pillow for the hero, hand-written SVG for the structure figure) and are safe to re-run: `python scripts/gen-readme-assets.py` writes `docs/assets/dsh-composer-history-hero-{zh,en}-{light,dark}.webp` and `docs/assets/dsh-composer-history-flow-v5-{light,dark}.svg` (localized hero, token-only structure figure shared by all five languages).
 
 Topics: `deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 

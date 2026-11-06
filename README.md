@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-flow-dark.svg">
-  <img src="docs/assets/dsh-composer-history-flow-light.svg" width="100%" alt="dsh-composer-history 流程：keydown → interceptor → setDraft → localStorage → Enter；Ctrl+R 覆盖 history / snippets / templates / insights 与 [compacted] 摘要">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-hero-zh-dark.webp">
+  <img src="docs/assets/dsh-composer-history-hero-zh-light.webp" width="100%" alt="dsh-composer-history 横幅：在作曲器首行按 ↑ 召回历史；右侧是历史栈（session / persisted / workspace / [compacted]）、暂存 {draft, caret} 与 Ctrl+R 搜索覆盖层">
 </picture>
 
 # dsh-composer-history
@@ -41,6 +41,15 @@ dsh plugin --profile <name> add dsh-composer-history
 第一次召回会暂存 `{draft, caret}`，回到底部或按 `Esc` 时两者精确还原——你打到一半的草稿不会被清空。历史存在浏览器本地，刷新页面、切换会话都还在；`Ctrl+R` 打开反向搜索，历史、片段、模板一起搜。harness 自动压缩上下文时，检查点摘要以 `[compacted] …` 条目加入召回与搜索，并弹出一条可一键填入 `/compact` 的短暂通知。
 
 纯 UI 行为：不产生会话事件、不改 agent-loop、不发模型请求。召回的文本只进入普通作曲器草稿；只有你按下 Enter，它才会到模型。
+
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-flow-v5-dark.svg">
+  <img src="docs/assets/dsh-composer-history-flow-v5-light.svg" width="100%" alt="DraftRecall 状态机：IDLE ⇄ BROWSING 共用 phase=plain 门控；首行 ↑ 暂存 {draft, caret} 并填入最新条目，末行 ↓ 或 Esc 还原；Ctrl+R 是绕过状态的并行搜索通道；所有效果只走 setDraft，数据落在四个 localStorage 键">
+</picture>
+
+</div>
 
 ## 三步上手
 
@@ -433,7 +442,7 @@ pnpm run check:readmes # 五语 README 一致性门禁
 pnpm run verify:pack   # 发布文件齐全 + 被 package.json files[] 覆盖
 ```
 
-配图由 [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) 程序化生成（Python + Pillow），可重复执行：`python scripts/gen-readme-assets.py` 写出 `docs/assets/dsh-composer-history-flow-{light,dark}.svg` 两份矢量图（不做栅格化；图内只有命令 token，五语共用）。
+配图由 [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) 程序化生成（Pillow 画 hero，手写 SVG 画结构图），可重复执行：`python scripts/gen-readme-assets.py` 写出 `docs/assets/dsh-composer-history-hero-{zh,en}-{light,dark}.webp` 与 `docs/assets/dsh-composer-history-flow-v5-{light,dark}.svg`（hero 按语言本地化，结构图只有命令 token，五语共用）。
 
 Topics：`deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 

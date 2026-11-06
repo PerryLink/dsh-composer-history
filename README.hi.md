@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-flow-dark.svg">
-  <img src="docs/assets/dsh-composer-history-flow-light.svg" width="100%" alt="dsh-composer-history प्रवाह: keydown → interceptor → setDraft → localStorage → Enter; Ctrl+R history / snippets / templates / insights और [compacted] सारांशों को कवर करता है">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-hero-en-dark.webp">
+  <img src="docs/assets/dsh-composer-history-hero-en-light.webp" width="100%" alt="dsh-composer-history बैनर: कंपोज़र की पहली लाइन पर ↑ दबाकर इतिहास रिकॉल करें; दाईं ओर इतिहास स्टैक (session / persisted / workspace / [compacted]), {draft, caret} टिकट और Ctrl+R खोज">
 </picture>
 
 # dsh-composer-history
@@ -41,6 +41,15 @@ dsh plugin --profile <name> add dsh-composer-history
 पहला रिकॉल `{draft, caret}` को सहेजता है, और नवीनतम एंट्री पर दोबारा पहुँचने (या `Esc` दबाने) पर दोनों बिल्कुल वैसे ही बहाल होते हैं — आधा लिखा ड्राफ़्ट कभी नहीं मिटता। इतिहास ब्राउज़र-लोकल स्टोरेज में रहता है, इसलिए रिकॉल पेज रीलोड के बाद भी बचा रहता है और सत्रों के पार जाता है; `Ctrl+R` इतिहास, स्निपेट और टेम्पलेट तीनों में एक साथ खोजता है। जब harness कॉन्टेक्स्ट को ऑटो-कॉम्पैक्ट करता है, हर चेकपॉइंट का सारांश `[compacted] …` एंट्री के रूप में रिकॉल और सर्च में जुड़ जाता है, और एक क्षणिक सूचना एक-क्लिक `/compact` भरने की सुविधा देती है।
 
 शुद्ध UI व्यवहार: कोई सत्र ईवेंट नहीं, कोई agent-loop बदलाव नहीं, कोई मॉडल अनुरोध नहीं। रिकॉल किया गया टेक्स्ट केवल सामान्य कंपोज़र ड्राफ़्ट में जाता है; मॉडल तक वह तभी पहुँचता है जब आप Enter दबाते हैं।
+
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-flow-v5-dark.svg">
+  <img src="docs/assets/dsh-composer-history-flow-v5-light.svg" width="100%" alt="DraftRecall स्टेट मशीन: साझा phase=plain गेट के पीछे IDLE ⇄ BROWSING; पहली लाइन पर ↑ {draft, caret} सहेजता है और नवीनतम भरता है, आख़िरी लाइन पर ↓ या Esc बहाल करता है; Ctrl+R एक समानांतर खोज लेन है जो दोनों स्टेट को छोड़ देती है; हर प्रभाव setDraft से जाता है और चार localStorage कुंजियों में रहता है">
+</picture>
+
+</div>
 
 ## तीन चरणों में शुरुआत
 
@@ -433,7 +442,7 @@ pnpm run check:readmes # पाँच भाषाओं के README की �
 pnpm run verify:pack   # पैक-सतह जाँच
 ```
 
-README की तस्वीरें [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) से प्रोग्रामेटिक रूप से बनती हैं (Python + Pillow) और दोबारा चलाना सुरक्षित है: `python scripts/gen-readme-assets.py` दो वेक्टर फ़ाइलें `docs/assets/dsh-composer-history-flow-{light,dark}.svg` लिखता है (कभी रास्टराइज़ नहीं; केवल कमांड टोकन, पाँचों भाषाओं में साझा)।
+README की तस्वीरें [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) से प्रोग्रामेटिक रूप से बनती हैं (hero के लिए Pillow, संरचना चित्र के लिए हाथ से लिखा SVG) और दोबारा चलाना सुरक्षित है: `python scripts/gen-readme-assets.py` `docs/assets/dsh-composer-history-hero-{zh,en}-{light,dark}.webp` और `docs/assets/dsh-composer-history-flow-v5-{light,dark}.svg` लिखता है (hero स्थानीयकृत, संरचना चित्र केवल कमांड टोकन, पाँचों भाषाओं में साझा)।
 
 विषय: `deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 

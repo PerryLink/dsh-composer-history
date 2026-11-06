@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-flow-dark.svg">
-  <img src="docs/assets/dsh-composer-history-flow-light.svg" width="100%" alt="Fluxo do dsh-composer-history: keydown → interceptor → setDraft → localStorage → Enter; Ctrl+R cobre history / snippets / templates / insights e os resumos [compacted]">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-hero-en-dark.webp">
+  <img src="docs/assets/dsh-composer-history-hero-en-light.webp" width="100%" alt="Banner do dsh-composer-history: pressione ↑ na primeira linha do compositor para recuperar o histórico; à direita, a pilha de histórico (session / persisted / workspace / [compacted]), o ticket {draft, caret} e a busca Ctrl+R">
 </picture>
 
 # dsh-composer-history
@@ -41,6 +41,15 @@ Ele leva o histórico de entrada de um terminal para o compositor web do DeepSee
 O primeiro recall guarda `{draft, caret}`, e ao voltar à entrada mais recente (ou pressionar `Esc`) os dois são restaurados exatamente — seu rascunho pela metade nunca é apagado. O histórico vive no armazenamento local do navegador, então o recall sobrevive a recarregamentos e atravessa sessões; `Ctrl+R` busca ao mesmo tempo em histórico, snippets e templates. Quando o harness autocompacta o contexto, o resumo de cada checkpoint entra no recall e na busca como entrada `[compacted] …`, e um aviso transitório oferece preencher `/compact` com um clique.
 
 Comportamento puramente de UI: sem eventos de sessão, sem mudanças no agent-loop, sem requisições ao modelo. O texto recuperado só entra no rascunho comum do compositor, e só chega ao modelo se você pressionar Enter.
+
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-composer-history-flow-v5-dark.svg">
+  <img src="docs/assets/dsh-composer-history-flow-v5-light.svg" width="100%" alt="Máquina de estados DraftRecall: IDLE ⇄ BROWSING sob o portão compartilhado phase=plain; ↑ na primeira linha guarda {draft, caret} e preenche o mais recente, ↓ na última linha ou Esc restaura; Ctrl+R é uma via paralela de busca que ignora os dois estados; todo efeito passa por setDraft e vive em quatro chaves localStorage">
+</picture>
+
+</div>
 
 ## Instalação em três passos
 
@@ -433,7 +442,7 @@ pnpm run check:readmes # gate de consistência dos cinco README
 pnpm run verify:pack   # checagem da superfície do pacote
 ```
 
-As imagens do README são geradas programaticamente por [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Python + Pillow) e é seguro rodar de novo: `python scripts/gen-readme-assets.py` escreve os dois arquivos vetoriais `docs/assets/dsh-composer-history-flow-{light,dark}.svg` (nunca rasterizados; apenas tokens de comando, compartilhados pelos cinco idiomas).
+As imagens do README são geradas programaticamente por [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Pillow para o banner, SVG escrito à mão para o diagrama) e é seguro rodar de novo: `python scripts/gen-readme-assets.py` escreve `docs/assets/dsh-composer-history-hero-{zh,en}-{light,dark}.webp` e `docs/assets/dsh-composer-history-flow-v5-{light,dark}.svg` (banner localizado, diagrama só com tokens compartilhado pelos cinco idiomas).
 
 Tópicos: `deepseek-harness` · `dsh` · `dsh-plugin` · `web-gui` · `input-history` · `keyboard-shortcuts` · `compaction` · `sliding-context` · `typescript`
 

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="660" viewBox="0 0 1100 660" role="img" aria-labelledby="fig-title">
+<title id="fig-title">dsh-composer-history — DraftRecall state machine</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#131a2a"/><stop offset="1" stop-color="#0c1016"/></linearGradient>
+<filter id="soft" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.55"/></filter>
+<marker id="arr-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#8496f5"/></marker>
+<marker id="arr-grn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#4ade80"/></marker>
+<marker id="arr-sub" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#9aa7c2"/></marker>
+<marker id="arr-fnt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#6f7c96"/></marker>
+</defs>
+<rect width="1100" height="660" fill="url(#bg)"/>
+<text x="48" y="54" font-size="22" fill="#eef2fb" font-family="'Microsoft YaHei','Segoe UI',sans-serif" font-weight="700">DraftRecall state machine</text>
+<text x="1052" y="54" font-size="14" fill="#6f7c96" font-family="'Consolas','Cascadia Mono',monospace" text-anchor="end">dsh-composer-history · v0.8.16</text>
+<text x="48" y="82" font-size="14" fill="#9aa7c2" font-family="'Microsoft YaHei','Segoe UI',sans-serif">keydown → gate → transition → single write path (setDraft); recall edits the draft, only Enter sends</text>
+<rect x="48" y="96" width="1004" height="76" rx="18" fill="#1b2438" stroke="#2b3550" stroke-width="1" filter="url(#soft)"/>
+<text x="68" y="116" font-size="14" fill="#6f7c96" font-family="'Consolas','Cascadia Mono',monospace" font-weight="700" letter-spacing="1.5">KEYS</text>
+<rect x="68" y="124" width="100" height="34" rx="10" fill="#202a41" stroke="#2b3550" stroke-width="1"/><text x="118.0" y="146.04" font-size="14" fill="#d7def0" font-family="'Consolas','Cascadia Mono',monospace" text-anchor="middle">↑ ArrowUp</text>
+<rect x="176" y="124" width="116" height="34" rx="10" fill="#202a41" stroke="#2b3550" stroke-width="1"/><text x="234.0" y="146.04" font-size="14" fill="#d7def0" font-family="'Consolas','Cascadia Mono',monospace" text-anchor="middle">↓ ArrowDown</text>
+<rect x="300" y="124" width="49" height="34" rx="10" fill="#202a41" stroke="#2b3550" stroke-width="1"/><text x="324.5" y="146.04" font-size="14" fill="#d7def0" font-family="'Consolas','Cascadia Mono',monospace" text-anchor="middle">Esc</text>
+<rect x="357" y="124" width="74" height="34" rx="10" fill="#202b45" stroke="#2b3550" stroke-width="1"/><text x="394.0" y="146.04" font-size="14" fill="#8496f5" font-family="'Consolas','Cascadia Mono',monospace" text-anchor="middle">Ctrl+R</text>
+<text x="443" y="146" font-size="16" fill="#6f7c96" font-family="'Microsoft YaHei','Segoe UI',sans-serif">→</text>
+<text x="462" y="116" font-size="14" fill="#6f7c96" font-family="'Consolas','Cascadia Mono',monospace" font-weight="700" letter-spacing="0.5">GATE · any miss → pass (event untouched)</text>
+<rect x="462" y="124" width="115" height="34" rx="10" fill="#202b45" stroke="#2b3550" stroke-width="1"/><text x="519.5" y="146.04" font-size="14" fill="#8496f5" font-family="'Microsoft YaHei','Segoe UI',sans-serif" text-anchor="middle">phase = plain</text>
+<rect x="585" y="124" width="136" height="34" rx="10" fill="#202a41" stroke="#2b3550" stroke-width="1"/><text x="653.0" y="146.04" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif" text-anchor="middle">menuOpen = false</text>
+<rect x="729" y="124" width="150" height="34" rx="10" fill="#202a41" stroke="#2b3550" stroke-width="1"/><text x="804.0" y="146.04" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif" text-anchor="middle">no IME / selection</text>
+<rect x="887" y="124" width="143" height="34" rx="10" fill="#202a41" stroke="#2b3550" stroke-width="1"/><text x="958.5" y="146.04" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif" text-anchor="middle">no Alt/Meta/Shift</text>
+<path d="M290 172V232" stroke="#8496f5" stroke-width="2" marker-end="url(#arr-acc)"/>
+<path d="M810 172V232" stroke="#8496f5" stroke-width="2" marker-end="url(#arr-acc)"/>
+<text x="302" y="196" font-size="14" fill="#6f7c96" font-family="'Microsoft YaHei','Segoe UI',sans-serif">same gate · both states</text>
+<rect x="150" y="240" width="280" height="190" rx="20" fill="#1b2438" stroke="#2b3550" stroke-width="1" filter="url(#soft)"/>
+<text x="176" y="284" font-size="22" fill="#8496f5" font-family="'Consolas','Cascadia Mono',monospace" font-weight="700" letter-spacing="1">IDLE</text>
+<text x="176" y="308" font-size="14" fill="#9aa7c2" font-family="'Microsoft YaHei','Segoe UI',sans-serif">not browsing · no stash</text>
+<text x="176" y="340" font-size="14" fill="#6f7c96" font-family="'Microsoft YaHei','Segoe UI',sans-serif">·</text>
+<text x="190" y="340" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif">↓ always passes</text>
+<text x="176" y="366" font-size="14" fill="#6f7c96" font-family="'Microsoft YaHei','Segoe UI',sans-serif">·</text>
+<text x="190" y="366" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif">↑ off line 1 → pass</text>
+<text x="176" y="392" font-size="14" fill="#6f7c96" font-family="'Microsoft YaHei','Segoe UI',sans-serif">·</text>
+<text x="190" y="392" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif">↑ line 1 + history → browse</text>
+<text x="176" y="418" font-size="14" fill="#6f7c96" font-family="'Microsoft YaHei','Segoe UI',sans-serif">·</text>
+<text x="190" y="418" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif">session switch → reset</text>
+<rect x="660" y="240" width="300" height="216" rx="20" fill="#1b2438" stroke="#2b3550" stroke-width="1" filter="url(#soft)"/>
+<text x="686" y="284" font-size="22" fill="#8496f5" font-family="'Consolas','Cascadia Mono',monospace" font-weight="700" letter-spacing="0.5">BROWSING</text>
+<text x="686" y="308" font-size="14" fill="#9aa7c2" font-family="'Microsoft YaHei','Segoe UI',sans-serif">index · savedDraft · savedCaret</text>
+<rect x="680" y="322" width="260" height="24" rx="8" fill="#202a41"/>
+<text x="694" y="339" font-size="14" fill="#6f7c96" font-family="'Consolas','Cascadia Mono',monospace">E0</text>
+<text x="730" y="339" font-size="14" fill="#9aa7c2" font-family="'Microsoft YaHei','Segoe UI',sans-serif">oldest</text>
+<rect x="680" y="350" width="260" height="24" rx="8" fill="#202b45" stroke="#8496f5" stroke-width="1.4"/>
+<text x="694" y="367" font-size="14" fill="#8496f5" font-family="'Consolas','Cascadia Mono',monospace">E1</text>
+<text x="928" y="367" font-size="14" fill="#8496f5" font-family="'Consolas','Cascadia Mono',monospace" text-anchor="end">index</text>
+<rect x="680" y="378" width="260" height="24" rx="8" fill="#202a41"/>
+<text x="694" y="395" font-size="14" fill="#6f7c96" font-family="'Consolas','Cascadia Mono',monospace">E2</text>
+<text x="730" y="395" font-size="14" fill="#9aa7c2" font-family="'Microsoft YaHei','Segoe UI',sans-serif">…</text>
+<rect x="680" y="406" width="260" height="24" rx="8" fill="#202a41"/>
+<text x="694" y="423" font-size="14" fill="#6f7c96" font-family="'Consolas','Cascadia Mono',monospace">E3</text>
+<text x="730" y="423" font-size="14" fill="#9aa7c2" font-family="'Microsoft YaHei','Segoe UI',sans-serif">newest</text>
+<text x="686" y="450" font-size="14" fill="#9aa7c2" font-family="'Microsoft YaHei','Segoe UI',sans-serif">↑ older · at index 0 → hold</text>
+<path d="M430 300H654" stroke="#8496f5" stroke-width="2.5" marker-end="url(#arr-acc)"/>
+<text x="438" y="280" font-size="14" fill="#8496f5" font-family="'Microsoft YaHei','Segoe UI',sans-serif">↑ first line · history ≠ ∅</text>
+<text x="438" y="324" font-size="14" fill="#9aa7c2" font-family="'Consolas','Cascadia Mono',monospace">stash {draft, caret}</text>
+<text x="438" y="344" font-size="14" fill="#9aa7c2" font-family="'Consolas','Cascadia Mono',monospace">fill(newest) → setDraft</text>
+<path d="M654 390H436" stroke="#4ade80" stroke-width="2.5" marker-end="url(#arr-grn)"/>
+<text x="438" y="414" font-size="14" fill="#4ade80" font-family="'Microsoft YaHei','Segoe UI',sans-serif">↓ last line / Esc</text>
+<text x="438" y="434" font-size="14" fill="#9aa7c2" font-family="'Microsoft YaHei','Segoe UI',sans-serif">restore savedDraft + caret</text>
+<rect x="48" y="470" width="632" height="146" rx="20" fill="#1b2438" stroke="#2b3550" stroke-width="1" filter="url(#soft)"/>
+<text x="70" y="496" font-size="14" fill="#6f7c96" font-family="'Consolas','Cascadia Mono',monospace" font-weight="700" letter-spacing="1">EFFECT · STORAGE</text>
+<text x="70" y="522" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif">history[] = session + persisted + workspace + [compacted]</text>
+<text x="70" y="544" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif">fill / restore → setDraft(text) — the only write path</text>
+<text x="70" y="566" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif">lands in the ordinary composer draft · Enter is still yours</text>
+<text x="70" y="588" font-size="14" fill="#9aa7c2" font-family="'Consolas','Cascadia Mono',monospace">localStorage ×4 · history.v1 · snippets.v1 · templates.v1 · insights.v1</text>
+<text x="70" y="608" font-size="14" fill="#9aa7c2" font-family="'Consolas','Cascadia Mono',monospace">bounded · schemaVersion 1 · Export JSON / Import file · no network</text>
+<path d="M1040 172V460" stroke="#6f7c96" stroke-width="1.6" stroke-dasharray="6 6" marker-end="url(#arr-fnt)"/>
+<text x="1028" y="200" font-size="14" fill="#6f7c96" font-family="'Microsoft YaHei','Segoe UI',sans-serif" text-anchor="end">bypasses states</text>
+<rect x="700" y="470" width="352" height="146" rx="20" fill="#1b2438" stroke="#2b3550" stroke-width="1" filter="url(#soft)"/>
+<text x="720" y="496" font-size="15" fill="#8496f5" font-family="'Consolas','Cascadia Mono',monospace" font-weight="700" letter-spacing="0.5">Ctrl+R · PARALLEL LANE</text>
+<text x="720" y="522" font-size="14" fill="#9aa7c2" font-family="'Consolas','Cascadia Mono',monospace">machine.reset() → openSearch()</text>
+<text x="720" y="544" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif">sources: history · snippets</text>
+<text x="720" y="566" font-size="14" fill="#d7def0" font-family="'Microsoft YaHei','Segoe UI',sans-serif">templates · [compacted]</text>
+<text x="720" y="588" font-size="14" fill="#9aa7c2" font-family="'Consolas','Cascadia Mono',monospace">actions: Export / Copy / Import JSON</text>
+<text x="720" y="608" font-size="14" fill="#9aa7c2" font-family="'Consolas','Cascadia Mono',monospace">pick → fill · Esc cancels</text>
+</svg>
