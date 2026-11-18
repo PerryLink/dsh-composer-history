@@ -9,7 +9,7 @@
 
 **Pressione ↑ como num terminal — e mantenha intacto o rascunho pela metade.**
 
-Histórico de entrada estilo terminal para o compositor da Web GUI do DeepSeek Harness: recall com setas com prioridade de borda, persistência local no navegador, busca inversa com `Ctrl+R` e bibliotecas de snippets e templates, tudo apenas no rascunho comum.
+Histórico de entrada estilo terminal para o compositor da Web GUI do DeepSeek Harness: recall com setas com prioridade de borda, persistência local no navegador, busca inversa com `dsh-v0.2.2-rc.4`（2026-11-18）；`Ctrl+R` e bibliotecas de snippets e templates, tudo apenas no rascunho comum.
 
 [Instalar](#instalação-em-três-passos) · [Configuração](#configuração) · [FAQ](#faq) · [简体中文](README.md) · [English](README.en.md) · [Español](README.es.md) · [Português](README.pt.md) · [हिन्दी](README.hi.md)
 

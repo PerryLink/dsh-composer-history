@@ -472,7 +472,7 @@ def flow_svg(theme: str) -> str:
 
     # header ----------------------------------------------------------------
     add(t(48, 54, "DraftRecall state machine", 22, c["text"], weight=700))
-    add(t(1052, 54, "dsh-composer-history · v0.8.16", 14, c["faint"],
+    add(t(1052, 54, "dsh-composer-history · v0.8.17", 14, c["faint"],
           anchor="end", mono=True))
     add(t(48, 82, "keydown → gate → transition → single write path (setDraft); "
                   "recall edits the draft, only Enter sends", 14, c["sub"]))
