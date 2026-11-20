@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- The search overlay, the compaction card and the notice now take their colours from the host theme (`--dsw-*` tokens) instead of a fixed dark palette, so they follow the light theme and accent overrides. Layout and behaviour are unchanged.
+
 ## [0.8.16] - 2026-11-05
 
 ### Changed
