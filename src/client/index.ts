@@ -42,7 +42,7 @@ import { createSearchOverlay, type OverlayAction, type SearchOverlay } from './s
 import type { SearchEntry } from './search.ts'
 import { createCompactionNotice, type CompactionNotice } from './compaction-notice.ts'
 import { compactionAfter, latestCompactionSeq } from './compaction-watch.ts'
-import { chatNodes, chatSourceFor, type UiConversationFace } from './session-nodes.ts'
+import { chatNodes, chatSourceFor, type ChatTargetSource, type UiConversationFace } from './session-nodes.ts'
 import { STORE_KEY, appendEntries, loadEntries, safeStorage } from './history-store.ts'
 import { loadSnippets, noteSnippetUse, parseSnippetCommand, saveCommandText, upsertSnippet, type SnippetRecord } from './snippets.ts'
 import { fillTemplate, loadTemplates } from './templates.ts'
@@ -77,6 +77,14 @@ interface PopupSelectFace {
   popupFor(actx: ClientContext): { readonly state: { getSnapshot(): { readonly open: boolean } } }
 }
 
+/** Origin of the Chat projection currently being published by the host. */
+interface SessionEventWindowFace {
+  readonly revision: number
+  readonly change:
+    | { readonly kind: 'replace' | 'prepend' | 'settle-assistant' }
+    | { readonly kind: 'append'; readonly entries: readonly { event: { type: string; seq: number } }[] }
+}
+
 /**
  * Structural face of the client sessions service this plugin reads (list
  * snapshots and agent scoping). Declared locally because the owning
@@ -91,6 +99,7 @@ interface SessionsFace {
     getSnapshot(): SessionsListSnapshot
     subscribe(listener: () => void): () => void
   }
+  binding?(id: string): { readonly eventSource: { getSnapshot(): SessionEventWindowFace } } | undefined
   scope(id: string): ClientContext | undefined
 }
 
@@ -594,39 +603,40 @@ function installWiring(ctx: ClientContext, options: ComposerHistoryConfig, stora
     }
   }
 
-  // Sliding-context observation: report compaction checkpoints that land
-  // while this page is open. Each session subscribe re-baselines to the
-  // newest checkpoint already in the log, so markers that predate the
-  // plugin install (or a session switch) never toast.
-  let lastCompactionSeq: number | undefined
-  const watchCompaction = (nodes: readonly ConversationNode[]): void => {
-    if (!options.showCompactionNotice || notice === undefined) return
-    const info = compactionAfter(nodes, lastCompactionSeq)
-    if (info === undefined) return
-    lastCompactionSeq = info.seq
-    notice.show(info)
-  }
-
   let disposeSessionSub: (() => void) | undefined
+  let activeSource: ChatTargetSource | undefined
   const reconcileSession = (): void => {
+    const id = currentSessionIdOf(sessions.list)
+    const source = id === undefined ? undefined : chatSourceFor(uiConversation, id)
+    if (source === activeSource) return
     disposeSessionSub?.()
     disposeSessionSub = undefined
-    const id = currentSessionIdOf(sessions.list)
-    if (id === undefined) return
-    const source = chatSourceFor(uiConversation, String(id))
-    if (source === undefined) return
-    // Subscribe first: the first subscribe activates the Chat target, and
-    // activation materializes the snapshot synchronously (assembler
-    // activateTarget → replaceView), so the reads below see the nodes even on
-    // the very first install. Reading before subscribing yields [].
+    activeSource = source
+    notice?.dispose()
+    if (source === undefined || id === undefined) return
+
+    lastSync = { length: -1, seq: -1 }
+    const feed = sessions.binding?.(id)?.eventSource
+    // Activation can synchronously publish a cached Chat view, or publish an
+    // empty view before history arrives. Neither is a new checkpoint. Only
+    // announce a marker whose own event was appended during this subscription.
+    const initialRevision = feed?.getSnapshot().revision
+    let lastCompactionSeq: number | undefined
     disposeSessionSub = source.subscribe(() => {
       const nodes = chatNodes(source)
       syncPersisted(nodes)
-      watchCompaction(nodes)
+      if (!options.showCompactionNotice || notice === undefined || initialRevision === undefined) return
+      const window = feed?.getSnapshot()
+      if (!window || window.revision <= initialRevision || window.change.kind !== 'append') return
+      const appended = window.change.entries
+      if (!appended.some(entry => entry.event.type === 'user/message')) return
+      const info = compactionAfter(nodes, lastCompactionSeq)
+      if (!info || !appended.some(entry => entry.event.seq === info.seq)) return
+      lastCompactionSeq = info.seq
+      notice.show(info)
     })
     const nodes = chatNodes(source)
     lastCompactionSeq = latestCompactionSeq(nodes)
-    lastSync = { length: -1, seq: -1 }
     syncPersisted(nodes)
   }
   const disposeListSub = sessions.list.subscribe(reconcileSession)
