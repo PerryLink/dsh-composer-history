@@ -406,7 +406,7 @@ The one coupling point is host-private DOM (`div[data-composer-input]`), recorde
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.2-rc.4` (verified 2026-11-18): `engines.dsh >=0.2.1-0 <0.3.0 || >=0.2.2-0 <0.3.0`; the P0 compatibility paths have regression tests. |
+| Harness | DeepSeek Harness `dsh-v0.2.2-rc.4` (verified 2026-11-18): `engines.dsh >=0.2.1-0 <0.3.0 \|\| >=0.2.2-0 <0.3.0`; the P0 compatibility paths have regression tests. |
 | Node | `^22.19.0 \|\| >=24.9.0` |
 | Platforms | Web GUI only (client plugin; browser-local storage; no network, no native code) |
 | Model | Any (no model requests — pure UI behavior) |

@@ -407,7 +407,7 @@ El único punto de acoplamiento es el DOM privado del host (`div[data-composer-i
 
 | Superficie | Estado |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.2-rc.4` (verificado 2026-11-18): `engines.dsh >=0.2.1-0 <0.3.0 || >=0.2.2-0 <0.3.0`; las rutas de compatibilidad P0 tienen pruebas de regresión. |
+| Harness | DeepSeek Harness `dsh-v0.2.2-rc.4` (verificado 2026-11-18): `engines.dsh >=0.2.1-0 <0.3.0 \|\| >=0.2.2-0 <0.3.0`; las rutas de compatibilidad P0 tienen pruebas de regresión. |
 | Node | `^22.19.0 \|\| >=24.9.0` |
 | Plataformas | Solo Web GUI (plugin cliente; almacenamiento local del navegador; sin red, sin código nativo) |
 | Modelo | Cualquiera (sin peticiones al modelo — comportamiento de UI puro) |
