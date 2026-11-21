@@ -49,6 +49,11 @@ Comportamento puramente de UI: sem eventos de sessão, sem mudanças no agent-lo
   <img src="docs/assets/dsh-composer-history-flow-v5-light.svg" width="100%" alt="Máquina de estados DraftRecall: IDLE ⇄ BROWSING sob o portão compartilhado phase=plain; ↑ na primeira linha guarda {draft, caret} e preenche o mais recente, ↓ na última linha ou Esc restaura; Ctrl+R é uma via paralela de busca que ignora os dois estados; todo efeito passa por setDraft e vive em quatro chaves localStorage">
 </picture>
 
+![dsh-composer-history: execução real de terminal](docs/assets/dsh-composer-history-demo.gif)
+
+*Repetição animada de uma execução real registrada neste repositório.*
+
+
 </div>
 
 ## Instalação em três passos

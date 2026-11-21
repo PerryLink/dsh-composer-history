@@ -49,6 +49,11 @@ dsh plugin --profile <name> add dsh-composer-history
   <img src="docs/assets/dsh-composer-history-flow-v5-light.svg" width="100%" alt="DraftRecall स्टेट मशीन: साझा phase=plain गेट के पीछे IDLE ⇄ BROWSING; पहली लाइन पर ↑ {draft, caret} सहेजता है और नवीनतम भरता है, आख़िरी लाइन पर ↓ या Esc बहाल करता है; Ctrl+R एक समानांतर खोज लेन है जो दोनों स्टेट को छोड़ देती है; हर प्रभाव setDraft से जाता है और चार localStorage कुंजियों में रहता है">
 </picture>
 
+![dsh-composer-history का असली टर्मिनल रन](docs/assets/dsh-composer-history-demo.gif)
+
+*इस रिपॉज़िटरी में दर्ज असली रन का एनिमेटेड रीप्ले।*
+
+
 </div>
 
 ## तीन चरणों में शुरुआत

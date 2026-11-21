@@ -36,6 +36,10 @@ dsh plugin --profile <name> add dsh-composer-history
 
 ## 它是什么
 
+![dsh-composer-history 真实终端运行](docs/assets/dsh-composer-history-demo.gif)
+
+*本仓库一次真实运行的动图回放。*
+
 它把终端的输入历史搬进 DeepSeek Harness 的 Web 作曲器：光标在首行时按 ↑ 召回上一条你发过的消息，光标不在首行时 ↑/↓ 照常移动光标，绝不抢键。
 
 第一次召回会暂存 `{draft, caret}`，回到底部或按 `Esc` 时两者精确还原——你打到一半的草稿不会被清空。历史存在浏览器本地，刷新页面、切换会话都还在；`Ctrl+R` 打开反向搜索，历史、片段、模板一起搜。harness 自动压缩上下文时，检查点摘要以 `[compacted] …` 条目加入召回与搜索，并弹出一条可一键填入 `/compact` 的短暂通知。
