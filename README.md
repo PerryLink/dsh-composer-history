@@ -9,7 +9,9 @@
 
 **像终端一样按 ↑ 找回历史——你打到一半的草稿一个字都不会丢。**
 
-DeepSeek Harness Web GUI 作曲器的输入历史层：边缘优先的方向键召回、浏览器本地持久化、`dsh-v0.2.2-rc.4`（2026-11-18）；`Ctrl+R` 反向搜索、片段与模板库，全部只落在普通草稿里。
+DeepSeek Harness Web GUI 作曲器的输入历史层：边缘优先的方向键召回、浏览器本地持久化、`Ctrl+R` 反向搜索、片段与模板库，全部只落在普通草稿里。
+
+最近一次核验：DeepSeek Harness `dsh-v0.2.3-alpha.1`（2026-11-22）。
 
 [安装](#三步上手) · [配置](#配置) · [FAQ](#faq) · [简体中文](README.md) · [English](README.en.md) · [Español](README.es.md) · [Português](README.pt.md) · [हिन्दी](README.hi.md)
 

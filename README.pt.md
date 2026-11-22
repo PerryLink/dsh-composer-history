@@ -9,7 +9,9 @@
 
 **Pressione ↑ como num terminal — e mantenha intacto o rascunho pela metade.**
 
-Histórico de entrada estilo terminal para o compositor da Web GUI do DeepSeek Harness: recall com setas com prioridade de borda, persistência local no navegador, busca inversa com `dsh-v0.2.2-rc.4`（2026-11-18）；`Ctrl+R` e bibliotecas de snippets e templates, tudo apenas no rascunho comum.
+Histórico de entrada estilo terminal para o compositor da Web GUI do DeepSeek Harness: recall com setas com prioridade de borda, persistência local no navegador, busca inversa com, `Ctrl+R` e bibliotecas de snippets e templates, tudo apenas no rascunho comum.
+
+Última verificação: DeepSeek Harness `dsh-v0.2.3-alpha.1` (2026-11-22).
 
 [Instalar](#instalação-em-três-passos) · [Configuração](#configuração) · [FAQ](#faq) · [简体中文](README.md) · [English](README.en.md) · [Español](README.es.md) · [Português](README.pt.md) · [हिन्दी](README.hi.md)
 
@@ -52,7 +54,6 @@ Comportamento puramente de UI: sem eventos de sessão, sem mudanças no agent-lo
 ![dsh-composer-history: execução real de terminal](docs/assets/dsh-composer-history-demo.gif)
 
 *Repetição animada de uma execução real registrada neste repositório.*
-
 
 </div>
 

@@ -9,7 +9,9 @@
 
 **Press ↑ like it's a terminal — and keep your half-typed draft intact.**
 
-Terminal-style input history for the DeepSeek Harness Web GUI composer: edge-first arrow recall, browser-local persistence, `dsh-v0.2.2-rc.4`（2026-11-18）；`Ctrl+R` reverse search, and snippet/template libraries — all landing in the ordinary draft only.
+Terminal-style input history for the DeepSeek Harness Web GUI composer: edge-first arrow recall, browser-local persistence, `Ctrl+R` reverse search, and snippet/template libraries — all landing in the ordinary draft only.
+
+Last verified on DeepSeek Harness `dsh-v0.2.3-alpha.1` (2026-11-22).
 
 [Install](#three-step-setup) · [Configuration](#configuration) · [FAQ](#faq) · [简体中文](README.md) · [English](README.en.md) · [Español](README.es.md) · [Português](README.pt.md) · [हिन्दी](README.hi.md)
 

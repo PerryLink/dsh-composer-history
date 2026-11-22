@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Compatibility: declare DeepSeek Harness 0.2.3-alpha.1 support (>=0.2.3-0 <0.3.0-0 in engines.dsh and every @deepseek-ai/dsh-* peer range) and refresh README verification stamps.
+
 ### Changed
 
 - The search overlay, the compaction card and the notice now take their colours from the host theme (`--dsw-*` tokens) instead of a fixed dark palette, so they follow the light theme and accent overrides. Layout and behaviour are unchanged.
