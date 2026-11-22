@@ -1,6 +1,6 @@
 {
   "name": "dsh-composer-history",
-  "version": "0.8.18",
+  "version": "0.8.19",
   "description": "Terminal-style input history for the DeepSeek Harness web composer: edge-first arrows with exact draft/caret restore, browser-local persisted history, Ctrl+R reverse search, workspace-scoped recall, and fully configurable keys — plus sliding-context awareness (compaction summaries join recall/search, a compaction notice with one-click /compact fill) layered on the ordinary composer draft only.",
   "packageManager": "pnpm@11.7.0",
   "repository": {
@@ -24,7 +24,8 @@
       "types": "./lib/types/client/index.d.ts",
       "default": "./lib/client.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
   },
   "files": [
     "lib/index.js",
@@ -36,7 +37,9 @@
     "docs",
     "README*.md",
     "CHANGELOG.md",
-    "LICENSE"
+    "LICENSE",
+    "locale/*.json",
+    "icon.svg"
   ],
   "publishConfig": {
     "access": "public"
@@ -170,5 +173,10 @@
   "funding": {
     "type": "individual",
     "url": "https://github.com/sponsors/PerryLink"
+  },
+  "icon": "icon.svg",
+  "author": {
+    "name": "PerryLink",
+    "url": "https://github.com/PerryLink"
   }
 }

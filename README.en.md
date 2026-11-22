@@ -7,6 +7,8 @@
 
 # dsh-composer-history
 
+Current version `0.8.19`.
+
 **Press ↑ like it's a terminal — and keep your half-typed draft intact.**
 
 Terminal-style input history for the DeepSeek Harness Web GUI composer: edge-first arrow recall, browser-local persistence, `Ctrl+R` reverse search, and snippet/template libraries — all landing in the ordinary draft only.

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "输入历史",
+    "description": "DeepSeek Harness Web GUI 作曲器的输入历史层：边缘优先的方向键召回、浏览器本地持久化、Ctrl+R 反向搜索、片段与模板库，全部只落在普通草稿里。"
+  }
+}
